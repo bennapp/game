@@ -11,7 +11,7 @@ import (
 type Board [BOARD_SIZE][BOARD_SIZE]int
 type GameBoard struct {
 	board Board
-	mux sync.Mutex
+	mux   sync.Mutex
 }
 type Coord struct {
 	x int
@@ -23,19 +23,18 @@ type Vector struct {
 }
 
 type Event struct {
-	emmiter int
+	emmiter   int
 	timestamp int
 	// Assume move type
-	coord Coord
+	coord  Coord
 	vector Vector
 }
 
 type EventAggregator struct {
 	// Refactor to dynamic list / queue
 	eventQueue []Event
-	mux sync.Mutex
+	mux        sync.Mutex
 }
-
 
 const PLAYER = 1
 const SNAKE = 2
@@ -87,7 +86,7 @@ func findElement(gameBoard *GameBoard, element int) Coord {
 
 func moveCharacter(eventAggregator *EventAggregator, coord Coord, vector Vector, element int) {
 	eventAggregator.mux.Lock()
-	eventAggregator.eventQueue = append(eventAggregator.eventQueue, Event{emmiter: element, timestamp: getTimeStamp(), coord: coord, vector: vector })
+	eventAggregator.eventQueue = append(eventAggregator.eventQueue, Event{emmiter: element, timestamp: getTimeStamp(), coord: coord, vector: vector})
 	eventAggregator.mux.Unlock()
 }
 
@@ -120,8 +119,8 @@ func showGame(gameBoard *GameBoard) {
 	for {
 		gameBoard.mux.Lock()
 		printBoard(gameBoard.board)
-		time.Sleep(250 * time.Millisecond)
 		gameBoard.mux.Unlock()
+		time.Sleep(250 * time.Millisecond)
 		clearScreen()
 	}
 }
@@ -183,7 +182,7 @@ func startTerminalClient(gameBoard *GameBoard, eventAggregator *EventAggregator)
 	}
 	defer termbox.Close()
 
-// Try to remove loop name here, or call exit
+	// Try to remove loop name here, or call exit
 loop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
@@ -264,4 +263,3 @@ func main() {
 
 	startTerminalClient(&gameBoard, &eventAggregator)
 }
-
