@@ -4,6 +4,7 @@ import "github.com/nsf/termbox-go"
 import (
 	"fmt"
 	"math/rand"
+	"os"
 	"sync"
 	"time"
 )
@@ -183,12 +184,11 @@ func startTerminalClient(gameBoard *GameBoard, eventAggregator *EventAggregator)
 	defer termbox.Close()
 
 	// Try to remove loop name here, or call exit
-loop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyCtrlQ {
-				break loop
+				os.Exit(3)
 			}
 
 			moveVector := Vector{x: 0, y: 0}
@@ -203,26 +203,8 @@ loop:
 			}
 
 			playerLocation := findPlayer(gameBoard)
-
-			//moveCharacter(gameBoard, playerLocation, moveVector, PLAYER)
-
 			moveCharacter(eventAggregator, playerLocation, moveVector, PLAYER)
-
-			//termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-			//draw_keyboard()
-			//dispatch_press(&ev)
-			//pretty_print_press(&ev)
 			termbox.Flush()
-		case termbox.EventResize:
-			//termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-			//draw_keyboard()
-			//pretty_print_resize(&ev)
-			//termbox.Flush()
-		case termbox.EventMouse:
-			//termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-			//draw_keyboard()
-			//pretty_print_mouse(&ev)
-			//termbox.Flush()
 		case termbox.EventError:
 			panic(ev.Err)
 		}
@@ -231,7 +213,6 @@ loop:
 
 func crunchEvents(eventAggregator *EventAggregator, gameBoard *GameBoard) {
 	for {
-		// loop through events
 		for _, event := range eventAggregator.eventQueue {
 			gameBoard.mux.Lock()
 			gameBoard.board[event.coord.x][event.coord.y] = 0
