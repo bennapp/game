@@ -6,7 +6,7 @@ import (
 	"time"
 	"math/rand"
 	"sync"
-)
+	)
 
 type Board [8][8]int
 type GameBoard struct {
@@ -25,7 +25,7 @@ type Vector struct {
 const PLAYER = 1
 const SNAKE = 2
 
-func placeCharacter(gameBoard *GameBoard) {
+func placePlayer(gameBoard *GameBoard) {
 	placeElementRandomLocation(gameBoard, PLAYER)
 }
 
@@ -44,7 +44,7 @@ func placeElementRandomLocation(gameBoard *GameBoard, element int) {
 	gameBoard.mux.Unlock()
 }
 
-func findCharacter(gameBoard *GameBoard) Coord {
+func findPlayer(gameBoard *GameBoard) Coord {
 	return findElement(gameBoard, PLAYER)
 }
 
@@ -116,15 +116,41 @@ func showGame(gameBoard *GameBoard) {
 	}
 }
 
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	} else {
+		return n
+	}
+}
+
+func normalize(n int) int {
+	if n < 0 {
+		return -1
+	} else {
+		return 1
+	}
+}
+
 func snakeWalk(gameBoard *GameBoard) {
 	for {
 		snakeLocation := findSnake(gameBoard)
 		if (snakeLocation.x == -1 && snakeLocation.y == -1) {
 			return
 		}
-		randX := rand.Intn(2)
-		randY := rand.Intn(2)
-		moveVector := Vector{x: randX , y: randY}
+
+		playerLocation := findPlayer(gameBoard)
+
+		diffX := snakeLocation.x - playerLocation.x
+		diffY := snakeLocation.y - playerLocation.y
+
+		moveVector := Vector{x: 0 , y: 0}
+		if abs(diffX) > abs(diffY) {
+			moveVector.x = normalize(-diffX)
+		} else {
+			moveVector.y = normalize(-diffY)
+		}
+
 		moveCharacter(gameBoard, snakeLocation, moveVector, SNAKE)
 		time.Sleep(1000 * time.Millisecond)
 	}
@@ -136,7 +162,7 @@ func main() {
 	board := Board{}
 	gameBoard := GameBoard{board: board}
 
-	placeCharacter(&gameBoard)
+	placePlayer(&gameBoard)
 	placeSnake(&gameBoard)
 
 	err := termbox.Init()
@@ -166,7 +192,7 @@ loop:
 				moveVector = Vector{x: 0, y: 1}
 			}
 
-			playerLocation := findCharacter(&gameBoard)
+			playerLocation := findPlayer(&gameBoard)
 			moveCharacter(&gameBoard, playerLocation, moveVector, PLAYER)
 
 			//print(board)
