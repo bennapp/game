@@ -5,9 +5,14 @@ import (
 	"fmt"
 	"time"
 	"math/rand"
+	"sync"
 )
 
 type Board [8][8]int
+type GameBoard struct {
+	board Board
+	mux sync.Mutex
+}
 type Coord struct {
 	x int
 	y int
@@ -17,34 +22,43 @@ type Vector struct {
 	y int
 }
 
-func placeCharacter(board Board) Board {
-	board = placeElementRandomLocation(board, 1)
+const PLAYER = 1
+const SNAKE = 2
 
-	return board
+func placeCharacter(gameBoard *GameBoard) {
+	placeElementRandomLocation(gameBoard, PLAYER)
 }
 
-func placeSnake(board Board) Board {
-	board = placeElementRandomLocation(board, 2)
-
-	return board
+func placeSnake(gameBoard *GameBoard) {
+	placeElementRandomLocation(gameBoard, SNAKE)
 }
 
-func placeElementRandomLocation(board Board, element int) Board {
+func placeElementRandomLocation(gameBoard *GameBoard, element int) {
+	gameBoard.mux.Lock()
+
 	x := rand.Intn(8)
 	y := rand.Intn(8)
 
-	board[x][y] = element
+	gameBoard.board[x][y] = element
 
-	return board
+	gameBoard.mux.Unlock()
 }
 
-func findCharacter(board Board) Coord {
-	x := 0
-	y := 0
+func findCharacter(gameBoard *GameBoard) Coord {
+	return findElement(gameBoard, PLAYER)
+}
+
+func findSnake(gameBoard *GameBoard) Coord {
+	return findElement(gameBoard, SNAKE)
+}
+
+func findElement(gameBoard *GameBoard, element int) Coord {
+	x := -1
+	y := -1
 
 	for i := 0; i < 8; i++ {
 		for j := 0; j < 8; j++ {
-			if board[i][j] == 1 {
+			if gameBoard.board[i][j] == element {
 				x = i
 				y = j
 				break
@@ -55,17 +69,23 @@ func findCharacter(board Board) Coord {
 	return Coord{x: x, y: y}
 }
 
-func moveCharacter(board Board, coord Coord, vector Vector) Board {
-	board[coord.x][coord.y] = 0
+func moveCharacter(gameBoard *GameBoard, coord Coord, vector Vector, element int) {
+	gameBoard.mux.Lock()
+
+	gameBoard.board[coord.x][coord.y] = 0
 
 	nextX := wrap(coord.x + vector.x)
 	nextY := wrap(coord.y + vector.y)
 
-	fmt.Println(nextX)
+	snakeLocation := findSnake(gameBoard)
 
-	board[nextX][nextY] = 1
+	if (snakeLocation.x == nextX && snakeLocation.y == nextY) {
+		fmt.Println("YUM!!!")
+	}
 
-	return board
+	gameBoard.board[nextX][nextY] = element
+
+	gameBoard.mux.Unlock()
 }
 
 func wrap(n int) int {
@@ -89,19 +109,44 @@ func print(x Board) {
 	fmt.Println()
 }
 
+func showGame(gameBoard *GameBoard) {
+	for {
+		print(gameBoard.board)
+		time.Sleep(250 * time.Millisecond)
+	}
+}
+
+func snakeWalk(gameBoard *GameBoard) {
+	for {
+		snakeLocation := findSnake(gameBoard)
+		if (snakeLocation.x == -1 && snakeLocation.y == -1) {
+			return
+		}
+		randX := rand.Intn(2)
+		randY := rand.Intn(2)
+		moveVector := Vector{x: randX , y: randY}
+		moveCharacter(gameBoard, snakeLocation, moveVector, SNAKE)
+		time.Sleep(1000 * time.Millisecond)
+	}
+}
+
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	board := Board{}
+	gameBoard := GameBoard{board: board}
 
-	board = placeCharacter(board)
-	board = placeSnake(board)
+	placeCharacter(&gameBoard)
+	placeSnake(&gameBoard)
 
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
 	}
 	defer termbox.Close()
+
+	go showGame(&gameBoard)
+	go snakeWalk(&gameBoard)
 loop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
@@ -121,9 +166,10 @@ loop:
 				moveVector = Vector{x: 0, y: 1}
 			}
 
-			playerLocation := findCharacter(board)
-			board = moveCharacter(board, playerLocation, moveVector)
-			print(board)
+			playerLocation := findCharacter(&gameBoard)
+			moveCharacter(&gameBoard, playerLocation, moveVector, PLAYER)
+
+			//print(board)
 
 			//termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 			//draw_keyboard()
