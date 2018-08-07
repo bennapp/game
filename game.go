@@ -3,15 +3,15 @@ package main
 import "github.com/nsf/termbox-go"
 import (
 	"fmt"
-	"time"
 	"math/rand"
 	"sync"
-	)
+	"time"
+)
 
-type Board [8][8]int
+type Board [BOARD_SIZE][BOARD_SIZE]int
 type GameBoard struct {
 	board Board
-	mux sync.Mutex
+	mux   sync.Mutex
 }
 type Coord struct {
 	x int
@@ -24,6 +24,7 @@ type Vector struct {
 
 const PLAYER = 1
 const SNAKE = 2
+const BOARD_SIZE = 8
 
 func placePlayer(gameBoard *GameBoard) {
 	placeElementRandomLocation(gameBoard, PLAYER)
@@ -36,8 +37,8 @@ func placeSnake(gameBoard *GameBoard) {
 func placeElementRandomLocation(gameBoard *GameBoard, element int) {
 	gameBoard.mux.Lock()
 
-	x := rand.Intn(8)
-	y := rand.Intn(8)
+	x := rand.Intn(BOARD_SIZE)
+	y := rand.Intn(BOARD_SIZE)
 
 	gameBoard.board[x][y] = element
 
@@ -56,8 +57,8 @@ func findElement(gameBoard *GameBoard, element int) Coord {
 	x := -1
 	y := -1
 
-	for i := 0; i < 8; i++ {
-		for j := 0; j < 8; j++ {
+	for i := 0; i < BOARD_SIZE; i++ {
+		for j := 0; j < BOARD_SIZE; j++ {
 			if gameBoard.board[i][j] == element {
 				x = i
 				y = j
@@ -79,7 +80,7 @@ func moveCharacter(gameBoard *GameBoard, coord Coord, vector Vector, element int
 
 	snakeLocation := findSnake(gameBoard)
 
-	if (snakeLocation.x == nextX && snakeLocation.y == nextY) {
+	if snakeLocation.x == nextX && snakeLocation.y == nextY {
 		fmt.Println("YUM!!!")
 	}
 
@@ -90,16 +91,16 @@ func moveCharacter(gameBoard *GameBoard, coord Coord, vector Vector, element int
 
 func wrap(n int) int {
 	if n == -1 {
-		return 8 - 1
+		return BOARD_SIZE - 1
 	}
-	if n == 8 {
+	if n == BOARD_SIZE {
 		return 0
 	}
 
 	return n
 }
 
-func print(x Board) {
+func printBoard(x Board) {
 	for _, i := range x {
 		for _, j := range i {
 			fmt.Printf("%d ", j)
@@ -111,9 +112,14 @@ func print(x Board) {
 
 func showGame(gameBoard *GameBoard) {
 	for {
-		print(gameBoard.board)
+		printBoard(gameBoard.board)
 		time.Sleep(250 * time.Millisecond)
+		clearScreen()
 	}
+}
+
+func clearScreen() {
+	print("\033[H\033[2J")
 }
 
 func abs(n int) int {
@@ -135,7 +141,7 @@ func normalize(n int) int {
 func snakeWalk(gameBoard *GameBoard) {
 	for {
 		snakeLocation := findSnake(gameBoard)
-		if (snakeLocation.x == -1 && snakeLocation.y == -1) {
+		if snakeLocation.x == -1 && snakeLocation.y == -1 {
 			return
 		}
 
@@ -144,7 +150,7 @@ func snakeWalk(gameBoard *GameBoard) {
 		diffX := playerLocation.x - snakeLocation.x
 		diffY := playerLocation.y - snakeLocation.y
 
-		moveVector := Vector{x: 0 , y: 0}
+		moveVector := Vector{x: 0, y: 0}
 		if abs(diffX) > abs(diffY) {
 			moveVector.x = normalize(diffX)
 		} else {
@@ -156,14 +162,8 @@ func snakeWalk(gameBoard *GameBoard) {
 	}
 }
 
-func main() {
-	rand.Seed(time.Now().UTC().UnixNano())
-
-	board := Board{}
-	gameBoard := GameBoard{board: board}
-
-	placePlayer(&gameBoard)
-	placeSnake(&gameBoard)
+func startTerminalClient(gameBoard *GameBoard) {
+	go showGame(gameBoard)
 
 	err := termbox.Init()
 	if err != nil {
@@ -171,8 +171,6 @@ func main() {
 	}
 	defer termbox.Close()
 
-	go showGame(&gameBoard)
-	go snakeWalk(&gameBoard)
 loop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
@@ -181,7 +179,7 @@ loop:
 				break loop
 			}
 
-			moveVector := Vector{x:0 , y:0}
+			moveVector := Vector{x: 0, y: 0}
 			if ev.Ch == 119 { // w
 				moveVector = Vector{x: -1, y: 0}
 			} else if ev.Ch == 97 { // a
@@ -192,10 +190,8 @@ loop:
 				moveVector = Vector{x: 0, y: 1}
 			}
 
-			playerLocation := findPlayer(&gameBoard)
-			moveCharacter(&gameBoard, playerLocation, moveVector, PLAYER)
-
-			//print(board)
+			playerLocation := findPlayer(gameBoard)
+			moveCharacter(gameBoard, playerLocation, moveVector, PLAYER)
 
 			//termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 			//draw_keyboard()
@@ -216,4 +212,18 @@ loop:
 			panic(ev.Err)
 		}
 	}
+}
+
+func main() {
+	rand.Seed(time.Now().UTC().UnixNano())
+
+	board := Board{}
+	gameBoard := GameBoard{board: board}
+
+	placePlayer(&gameBoard)
+	placeSnake(&gameBoard)
+
+	go snakeWalk(&gameBoard)
+
+	startTerminalClient(&gameBoard)
 }
