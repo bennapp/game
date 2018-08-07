@@ -141,14 +141,14 @@ func snakeWalk(gameBoard *GameBoard) {
 
 		playerLocation := findPlayer(gameBoard)
 
-		diffX := snakeLocation.x - playerLocation.x
-		diffY := snakeLocation.y - playerLocation.y
+		diffX := playerLocation.x - snakeLocation.x
+		diffY := playerLocation.y - snakeLocation.y
 
 		moveVector := Vector{x: 0 , y: 0}
 		if abs(diffX) > abs(diffY) {
-			moveVector.x = normalize(-diffX)
+			moveVector.x = normalize(diffX)
 		} else {
-			moveVector.y = normalize(-diffY)
+			moveVector.y = normalize(diffY)
 		}
 
 		moveCharacter(gameBoard, snakeLocation, moveVector, SNAKE)
