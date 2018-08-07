@@ -11,7 +11,7 @@ import (
 type Board [BOARD_SIZE][BOARD_SIZE]int
 type GameBoard struct {
 	board Board
-	mux   sync.Mutex
+	mux sync.Mutex
 }
 type Coord struct {
 	x int
@@ -21,6 +21,21 @@ type Vector struct {
 	x int
 	y int
 }
+
+type Event struct {
+	emmiter int
+	timestamp int
+	// Assume move type
+	coord Coord
+	vector Vector
+}
+
+type EventAggregator struct {
+	// Refactor to dynamic list / queue
+	eventQueue []Event
+	mux sync.Mutex
+}
+
 
 const PLAYER = 1
 const SNAKE = 2
@@ -70,23 +85,14 @@ func findElement(gameBoard *GameBoard, element int) Coord {
 	return Coord{x: x, y: y}
 }
 
-func moveCharacter(gameBoard *GameBoard, coord Coord, vector Vector, element int) {
-	gameBoard.mux.Lock()
+func moveCharacter(eventAggregator *EventAggregator, coord Coord, vector Vector, element int) {
+	eventAggregator.mux.Lock()
+	eventAggregator.eventQueue = append(eventAggregator.eventQueue, Event{emmiter: element, timestamp: getTimeStamp(), coord: coord, vector: vector })
+	eventAggregator.mux.Unlock()
+}
 
-	gameBoard.board[coord.x][coord.y] = 0
-
-	nextX := wrap(coord.x + vector.x)
-	nextY := wrap(coord.y + vector.y)
-
-	snakeLocation := findSnake(gameBoard)
-
-	if snakeLocation.x == nextX && snakeLocation.y == nextY {
-		fmt.Println("YUM!!!")
-	}
-
-	gameBoard.board[nextX][nextY] = element
-
-	gameBoard.mux.Unlock()
+func getTimeStamp() int {
+	return 0
 }
 
 func wrap(n int) int {
@@ -112,8 +118,10 @@ func printBoard(x Board) {
 
 func showGame(gameBoard *GameBoard) {
 	for {
+		gameBoard.mux.Lock()
 		printBoard(gameBoard.board)
 		time.Sleep(250 * time.Millisecond)
+		gameBoard.mux.Unlock()
 		clearScreen()
 	}
 }
@@ -138,8 +146,10 @@ func normalize(n int) int {
 	}
 }
 
-func snakeWalk(gameBoard *GameBoard) {
+func snakeWalk(gameBoard *GameBoard, eventAggregator *EventAggregator) {
 	for {
+		gameBoard.mux.Lock()
+
 		snakeLocation := findSnake(gameBoard)
 		if snakeLocation.x == -1 && snakeLocation.y == -1 {
 			return
@@ -157,12 +167,14 @@ func snakeWalk(gameBoard *GameBoard) {
 			moveVector.y = normalize(diffY)
 		}
 
-		moveCharacter(gameBoard, snakeLocation, moveVector, SNAKE)
+		moveCharacter(eventAggregator, snakeLocation, moveVector, SNAKE)
+		gameBoard.mux.Unlock()
+
 		time.Sleep(1000 * time.Millisecond)
 	}
 }
 
-func startTerminalClient(gameBoard *GameBoard) {
+func startTerminalClient(gameBoard *GameBoard, eventAggregator *EventAggregator) {
 	go showGame(gameBoard)
 
 	err := termbox.Init()
@@ -171,6 +183,7 @@ func startTerminalClient(gameBoard *GameBoard) {
 	}
 	defer termbox.Close()
 
+// Try to remove loop name here, or call exit
 loop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
@@ -191,7 +204,10 @@ loop:
 			}
 
 			playerLocation := findPlayer(gameBoard)
-			moveCharacter(gameBoard, playerLocation, moveVector, PLAYER)
+
+			//moveCharacter(gameBoard, playerLocation, moveVector, PLAYER)
+
+			moveCharacter(eventAggregator, playerLocation, moveVector, PLAYER)
 
 			//termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
 			//draw_keyboard()
@@ -214,16 +230,38 @@ loop:
 	}
 }
 
+func crunchEvents(eventAggregator *EventAggregator, gameBoard *GameBoard) {
+	for {
+		// loop through events
+		for _, event := range eventAggregator.eventQueue {
+			gameBoard.mux.Lock()
+			gameBoard.board[event.coord.x][event.coord.y] = 0
+			nextX := wrap(event.coord.x + event.vector.x)
+			nextY := wrap(event.coord.y + event.vector.y)
+			gameBoard.board[nextX][nextY] = event.emmiter
+			gameBoard.mux.Unlock()
+		}
+
+		eventAggregator.eventQueue = []Event{}
+
+		time.Sleep(100 * time.Millisecond)
+	}
+}
+
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	board := Board{}
 	gameBoard := GameBoard{board: board}
 
+	eventAggregator := EventAggregator{}
+
 	placePlayer(&gameBoard)
 	placeSnake(&gameBoard)
 
-	go snakeWalk(&gameBoard)
+	go snakeWalk(&gameBoard, &eventAggregator)
+	go crunchEvents(&eventAggregator, &gameBoard)
 
-	startTerminalClient(&gameBoard)
+	startTerminalClient(&gameBoard, &eventAggregator)
 }
+
