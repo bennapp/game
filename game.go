@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"sync"
 	"time"
+	"os"
+	"os/exec"
 )
 
 type Board [BOARD_SIZE][BOARD_SIZE]int
@@ -75,8 +77,8 @@ func moveCharacter(gameBoard *GameBoard, coord Coord, vector Vector, element int
 
 	gameBoard.board[coord.x][coord.y] = 0
 
-	nextX := wrap(coord.x + vector.x)
-	nextY := wrap(coord.y + vector.y)
+	nextX := wrapAroundBoard(coord.x + vector.x)
+	nextY := wrapAroundBoard(coord.y + vector.y)
 
 	snakeLocation := findSnake(gameBoard)
 
@@ -89,7 +91,7 @@ func moveCharacter(gameBoard *GameBoard, coord Coord, vector Vector, element int
 	gameBoard.mux.Unlock()
 }
 
-func wrap(n int) int {
+func wrapAroundBoard(n int) int {
 	if n == -1 {
 		return BOARD_SIZE - 1
 	}
@@ -119,7 +121,9 @@ func showGame(gameBoard *GameBoard) {
 }
 
 func clearScreen() {
-	print("\033[H\033[2J")
+	cmd := exec.Command("cmd", "/c", "cls")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 }
 
 func abs(n int) int {
@@ -130,7 +134,7 @@ func abs(n int) int {
 	}
 }
 
-func normalize(n int) int {
+func convertToOneMove(n int) int {
 	if n < 0 {
 		return -1
 	} else {
@@ -152,9 +156,9 @@ func snakeWalk(gameBoard *GameBoard) {
 
 		moveVector := Vector{x: 0, y: 0}
 		if abs(diffX) > abs(diffY) {
-			moveVector.x = normalize(diffX)
+			moveVector.x = convertToOneMove(diffX)
 		} else {
-			moveVector.y = normalize(diffY)
+			moveVector.y = convertToOneMove(diffY)
 		}
 
 		moveCharacter(gameBoard, snakeLocation, moveVector, SNAKE)
@@ -171,12 +175,11 @@ func startTerminalClient(gameBoard *GameBoard) {
 	}
 	defer termbox.Close()
 
-loop:
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyCtrlQ {
-				break loop
+				os.Exit(3)
 			}
 
 			moveVector := Vector{x: 0, y: 0}
@@ -193,21 +196,7 @@ loop:
 			playerLocation := findPlayer(gameBoard)
 			moveCharacter(gameBoard, playerLocation, moveVector, PLAYER)
 
-			//termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-			//draw_keyboard()
-			//dispatch_press(&ev)
-			//pretty_print_press(&ev)
 			termbox.Flush()
-		case termbox.EventResize:
-			//termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-			//draw_keyboard()
-			//pretty_print_resize(&ev)
-			//termbox.Flush()
-		case termbox.EventMouse:
-			//termbox.Clear(termbox.ColorDefault, termbox.ColorDefault)
-			//draw_keyboard()
-			//pretty_print_mouse(&ev)
-			//termbox.Flush()
 		case termbox.EventError:
 			panic(ev.Err)
 		}
