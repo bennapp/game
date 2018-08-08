@@ -13,7 +13,8 @@ import (
 type Board [BOARD_SIZE][BOARD_SIZE]int
 type GameBoard struct {
 	board Board
-	mux   sync.Mutex
+	coinCount int
+	mux sync.Mutex
 }
 type Coord struct {
 	x int
@@ -24,27 +25,46 @@ type Vector struct {
 	y int
 }
 
+const EMPTY = 0
 const PLAYER = 1
 const SNAKE = 2
-const BOARD_SIZE = 8
+const COIN = 3
+const ROCK = 4
+const BOARD_SIZE = 36
 
 func placePlayer(gameBoard *GameBoard) {
-	placeElementRandomLocation(gameBoard, PLAYER)
+	placeElementRandomLocationWithLock(gameBoard, PLAYER)
 }
 
 func placeSnake(gameBoard *GameBoard) {
-	placeElementRandomLocation(gameBoard, SNAKE)
+	placeElementRandomLocationWithLock(gameBoard, SNAKE)
+}
+
+func placeCoin(gameBoard *GameBoard) {
+	placeElementRandomLocationWithLock(gameBoard, COIN)
+}
+
+func placeRock(gameBoard *GameBoard) {
+	placeElementRandomLocationWithLock(gameBoard, ROCK)
+}
+
+func placeElementRandomLocationWithLock(gameBoard *GameBoard, element int) {
+	gameBoard.mux.Lock()
+
+	placeElementRandomLocation(gameBoard, element)
+
+	gameBoard.mux.Unlock()
 }
 
 func placeElementRandomLocation(gameBoard *GameBoard, element int) {
-	gameBoard.mux.Lock()
-
 	x := rand.Intn(BOARD_SIZE)
 	y := rand.Intn(BOARD_SIZE)
 
-	gameBoard.board[x][y] = element
-
-	gameBoard.mux.Unlock()
+	if gameBoard.board[x][y] == EMPTY {
+		gameBoard.board[x][y] = element
+	} else {
+		placeElementRandomLocation(gameBoard, element)
+	}
 }
 
 func findPlayer(gameBoard *GameBoard) Coord {
@@ -72,23 +92,48 @@ func findElement(gameBoard *GameBoard, element int) Coord {
 	return Coord{x: x, y: y}
 }
 
+
+
 func moveCharacter(gameBoard *GameBoard, coord Coord, vector Vector, element int) {
 	gameBoard.mux.Lock()
-
-	gameBoard.board[coord.x][coord.y] = 0
 
 	nextX := wrapAroundBoard(coord.x + vector.x)
 	nextY := wrapAroundBoard(coord.y + vector.y)
 
-	snakeLocation := findSnake(gameBoard)
+	nextCoord := Coord{x: nextX, y: nextY }
 
-	if snakeLocation.x == nextX && snakeLocation.y == nextY {
-		fmt.Println("YUM!!!")
+	checkKillSnake(gameBoard, nextCoord)
+	checkPickUpCoin(gameBoard, nextCoord, element)
+
+	if !checkRock(gameBoard, nextCoord) {
+		gameBoard.board[coord.x][coord.y] = 0
+		gameBoard.board[nextX][nextY] = element
 	}
 
-	gameBoard.board[nextX][nextY] = element
-
 	gameBoard.mux.Unlock()
+}
+
+//No lock
+func checkKillSnake(gameBoard *GameBoard, coord Coord) {
+	if gameBoard.board[coord.x][coord.y] == SNAKE {
+		fmt.Println("YUM!!!")
+	}
+}
+
+//No lock
+func checkPickUpCoin(gameBoard *GameBoard, coord Coord, element int) {
+	if element != PLAYER {
+		return
+	}
+
+	if gameBoard.board[coord.x][coord.y] == COIN {
+		gameBoard.coinCount++
+	}
+}
+
+//No lock
+func checkRock(gameBoard *GameBoard, coord Coord) bool {
+	return gameBoard.board[coord.x][coord.y] == ROCK
 }
 
 func wrapAroundBoard(n int) int {
@@ -112,9 +157,15 @@ func printBoard(x Board) {
 	fmt.Println()
 }
 
+func printStat(gameBoard *GameBoard) {
+	fmt.Printf("Coin: %d", gameBoard.coinCount)
+	fmt.Println()
+}
+
 func showGame(gameBoard *GameBoard) {
 	for {
 		printBoard(gameBoard.board)
+		printStat(gameBoard)
 		time.Sleep(250 * time.Millisecond)
 		clearScreen()
 	}
@@ -128,6 +179,7 @@ func clearScreen() {
 
 func abs(n int) int {
 	if n < 0 {
+
 		return -n
 	} else {
 		return n
@@ -163,6 +215,13 @@ func snakeWalk(gameBoard *GameBoard) {
 
 		moveCharacter(gameBoard, snakeLocation, moveVector, SNAKE)
 		time.Sleep(1000 * time.Millisecond)
+	}
+}
+
+func dropGold(gameBoard *GameBoard) {
+	for {
+		placeCoin(gameBoard)
+		time.Sleep(4000 * time.Millisecond)
 	}
 }
 
@@ -212,7 +271,12 @@ func main() {
 	placePlayer(&gameBoard)
 	placeSnake(&gameBoard)
 
+	for i:=0; i < 10; i++ {
+		placeRock(&gameBoard)
+	}
+
 	go snakeWalk(&gameBoard)
+	go dropGold(&gameBoard)
 
 	startTerminalClient(&gameBoard)
 }
