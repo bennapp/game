@@ -7,8 +7,7 @@ import (
 	"sync"
 	"time"
 	"os"
-	"os/exec"
-)
+	)
 
 type World struct {
 	subWorlds [WORLD_SIZE][WORLD_SIZE]SubWorld
@@ -93,6 +92,8 @@ func placeElementRandomLocation(subWorld *SubWorld, element int) Coord {
 }
 
 func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector, element int) (Coord, Coord) {
+	fmt.Println(subWorldCoord.y)
+
 	subWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
 
 	subWorld.mux.Lock()
@@ -137,7 +138,7 @@ func subWorldMove(subWorldCoord Coord, gridCoord Coord, vector Vector) (Coord, C
 	wY := subWorldCoord.y + carry(gridCoord.y, vector.y, GRID_SIZE)
 
 	gX := wrap(gridCoord.x, vector.x, GRID_SIZE)
-	gY := wrap(gridCoord.x, vector.x, GRID_SIZE)
+	gY := wrap(gridCoord.y, vector.y, GRID_SIZE)
 
 	if isOutOfBound(wX, wY, WORLD_SIZE) {
 		return subWorldCoord, gridCoord
@@ -201,14 +202,16 @@ func render(world *World) {
 		printWorld(world)
 		printStat(world)
 		time.Sleep(250 * time.Millisecond)
-		clearScreen()
+		//clearScreen()
 	}
 }
 
 func clearScreen() {
-	cmd := exec.Command("cmd", "/c", "cls")
-	cmd.Stdout = os.Stdout
-	cmd.Run()
+	//cmd := exec.Command("cmd", "/c", "cls")
+	//cmd.Stdout = os.Stdout
+	//cmd.Run()
+
+	print("\033[H\033[2J")
 }
 
 func abs(n int) int {
@@ -337,15 +340,16 @@ func startTerminalClient(world *World) {
 
 			moveVector := Vector{x: 0, y: 0}
 			if ev.Ch == 119 { // w
-				moveVector.x = -1
-			} else if ev.Ch == 97 { // a
 				moveVector.y = -1
+			} else if ev.Ch == 97 { // a
+				moveVector.x = -1
 			} else if ev.Ch == 115 { // s
-				moveVector.x = 1
-			} else if ev.Ch == 100 { // d
 				moveVector.y = 1
+			} else if ev.Ch == 100 { // d
+				moveVector.x = 1
 			}
 
+			fmt.Println(subWorldCoord)
 			subWorldCoord, playerCoord = moveCharacter(world, subWorldCoord, playerCoord, moveVector, PLAYER)
 			termbox.Flush()
 		case termbox.EventError:
@@ -377,7 +381,7 @@ func initializeSubworld() SubWorld {
 }
 
 func initializeWorldElements(world *World) {
-	go snakeWalk(world)
+	//go snakeWalk(world)
 	go spawnGoldInWorld(world)
 }
 
