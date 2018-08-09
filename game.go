@@ -33,7 +33,7 @@ const PLAYER = 1
 const SNAKE = 2
 const COIN = 3
 const ROCK = 4
-const GRID_SIZE = 8
+const GRID_SIZE = 2
 const WORLD_SIZE = 2
 
 // creates a player
@@ -119,7 +119,7 @@ func wrap(base int, add int, max int) int {
 	if sum > 0 {
 		return sum % max
 	} else {
-		return max + (sum % max)
+		return ((sum % max) + max) % max
 	}
 }
 
@@ -127,9 +127,9 @@ func carry(base int, add int, max int) int {
 	sum := base + add
 
 	if sum > 0 {
-		return sum / max
+		return (sum - 1) / max
 	} else {
-		return max + (sum / max)
+		return ((sum - max + 1) / max)
 	}
 }
 
@@ -139,6 +139,8 @@ func subWorldMove(subWorldCoord Coord, gridCoord Coord, vector Vector) (Coord, C
 
 	gX := wrap(gridCoord.x, vector.x, GRID_SIZE)
 	gY := wrap(gridCoord.y, vector.y, GRID_SIZE)
+
+	fmt.Println(Coord{x: wX, y: wY}, Coord{x: gX, y: gY})
 
 	if isOutOfBound(wX, wY, WORLD_SIZE) {
 		return subWorldCoord, gridCoord
@@ -201,7 +203,7 @@ func render(world *World) {
 	for {
 		printWorld(world)
 		printStat(world)
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 		//clearScreen()
 	}
 }
@@ -374,7 +376,7 @@ func initializeSubworld() SubWorld {
 	subWorld := SubWorld{}
 
 	for i:=0; i < 10; i++ {
-		placeRock(&subWorld)
+		//placeRock(&subWorld)
 	}
 
 	return subWorld
@@ -382,7 +384,7 @@ func initializeSubworld() SubWorld {
 
 func initializeWorldElements(world *World) {
 	//go snakeWalk(world)
-	go spawnGoldInWorld(world)
+	//go spawnGoldInWorld(world)
 }
 
 func main() {
@@ -392,5 +394,29 @@ func main() {
 
 	initializeWorldElements(&world)
 
-	startTerminalClient(&world)
+	//startTerminalClient(&world)
+
+	// TESTS
+	fmt.Println(carry(0, 4, 3) == 1)
+	fmt.Println(carry(0, 5, 3) == 1)
+	fmt.Println(carry(0, 6, 3) == 1)
+	fmt.Println(carry(0, 1, 3) == 0)
+	fmt.Println(carry(0, 2, 3) == 0)
+	fmt.Println(carry(0, 3, 3))
+	fmt.Println(carry(0, 3, 3) == 1)
+	fmt.Println(carry(0, -1, 3))
+	fmt.Println(carry(0, -1, 3) == -1)
+	fmt.Println(carry(0, -2, 3))
+	fmt.Println(carry(0, -2, 3) == -1)
+	fmt.Println(carry(0, -3, 3) == -1)
+
+	fmt.Println(carry(0, -4, 3) == -2)
+	fmt.Println(carry(0, -7, 3) == -3)
+	//
+	//fmt.Println(wrap(0, -1, 4) == 3)
+	//fmt.Println(wrap(0, -2, 4) == 2)
+	//fmt.Println(wrap(0, -3, 4) == 1)
+	//
+	//fmt.Println(wrap(0, -4, 4) == 0)
+
 }
