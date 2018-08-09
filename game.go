@@ -148,7 +148,7 @@ func subWorldMove(subWorldCoord Coord, gridCoord Coord, vector Vector) (Coord, C
 }
 
 func isOutOfBound(x int, y int, bound int) bool {
-	return x < 0 ||  y < 0 || x > bound || y > bound
+	return x < 0 ||  y < 0 || x >= bound || y >= bound
 }
 
 //No lock
