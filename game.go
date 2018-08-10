@@ -13,6 +13,7 @@ import (
 type World struct {
 	subWorlds [WORLD_SIZE][WORLD_SIZE]SubWorld
 	coinCount int
+	alive     bool
 	mux       sync.Mutex // remove after coin count refactor
 }
 type Grid [GRID_SIZE][GRID_SIZE]int
@@ -61,6 +62,7 @@ func initializeGlobalVariables() {
 
 	// SNAKE
 	elementInteractFuncMap[SNAKE][ROCK] = interactWithRock
+	elementInteractFuncMap[SNAKE][PLAYER] = killPlayer
 }
 
 // creates a player
@@ -68,6 +70,7 @@ func initializeGlobalVariables() {
 func initializePlayer(world *World) (Coord, Coord) {
 	x, y := randomPair(WORLD_SIZE)
 	subWorld := world.subWorlds[x][y]
+	world.alive = true
 
 	return Coord{x: x, y: y}, placeElementRandomLocationWithLock(&subWorld, PLAYER)
 }
@@ -193,7 +196,7 @@ func isOutOfBound(x int, y int, bound int) bool {
 
 // return true if element can replace SNAKE
 func interactWithSnake(world *World) bool {
-	fmt.Println("YUM!!!")
+	fmt.Println("Argh run!")
 	return true
 }
 
@@ -209,6 +212,14 @@ func interactWithCoin(world *World) bool {
 // return true if element can replace ROCK
 func interactWithRock(world *World) bool {
 	return false
+}
+
+func killPlayer(world *World) bool {
+	world.mux.Lock()
+	world.alive = false
+	world.mux.Unlock()
+
+	return true
 }
 
 func printWorld(world *World) {
@@ -229,14 +240,19 @@ func printWorld(world *World) {
 func printStat(world *World) {
 	fmt.Printf("Coin: %d", world.coinCount)
 	fmt.Println()
+
+	if !world.alive {
+		fmt.Println("You Died")
+		os.Exit(0)
+	}
 }
 
 func render(world *World) {
 	for {
+		clearScreen()
 		printWorld(world)
 		printStat(world)
 		time.Sleep(250 * time.Millisecond)
-		clearScreen()
 	}
 }
 
