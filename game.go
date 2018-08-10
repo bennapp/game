@@ -5,20 +5,19 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"os/exec"
-	"sync"
+		"sync"
 	"time"
 )
 
 type World struct {
 	subWorlds [WORLD_SIZE][WORLD_SIZE]SubWorld
 	coinCount int
-	mux       sync.Mutex // remove after coin count refactor
+	mux sync.Mutex // remove after coin count refactor
 }
 type Grid [GRID_SIZE][GRID_SIZE]int
 type SubWorld struct {
 	grid Grid
-	mux  sync.Mutex
+	mux sync.Mutex
 }
 type Coord struct {
 	x int
@@ -95,14 +94,14 @@ func placeElementRandomLocation(subWorld *SubWorld, element int) Coord {
 func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector, element int) (Coord, Coord) {
 	prevSubWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
 
-	subWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
+	nextSubWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
 
-	nextSubWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
+	nextSubWorld := &world.subWorlds[nextSubWorldCoord.x][nextSubWorldCoord.y]
 
-	checkKillSnake(prevSubWorld, nextCoord)
-	checkPickUpCoin(world, prevSubWorld, nextCoord, element)
+	checkKillSnake(nextSubWorld, nextCoord)
+	checkPickUpCoin(world, nextSubWorld, nextCoord, element)
 
-	if !checkRock(prevSubWorld, nextCoord) {
+	if !checkRock(nextSubWorld, nextCoord) {
 		prevSubWorld.mux.Lock()
 		prevSubWorld.grid[coord.x][coord.y] = EMPTY
 		prevSubWorld.mux.Unlock()
@@ -110,9 +109,11 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 		nextSubWorld.mux.Lock()
 		nextSubWorld.grid[nextCoord.x][nextCoord.y] = element
 		nextSubWorld.mux.Unlock()
-	}
 
-	return subWorldCoord, nextCoord
+		return nextSubWorldCoord, nextCoord
+	} else {
+		return subWorldCoord, coord
+	}
 }
 
 func wrap(base int, add int, max int) int {
@@ -202,15 +203,15 @@ func render(world *World) {
 	for {
 		printWorld(world)
 		printStat(world)
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(200 * time.Millisecond)
 		clearScreen()
 	}
 }
 
 func clearScreen() {
-	cmd := exec.Command("cmd", "/c", "cls || clear")
-	cmd.Stdout = os.Stdout
-	cmd.Run()
+	//cmd := exec.Command("cmd", "/c", "cls || clear")
+	//cmd.Stdout = os.Stdout
+	//cmd.Run()
 
 	print("\033[H\033[2J")
 }
