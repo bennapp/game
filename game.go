@@ -12,7 +12,8 @@ import (
 type World struct {
 	subWorlds [WORLD_SIZE][WORLD_SIZE]SubWorld
 	coinCount int
-	mux sync.Mutex // remove after coin count refactor
+	alive     bool
+	mux       sync.Mutex // remove after coin count refactor
 }
 type Grid [GRID_SIZE][GRID_SIZE]int
 type SubWorld struct {
@@ -28,19 +29,47 @@ type Vector struct {
 	y int
 }
 
+// element types
 const EMPTY = 0
 const PLAYER = 1
 const SNAKE = 2
 const COIN = 3
 const ROCK = 4
+
+const NUM_ELEMENTS = 5 //total number of elements, increment when more are added
+
 const GRID_SIZE = 8
 const WORLD_SIZE = 2
+
+//current design of interact function
+// returns a bool indicating whether or not the doer can override receiver
+//need to think about the possible outcome of interactions
+type InteractFunc func(*World) bool
+
+//scales to the number of element types
+//returns an interact function of doer and receiver
+var elementInteractFuncMap [NUM_ELEMENTS][NUM_ELEMENTS]InteractFunc
+
+func initializeGlobalVariables() {
+
+	elementInteractFuncMap = [NUM_ELEMENTS][NUM_ELEMENTS]InteractFunc{}
+
+	// PLAYER
+	elementInteractFuncMap[PLAYER][SNAKE] = interactWithSnake
+	elementInteractFuncMap[PLAYER][ROCK] = interactWithRock
+	elementInteractFuncMap[PLAYER][COIN] = interactWithCoin
+
+	// SNAKE
+	elementInteractFuncMap[SNAKE][ROCK] = interactWithRock
+	elementInteractFuncMap[SNAKE][PLAYER] = killPlayer
+}
 
 // creates a player
 // returns a pair of Coord of World, SubWorld
 func initializePlayer(world *World) (Coord, Coord) {
 	x, y := randomPair(WORLD_SIZE)
 	subWorld := world.subWorlds[x][y]
+	world.alive = true
 
 	return Coord{x: x, y: y}, placeElementRandomLocationWithLock(&subWorld, PLAYER)
 }
@@ -92,7 +121,7 @@ func placeElementRandomLocation(subWorld *SubWorld, element int) Coord {
 }
 
 func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector, element int) (Coord, Coord) {
-	prevSubWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
+	subWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
 
 	nextSubWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
 
@@ -114,6 +143,41 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 	} else {
 		return subWorldCoord, coord
 	}
+}
+
+func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector, element int) (Coord, Coord) {
+	subWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
+
+	nextSubWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
+
+	nextSubWorld := &world.subWorlds[nextSubWorldCoord.x][nextSubWorldCoord.y]
+
+	interactFunc := elementInteractFuncMap[element][getElement(nextSubWorld, nextCoord)]
+
+	override := false
+	if interactFunc != nil {
+		override = interactFunc(world)
+	} else {
+		override = true
+	}
+
+	if override {
+		subWorld.mux.Lock()
+		subWorld.grid[coord.x][coord.y] = EMPTY
+		subWorld.mux.Unlock()
+
+		nextSubWorld.mux.Lock()
+		nextSubWorld.grid[nextCoord.x][nextCoord.y] = element
+		nextSubWorld.mux.Unlock()
+	} else {
+		nextSubWorldCoord = subWorldCoord
+		nextCoord = coord
+	}
+	return nextSubWorldCoord, nextCoord
+}
+
+func getElement(subWorld *SubWorld, coord Coord) int {
+	return subWorld.grid[coord.x][coord.y]
 }
 
 func wrap(base int, add int, max int) int {
@@ -154,29 +218,32 @@ func isOutOfBound(x int, y int, bound int) bool {
 	return x < 0 || y < 0 || x >= bound || y >= bound
 }
 
-//No lock
-func checkKillSnake(subWorld *SubWorld, coord Coord) {
-	if subWorld.grid[coord.x][coord.y] == SNAKE {
-		fmt.Println("YUM!!!")
-	}
+// return true if element can replace SNAKE
+func interactWithSnake(world *World) bool {
+	fmt.Println("Argh run!")
+	return true
 }
 
-//No lock
-func checkPickUpCoin(world *World, subWorld *SubWorld, coord Coord, element int) {
-	if element != PLAYER {
-		return
-	}
+// return true if element can replace COIN
+func interactWithCoin(world *World) bool {
+	world.mux.Lock()
+	world.coinCount++
+	world.mux.Unlock()
 
-	if subWorld.grid[coord.x][coord.y] == COIN {
-		world.mux.Lock()
-		world.coinCount++
-		world.mux.Unlock()
-	}
+	return true
 }
 
-//No lock
-func checkRock(subWorld *SubWorld, coord Coord) bool {
-	return subWorld.grid[coord.x][coord.y] == ROCK
+// return true if element can replace ROCK
+func interactWithRock(world *World) bool {
+	return false
+}
+
+func killPlayer(world *World) bool {
+	world.mux.Lock()
+	world.alive = false
+	world.mux.Unlock()
+
+	return true
 }
 
 func printWorld(world *World) {
@@ -197,14 +264,19 @@ func printWorld(world *World) {
 func printStat(world *World) {
 	fmt.Printf("Coin: %d", world.coinCount)
 	fmt.Println()
+
+	if !world.alive {
+		fmt.Println("You Died")
+		os.Exit(0)
+	}
 }
 
 func render(world *World) {
 	for {
+		clearScreen()
 		printWorld(world)
 		printStat(world)
-		time.Sleep(200 * time.Millisecond)
-		clearScreen()
+		time.Sleep(250 * time.Millisecond)
 	}
 }
 
@@ -388,6 +460,8 @@ func initializeWorldElements(world *World) {
 
 func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
+
+	initializeGlobalVariables()
 
 	world := initializeWorld()
 
