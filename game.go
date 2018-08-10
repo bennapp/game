@@ -127,31 +127,6 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 
 	nextSubWorld := &world.subWorlds[nextSubWorldCoord.x][nextSubWorldCoord.y]
 
-	checkKillSnake(nextSubWorld, nextCoord)
-	checkPickUpCoin(world, nextSubWorld, nextCoord, element)
-
-	if !checkRock(nextSubWorld, nextCoord) {
-		prevSubWorld.mux.Lock()
-		prevSubWorld.grid[coord.x][coord.y] = EMPTY
-		prevSubWorld.mux.Unlock()
-
-		nextSubWorld.mux.Lock()
-		nextSubWorld.grid[nextCoord.x][nextCoord.y] = element
-		nextSubWorld.mux.Unlock()
-
-		return nextSubWorldCoord, nextCoord
-	} else {
-		return subWorldCoord, coord
-	}
-}
-
-func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector, element int) (Coord, Coord) {
-	subWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
-
-	nextSubWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
-
-	nextSubWorld := &world.subWorlds[nextSubWorldCoord.x][nextSubWorldCoord.y]
-
 	interactFunc := elementInteractFuncMap[element][getElement(nextSubWorld, nextCoord)]
 
 	override := false
