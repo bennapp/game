@@ -4,20 +4,21 @@ import "github.com/nsf/termbox-go"
 import (
 	"fmt"
 	"math/rand"
+	"os"
+	"os/exec"
 	"sync"
 	"time"
-	"os"
-	)
+)
 
 type World struct {
 	subWorlds [WORLD_SIZE][WORLD_SIZE]SubWorld
 	coinCount int
-	mux sync.Mutex // remove after coin count refactor
+	mux       sync.Mutex // remove after coin count refactor
 }
 type Grid [GRID_SIZE][GRID_SIZE]int
 type SubWorld struct {
 	grid Grid
-	mux sync.Mutex
+	mux  sync.Mutex
 }
 type Coord struct {
 	x int
@@ -33,7 +34,7 @@ const PLAYER = 1
 const SNAKE = 2
 const COIN = 3
 const ROCK = 4
-const GRID_SIZE = 2
+const GRID_SIZE = 8
 const WORLD_SIZE = 2
 
 // creates a player
@@ -92,23 +93,24 @@ func placeElementRandomLocation(subWorld *SubWorld, element int) Coord {
 }
 
 func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector, element int) (Coord, Coord) {
-	fmt.Println(subWorldCoord.y)
-
-	subWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
-
-	subWorld.mux.Lock()
+	prevSubWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
 
 	subWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
 
-	checkKillSnake(subWorld, nextCoord)
-	checkPickUpCoin(world, subWorld, nextCoord, element)
+	nextSubWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
 
-	if !checkRock(subWorld, nextCoord) {
-		subWorld.grid[coord.x][coord.y] = EMPTY
-		subWorld.grid[nextCoord.x][nextCoord.y] = element
+	checkKillSnake(prevSubWorld, nextCoord)
+	checkPickUpCoin(world, prevSubWorld, nextCoord, element)
+
+	if !checkRock(prevSubWorld, nextCoord) {
+		prevSubWorld.mux.Lock()
+		prevSubWorld.grid[coord.x][coord.y] = EMPTY
+		prevSubWorld.mux.Unlock()
+
+		nextSubWorld.mux.Lock()
+		nextSubWorld.grid[nextCoord.x][nextCoord.y] = element
+		nextSubWorld.mux.Unlock()
 	}
-
-	subWorld.mux.Unlock()
 
 	return subWorldCoord, nextCoord
 }
@@ -127,7 +129,7 @@ func carry(base int, add int, max int) int {
 	sum := base + add
 
 	if sum > 0 {
-		return (sum - 1) / max
+		return sum / max
 	} else {
 		return ((sum - max + 1) / max)
 	}
@@ -140,8 +142,6 @@ func subWorldMove(subWorldCoord Coord, gridCoord Coord, vector Vector) (Coord, C
 	gX := wrap(gridCoord.x, vector.x, GRID_SIZE)
 	gY := wrap(gridCoord.y, vector.y, GRID_SIZE)
 
-	fmt.Println(Coord{x: wX, y: wY}, Coord{x: gX, y: gY})
-
 	if isOutOfBound(wX, wY, WORLD_SIZE) {
 		return subWorldCoord, gridCoord
 	}
@@ -150,7 +150,7 @@ func subWorldMove(subWorldCoord Coord, gridCoord Coord, vector Vector) (Coord, C
 }
 
 func isOutOfBound(x int, y int, bound int) bool {
-	return x < 0 ||  y < 0 || x >= bound || y >= bound
+	return x < 0 || y < 0 || x >= bound || y >= bound
 }
 
 //No lock
@@ -179,10 +179,10 @@ func checkRock(subWorld *SubWorld, coord Coord) bool {
 }
 
 func printWorld(world *World) {
-	for wy:=0; wy<WORLD_SIZE; wy++ {
-		for gy:=0; gy<GRID_SIZE; gy++ {
-			for wx:=0; wx<WORLD_SIZE; wx++ {
-				for gx:=0; gx<GRID_SIZE; gx++ {
+	for wy := 0; wy < WORLD_SIZE; wy++ {
+		for gy := 0; gy < GRID_SIZE; gy++ {
+			for wx := 0; wx < WORLD_SIZE; wx++ {
+				for gx := 0; gx < GRID_SIZE; gx++ {
 					fmt.Printf("%d ", world.subWorlds[wx][wy].grid[gx][gy])
 				}
 				fmt.Printf(" ")
@@ -192,7 +192,6 @@ func printWorld(world *World) {
 		fmt.Println()
 	}
 }
-
 
 func printStat(world *World) {
 	fmt.Printf("Coin: %d", world.coinCount)
@@ -204,14 +203,14 @@ func render(world *World) {
 		printWorld(world)
 		printStat(world)
 		time.Sleep(1000 * time.Millisecond)
-		//clearScreen()
+		clearScreen()
 	}
 }
 
 func clearScreen() {
-	//cmd := exec.Command("cmd", "/c", "cls")
-	//cmd.Stdout = os.Stdout
-	//cmd.Run()
+	cmd := exec.Command("cmd", "/c", "cls || clear")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 
 	print("\033[H\033[2J")
 }
@@ -351,7 +350,6 @@ func startTerminalClient(world *World) {
 				moveVector.x = 1
 			}
 
-			fmt.Println(subWorldCoord)
 			subWorldCoord, playerCoord = moveCharacter(world, subWorldCoord, playerCoord, moveVector, PLAYER)
 			termbox.Flush()
 		case termbox.EventError:
@@ -363,8 +361,8 @@ func startTerminalClient(world *World) {
 func initializeWorld() World {
 	subWorlds := [WORLD_SIZE][WORLD_SIZE]SubWorld{}
 
-	for i:=0; i<WORLD_SIZE; i++ {
-		for j:=0; j<WORLD_SIZE; j++ {
+	for i := 0; i < WORLD_SIZE; i++ {
+		for j := 0; j < WORLD_SIZE; j++ {
 			subWorlds[i][j] = initializeSubworld()
 		}
 	}
@@ -375,16 +373,16 @@ func initializeWorld() World {
 func initializeSubworld() SubWorld {
 	subWorld := SubWorld{}
 
-	for i:=0; i < 10; i++ {
-		//placeRock(&subWorld)
+	for i := 0; i < 10; i++ {
+		placeRock(&subWorld)
 	}
 
 	return subWorld
 }
 
 func initializeWorldElements(world *World) {
-	//go snakeWalk(world)
-	//go spawnGoldInWorld(world)
+	go snakeWalk(world)
+	go spawnGoldInWorld(world)
 }
 
 func main() {
@@ -394,29 +392,23 @@ func main() {
 
 	initializeWorldElements(&world)
 
-	//startTerminalClient(&world)
+	startTerminalClient(&world)
 
 	// TESTS
-	fmt.Println(carry(0, 4, 3) == 1)
-	fmt.Println(carry(0, 5, 3) == 1)
-	fmt.Println(carry(0, 6, 3) == 1)
-	fmt.Println(carry(0, 1, 3) == 0)
-	fmt.Println(carry(0, 2, 3) == 0)
-	fmt.Println(carry(0, 3, 3))
-	fmt.Println(carry(0, 3, 3) == 1)
-	fmt.Println(carry(0, -1, 3))
-	fmt.Println(carry(0, -1, 3) == -1)
-	fmt.Println(carry(0, -2, 3))
-	fmt.Println(carry(0, -2, 3) == -1)
-	fmt.Println(carry(0, -3, 3) == -1)
-
-	fmt.Println(carry(0, -4, 3) == -2)
-	fmt.Println(carry(0, -7, 3) == -3)
-	//
+	//fmt.Println(carry(0, 3, 3) == 1)
+	//fmt.Println(carry(0, 4, 3) == 1)
+	//fmt.Println(carry(0, 5, 3) == 1)
+	//fmt.Println(carry(0, 6, 3) == 2)
+	//fmt.Println(carry(0, 1, 3) == 0)
+	//fmt.Println(carry(0, 2, 3) == 0)
+	//fmt.Println(carry(0, 3, 3) == 1)
+	//fmt.Println(carry(0, -1, 3) == -1)
+	//fmt.Println(carry(0, -2, 3) == -1)
+	//fmt.Println(carry(0, -3, 3) == -1)
+	//fmt.Println(carry(0, -4, 3) == -2)
+	//fmt.Println(carry(0, -7, 3) == -3)
 	//fmt.Println(wrap(0, -1, 4) == 3)
 	//fmt.Println(wrap(0, -2, 4) == 2)
 	//fmt.Println(wrap(0, -3, 4) == 1)
-	//
 	//fmt.Println(wrap(0, -4, 4) == 0)
-
 }
