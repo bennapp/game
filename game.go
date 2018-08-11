@@ -58,10 +58,16 @@ func initializeGlobalVariables() {
 	elementInteractFuncMap = [NUM_ELEMENTS][NUM_ELEMENTS]InteractFunc{}
 
 	empty = Cell{code: 0, display: " "}
-	player = Cell{code: 1, display: "🏃"}
-	snake = Cell{code: 2, display: "🐍"}
-	coin = Cell{code: 3, display: "💰"}
-	rock = Cell{code: 4, display: "🗻"}
+	player = Cell{code: 1, display: "T"}
+	snake = Cell{code: 2, display: "Z"}
+	coin = Cell{code: 3, display: "C"}
+	rock = Cell{code: 4, display: "M"}
+
+	//empty = Cell{code: 0, display: " "}
+	//player = Cell{code: 1, display: "🏃"}
+	//snake = Cell{code: 2, display: "🐍"}
+	//coin = Cell{code: 3, display: "💰"}
+	//rock = Cell{code: 4, display: "🗻"}
 
 	// PLAYER
 	elementInteractFuncMap[player.code][snake.code] = interactWithSnake
