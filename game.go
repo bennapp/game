@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 	"sync"
 	"time"
-	"strings"
 )
 
 type World struct {
@@ -19,7 +19,7 @@ type World struct {
 type Grid [GRID_SIZE][GRID_SIZE]Cell
 type SubWorld struct {
 	grid Grid
-	mux sync.Mutex
+	mux  sync.Mutex
 }
 type Coord struct {
 	x int
@@ -30,7 +30,7 @@ type Vector struct {
 	y int
 }
 type Cell struct {
-	code int
+	code    int
 	display string
 }
 
@@ -241,7 +241,7 @@ func printWorld(world *World) {
 			}
 			fmt.Println()
 		}
-		fmt.Println(strings.Repeat(" -", (WORLD_SIZE * GRID_SIZE) + 2))
+		fmt.Println(strings.Repeat(" -", (WORLD_SIZE*GRID_SIZE)+2))
 	}
 }
 
@@ -335,7 +335,7 @@ func snakeWalk(world *World) {
 		}
 
 		subWorldCoord, snakeCoord = moveCharacter(world, subWorldCoord, snakeCoord, moveVector, snake)
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(250 * time.Millisecond)
 	}
 }
 
@@ -443,8 +443,15 @@ func initializeSubworld() SubWorld {
 	return subWorld
 }
 
+func spawnSnakes(world *World) {
+	for {
+		go snakeWalk(world)
+		time.Sleep(2000 * time.Millisecond)
+	}
+}
+
 func initializeWorldElements(world *World) {
-	go snakeWalk(world)
+	go spawnSnakes(world)
 	go spawnGoldInWorld(world)
 }
 
