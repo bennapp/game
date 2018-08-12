@@ -8,18 +8,24 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"os/exec"
 )
 
 type World struct {
 	subWorlds [WORLD_SIZE][WORLD_SIZE]SubWorld
 	coinCount int
-	alive     bool
-	mux       sync.Mutex // remove after coin count refactor
+	alive bool
+	mux sync.Mutex // remove after coin count refactor
 }
 type Grid [GRID_SIZE][GRID_SIZE]Cell
+type LocationRequest struct {
+	cell Cell
+	coord Coord
+}
 type SubWorld struct {
+	channel chan LocationRequest
 	grid Grid
-	mux  sync.Mutex
+	mux sync.Mutex
 }
 type Coord struct {
 	x int
@@ -30,14 +36,14 @@ type Vector struct {
 	y int
 }
 type Cell struct {
-	code    int
+	code int
 	display string
 }
 
 const NUM_ELEMENTS = 5 //total number of elements, increment when more are added
 
-const GRID_SIZE = 8
-const WORLD_SIZE = 4
+const GRID_SIZE = 5
+const WORLD_SIZE = 2
 
 // current design of interact function
 // returns a bool indicating whether or not the doer can override receiver
@@ -152,12 +158,19 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 	}
 
 	if override {
+		// we should lock both rows and then unlock both rows
+		// Otherwise we will have a race condition that could cause bugs
+		// we should also refactor this to always lock the worlds in a deterministic order
+		// otherwise we will get deadlocks, right now this could cause deadlocks but won't cause bad state
+
 		subWorld.mux.Lock()
-		subWorld.grid[coord.x][coord.y] = empty
+		subWorld.channel <- LocationRequest{coord: coord, cell: empty}
+		//subWorld.grid[coord.x][coord.y] = empty
 		subWorld.mux.Unlock()
 
 		nextSubWorld.mux.Lock()
-		nextSubWorld.grid[nextCoord.x][nextCoord.y] = element
+		nextSubWorld.channel <- LocationRequest{coord: nextCoord, cell: element}
+		//nextSubWorld.grid[nextCoord.x][nextCoord.y] = element
 		nextSubWorld.mux.Unlock()
 	} else {
 		nextSubWorldCoord = subWorldCoord
@@ -271,11 +284,11 @@ func render(world *World) {
 }
 
 func clearScreen() {
-	//cmd := exec.Command("cmd", "/c", "cls || clear")
-	//cmd.Stdout = os.Stdout
-	//cmd.Run()
+	cmd := exec.Command("cmd", "/c", "cls || clear")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 
-	print("\033[H\033[2J")
+	//print("\033[H\033[2J")
 }
 
 func abs(n int) int {
@@ -414,7 +427,7 @@ func startTerminalClient(world *World) {
 			}
 
 			subWorldCoord, playerCoord = moveCharacter(world, subWorldCoord, playerCoord, moveVector, player)
-			termbox.Flush()
+			//termbox.Flush()
 		case termbox.EventError:
 			panic(ev.Err)
 		}
@@ -442,11 +455,26 @@ func initializeSubworld() SubWorld {
 		}
 	}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 5; i++ {
 		placeRock(&subWorld)
 	}
 
+	subWorld.channel = make(chan LocationRequest, 1000)
+	go listenLocationRequest(&subWorld)
+
 	return subWorld
+}
+
+func listenLocationRequest(subWorld *SubWorld) {
+	for {
+		locationRequest := <- subWorld.channel
+		handleLocationRequest(subWorld, &locationRequest)
+	}
+}
+
+func handleLocationRequest(subWorld *SubWorld, request *LocationRequest) {
+	fmt.Printf("%v", request.cell)
+	subWorld.grid[request.coord.x][request.coord.y] = request.cell
 }
 
 func spawnSnakes(world *World) {
@@ -457,8 +485,8 @@ func spawnSnakes(world *World) {
 }
 
 func initializeWorldElements(world *World) {
-	go spawnSnakes(world)
-	go spawnGoldInWorld(world)
+	//go spawnSnakes(world)
+	//go spawnGoldInWorld(world)
 }
 
 func main() {
