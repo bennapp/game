@@ -13,9 +13,6 @@ import (
 
 type World struct {
 	subWorlds [WORLD_SIZE][WORLD_SIZE]SubWorld
-	coinCount int
-	alive     bool
-	mux       sync.Mutex // remove after coin count refactor
 }
 type Grid [GRID_SIZE][GRID_SIZE]Cell
 type SubWorld struct {
@@ -30,92 +27,75 @@ type Vector struct {
 	y int
 }
 type Cell struct {
-	code int
-	mux  sync.Mutex
+	mux     sync.Mutex
+	element Element
 }
-
-const NUM_ELEMENTS = 5 //total number of elements, increment when more are added
+type Element struct {
+	subWorldCoord Coord
+	gridCoord     Coord
+}
+type Player struct {
+	Element
+	mux       sync.Mutex
+	coinCount int
+	alive     bool
+}
+type Snake struct {
+	Element
+}
+type Coin struct {
+	Element
+}
+type Rock struct {
+	Element
+}
 
 const GRID_SIZE = 8
 const WORLD_SIZE = 4
 
-// current design of interact function
-// returns a bool indicating whether or not the doer can override receiver
-// need to think about the possible outcome of interactions
-type InteractFunc func(*World) bool
-
-// scales to the number of element types
-// returns an interact function of doer and receiver
-var elementInteractFuncMap [NUM_ELEMENTS][NUM_ELEMENTS]InteractFunc
-var cellDisplayLookup map[int]string
-
-var empty Cell
-var player Cell
-var snake Cell
-var coin Cell
-var rock Cell
-
-func initializeGlobalVariables() {
-	elementInteractFuncMap = [NUM_ELEMENTS][NUM_ELEMENTS]InteractFunc{}
-	cellDisplayLookup = map[int]string{}
-
-	empty = Cell{code: 0}
-	cellDisplayLookup[empty.code] = " "
-	player = Cell{code: 1}
-	cellDisplayLookup[player.code] = "T"
-	snake = Cell{code: 2}
-	cellDisplayLookup[snake.code] = "Z"
-	coin = Cell{code: 3}
-	cellDisplayLookup[coin.code] = "C"
-	rock = Cell{code: 4}
-	cellDisplayLookup[rock.code] = "M"
-
-	// PLAYER
-	elementInteractFuncMap[player.code][snake.code] = interactWithSnake
-	elementInteractFuncMap[player.code][rock.code] = interactWithRock
-	elementInteractFuncMap[player.code][coin.code] = interactWithCoin
-
-	// SNAKE
-	elementInteractFuncMap[snake.code][rock.code] = interactWithRock
-	elementInteractFuncMap[snake.code][player.code] = killPlayer
-}
-
 // creates a player
 // returns a pair of Coord of World, SubWorld
-func initializePlayer(world *World) (Coord, Coord) {
+func initializePlayer(world *World) Player {
 	x, y := randomPair(WORLD_SIZE)
 	subWorld := world.subWorlds[x][y]
-	world.alive = true
 
-	return Coord{x: x, y: y}, placeElementRandomLocationWithLock(&subWorld, player)
+	player := Player{alive: true}
+	subWorldCoord := Coord{x: x, y: y}
+	gridCoord := placeElementRandomLocationWithLock(&subWorld, player.cell)
+
+	player.Character.cell = playerCell
+	player.subWorldCoord = subWorldCoord
+	player.gridCoord = gridCoord
+
+	return player
 }
 
-// creates a snake
+// creates a snakeCell
 // returns a pair of Coord of World, SubWorld
 func placeSnake(world *World) (Coord, Coord) {
 	x, y := randomPair(WORLD_SIZE)
 	subWorld := world.subWorlds[x][y]
 
-	return Coord{x: x, y: y}, placeElementRandomLocationWithLock(&subWorld, snake)
+	return Coord{x: x, y: y}, placeElementRandomLocationWithLock(&subWorld, snakeCell)
 }
 
 // creates a Coin
 // returns a pair of Coord of SubWorld
 func placeCoin(subWorld *SubWorld) Coord {
-	return placeElementRandomLocationWithLock(subWorld, coin)
+	return placeElementRandomLocationWithLock(subWorld, coinCell)
 }
 
 // creates a Rock
 // returns a pair of Coord of SubWorld
 func placeRock(subWorld *SubWorld) Coord {
-	return placeElementRandomLocationWithLock(subWorld, rock)
+	return placeElementRandomLocationWithLock(subWorld, rockCell)
 }
 
 func placeElementRandomLocationWithLock(subWorld *SubWorld, element Cell) Coord {
 	x, y := randomPair(GRID_SIZE)
 	coord := Coord{x: x, y: y}
 
-	if subWorld.grid[x][y].code == empty.code {
+	if subWorld.grid[x][y].code == emptyCell.code {
 		cell := &subWorld.grid[x][y]
 
 		cell.mux.Lock()
@@ -128,14 +108,20 @@ func placeElementRandomLocationWithLock(subWorld *SubWorld, element Cell) Coord 
 	return coord
 }
 
-func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector, element Cell) (Coord, Coord) {
+func movePlayer(world *World, player *Player, vector Vector) {
+	player.subWorldCoord, player.gridCoord = moveCharacter(world, player.subWorldCoord, player.gridCoord, vector, &player.Character)
+}
+
+func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector, character *Character) (Coord, Coord) {
 	subWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
 
 	nextSubWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
 
 	nextSubWorld := &world.subWorlds[nextSubWorldCoord.x][nextSubWorldCoord.y]
 
-	interactFunc := elementInteractFuncMap[element.code][getElement(nextSubWorld, nextCoord).code]
+	nextElement := getElement(nextSubWorld, nextCoord)
+	interactFunc := elementInteractFuncMap[character.cell.code][nextElement.code]
+	character.Interact(nextElement)
 
 	override := false
 	if interactFunc != nil {
@@ -148,12 +134,12 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 		prevCell := &subWorld.grid[coord.x][coord.y]
 
 		prevCell.mux.Lock()
-		prevCell.code = empty.code
+		prevCell.code = emptyCell.code
 		prevCell.mux.Unlock()
 
 		nextCell := &nextSubWorld.grid[nextCoord.x][nextCoord.y]
 		nextCell.mux.Lock()
-		nextCell.code = element.code
+		nextCell.code = character.cell.code
 		nextCell.mux.Unlock()
 	} else {
 		nextSubWorldCoord = subWorldCoord
@@ -204,7 +190,7 @@ func isOutOfBound(x int, y int, bound int) bool {
 	return x < 0 || y < 0 || x >= bound || y >= bound
 }
 
-// return true if element can replace snake.code
+// return true if element can replace snakeCell.code
 func interactWithSnake(world *World) bool {
 	fmt.Println("Argh run!")
 	return true
@@ -291,7 +277,7 @@ func convertToOneMove(n int) int {
 }
 
 func findPlayer(subWorld *SubWorld) Coord {
-	return findElement(subWorld, player)
+	return findElement(subWorld, playerCell)
 }
 
 func findElement(subWorld *SubWorld, element Cell) Coord {
@@ -336,7 +322,7 @@ func snakeWalk(world *World) {
 			moveVector = randomVector()
 		}
 
-		subWorldCoord, snakeCoord = moveCharacter(world, subWorldCoord, snakeCoord, moveVector, snake)
+		subWorldCoord, snakeCoord = moveCharacter(world, subWorldCoord, snakeCoord, moveVector, snakeCell)
 		time.Sleep(250 * time.Millisecond)
 	}
 }
@@ -387,7 +373,7 @@ func startTerminalClient(world *World) {
 	}
 	defer termbox.Close()
 
-	subWorldCoord, playerCoord := initializePlayer(world)
+	player := initializePlayer(world)
 
 	go render(world)
 
@@ -409,7 +395,8 @@ func startTerminalClient(world *World) {
 				moveVector.x = 1
 			}
 
-			subWorldCoord, playerCoord = moveCharacter(world, subWorldCoord, playerCoord, moveVector, player)
+			movePlayer(world, &player, moveVector)
+
 			termbox.Flush()
 		case termbox.EventError:
 			panic(ev.Err)
@@ -434,7 +421,7 @@ func initializeSubworld() SubWorld {
 
 	for i := 0; i < GRID_SIZE; i++ {
 		for j := 0; j < GRID_SIZE; j++ {
-			subWorld.grid[i][j].code = empty.code
+			subWorld.grid[i][j].code = emptyCell.code
 		}
 	}
 
@@ -458,9 +445,7 @@ func initializeWorldElements(world *World) {
 }
 
 func main() {
-	rand.Seed(time.Now().UTC().UnixNano())
-
-	initializeGlobalVariables()
+	rand.Seed(12345)
 
 	world := initializeWorld()
 
