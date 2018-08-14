@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 	"time"
@@ -30,8 +31,7 @@ type Vector struct {
 	y int
 }
 type Cell struct {
-	code    int
-	display string
+	code int
 }
 
 const NUM_ELEMENTS = 5 //total number of elements, increment when more are added
@@ -47,6 +47,7 @@ type InteractFunc func(*World) bool
 // scales to the number of element types
 // returns an interact function of doer and receiver
 var elementInteractFuncMap [NUM_ELEMENTS][NUM_ELEMENTS]InteractFunc
+var cellDisplayLookup map[int]string
 
 var empty Cell
 var player Cell
@@ -56,18 +57,18 @@ var rock Cell
 
 func initializeGlobalVariables() {
 	elementInteractFuncMap = [NUM_ELEMENTS][NUM_ELEMENTS]InteractFunc{}
+	cellDisplayLookup = map[int]string{}
 
-	empty = Cell{code: 0, display: " "}
-	player = Cell{code: 1, display: "T"}
-	snake = Cell{code: 2, display: "Z"}
-	coin = Cell{code: 3, display: "C"}
-	rock = Cell{code: 4, display: "M"}
-
-	//empty = Cell{code: 0, display: " "}
-	//player = Cell{code: 1, display: "🏃"}
-	//snake = Cell{code: 2, display: "🐍"}
-	//coin = Cell{code: 3, display: "💰"}
-	//rock = Cell{code: 4, display: "🗻"}
+	empty = Cell{code: 0}
+	cellDisplayLookup[empty.code] = " "
+	player = Cell{code: 1}
+	cellDisplayLookup[player.code] = "T"
+	snake = Cell{code: 2}
+	cellDisplayLookup[snake.code] = "Z"
+	coin = Cell{code: 3}
+	cellDisplayLookup[coin.code] = "C"
+	rock = Cell{code: 4}
+	cellDisplayLookup[rock.code] = "M"
 
 	// PLAYER
 	elementInteractFuncMap[player.code][snake.code] = interactWithSnake
@@ -241,7 +242,7 @@ func printWorld(world *World) {
 		for gy := 0; gy < GRID_SIZE; gy++ {
 			for wx := 0; wx < WORLD_SIZE; wx++ {
 				for gx := 0; gx < GRID_SIZE; gx++ {
-					fmt.Printf("%v ", world.subWorlds[wx][wy].grid[gx][gy].display)
+					fmt.Printf("%v ", cellDisplayLookup[world.subWorlds[wx][wy].grid[gx][gy].code])
 				}
 				fmt.Printf("|")
 			}
@@ -271,11 +272,11 @@ func render(world *World) {
 }
 
 func clearScreen() {
-	//cmd := exec.Command("cmd", "/c", "cls || clear")
-	//cmd.Stdout = os.Stdout
-	//cmd.Run()
+	cmd := exec.Command("cmd", "/c", "cls || clear")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 
-	print("\033[H\033[2J")
+	//print("\033[H\033[2J")
 }
 
 func abs(n int) int {
