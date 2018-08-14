@@ -20,7 +20,6 @@ type World struct {
 type Grid [GRID_SIZE][GRID_SIZE]Cell
 type SubWorld struct {
 	grid Grid
-	mux  sync.Mutex
 }
 type Coord struct {
 	x int
@@ -32,6 +31,7 @@ type Vector struct {
 }
 type Cell struct {
 	code int
+	mux  sync.Mutex
 }
 
 const NUM_ELEMENTS = 5 //total number of elements, increment when more are added
@@ -111,26 +111,18 @@ func placeRock(subWorld *SubWorld) Coord {
 	return placeElementRandomLocationWithLock(subWorld, rock)
 }
 
-// creates a Rock
-// returns a pair of Coord of SubWorld
 func placeElementRandomLocationWithLock(subWorld *SubWorld, element Cell) Coord {
-	subWorld.mux.Lock()
-
-	coord := placeElementRandomLocation(subWorld, element)
-
-	subWorld.mux.Unlock()
-
-	return coord
-}
-
-func placeElementRandomLocation(subWorld *SubWorld, element Cell) Coord {
 	x, y := randomPair(GRID_SIZE)
 	coord := Coord{x: x, y: y}
 
 	if subWorld.grid[x][y].code == empty.code {
-		subWorld.grid[x][y] = element
+		cell := &subWorld.grid[x][y]
+
+		cell.mux.Lock()
+		cell.code = element.code
+		cell.mux.Unlock()
 	} else {
-		coord = placeElementRandomLocation(subWorld, element)
+		coord = placeElementRandomLocationWithLock(subWorld, element)
 	}
 
 	return coord
@@ -153,13 +145,16 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 	}
 
 	if override {
-		subWorld.mux.Lock()
-		subWorld.grid[coord.x][coord.y] = empty
-		subWorld.mux.Unlock()
+		prevCell := &subWorld.grid[coord.x][coord.y]
 
-		nextSubWorld.mux.Lock()
-		nextSubWorld.grid[nextCoord.x][nextCoord.y] = element
-		nextSubWorld.mux.Unlock()
+		prevCell.mux.Lock()
+		prevCell.code = empty.code
+		prevCell.mux.Unlock()
+
+		nextCell := &nextSubWorld.grid[nextCoord.x][nextCoord.y]
+		nextCell.mux.Lock()
+		nextCell.code = element.code
+		nextCell.mux.Unlock()
 	} else {
 		nextSubWorldCoord = subWorldCoord
 		nextCoord = coord
@@ -305,7 +300,7 @@ func findElement(subWorld *SubWorld, element Cell) Coord {
 
 	for i := 0; i < GRID_SIZE; i++ {
 		for j := 0; j < GRID_SIZE; j++ {
-			if subWorld.grid[i][j] == element {
+			if subWorld.grid[i][j].code == element.code {
 				x = i
 				y = j
 				break
@@ -439,7 +434,7 @@ func initializeSubworld() SubWorld {
 
 	for i := 0; i < GRID_SIZE; i++ {
 		for j := 0; j < GRID_SIZE; j++ {
-			subWorld.grid[i][j] = empty
+			subWorld.grid[i][j].code = empty.code
 		}
 	}
 
