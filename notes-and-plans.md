@@ -60,8 +60,8 @@ Server v0
 -- logging system <0,1, PLAYER1> destory <0,2 ROCK> -> <0,2 EMPTY>, PLAYER stone++
 -- get coin, build, destroy
 ---
-- Load resource from DB
-- Write to DB
+~~Load resource from DB~~
+~~Write to DB~~
 ---
 
 Client v0
