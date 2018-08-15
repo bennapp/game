@@ -37,13 +37,13 @@ type Element struct {
 	subWorldCoord Coord
 	gridCoord     Coord
 }
-
 type Player struct {
 	Element
 	mux       sync.Mutex
 	coinCount int
 	alive     bool
 }
+
 func (p *Player) String() string {
 	return "P"
 }
@@ -78,6 +78,7 @@ func (player *Player) IncCoinCount() {
 type Snake struct {
 	Element
 }
+
 func (s *Snake) String() string {
 	return "S"
 }
@@ -105,6 +106,7 @@ func (snake *Snake) Interact(element interface{}) bool {
 type Coin struct {
 	Element
 }
+
 func (c *Coin) String() string {
 	return "C"
 }
@@ -112,6 +114,7 @@ func (c *Coin) String() string {
 type Rock struct {
 	Element
 }
+
 func (r *Rock) String() string {
 	return "R"
 }
@@ -119,6 +122,7 @@ func (r *Rock) String() string {
 type Empty struct {
 	Element
 }
+
 func (e *Empty) String() string {
 	return " "
 }
@@ -275,7 +279,6 @@ func subWorldMove(subWorldCoord Coord, gridCoord Coord, vector Vector) (Coord, C
 func isOutOfBound(x int, y int, bound int) bool {
 	return x < 0 || y < 0 || x >= bound || y >= bound
 }
-
 
 func printWorld(world *World) {
 	for wy := 0; wy < WORLD_SIZE; wy++ {
