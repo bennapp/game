@@ -1,6 +1,7 @@
 package main
 
 import "github.com/nsf/termbox-go"
+
 import (
 	"fmt"
 	"math/rand"
@@ -13,6 +14,7 @@ import (
 
 const GRID_SIZE = 8
 const WORLD_SIZE = 4
+const MAX_COIN_AMOUNT = 10
 
 type World struct {
 	subWorlds [WORLD_SIZE][WORLD_SIZE]SubWorld
@@ -37,6 +39,8 @@ type Element struct {
 	subWorldCoord Coord
 	gridCoord     Coord
 }
+
+// PLAYER
 type Player struct {
 	Element
 	mux       sync.Mutex
@@ -48,18 +52,14 @@ func (p *Player) String() string {
 	return "P"
 }
 func (player *Player) Interact(element interface{}) bool {
-	switch element.(type) {
-	case *Snake:
-		return false
+	switch v := element.(type) {
 	case *Coin:
-		player.IncCoinCount()
+		player.IncCoinCount(v.amount)
 		return true
-	case *Rock:
-		return false
 	case *Empty:
 		return true
 	default:
-		panic("No interaction defined")
+		return false
 	}
 
 	return false
@@ -69,12 +69,13 @@ func (player *Player) Kill() {
 	player.alive = false
 	player.mux.Unlock()
 }
-func (player *Player) IncCoinCount() {
+func (player *Player) IncCoinCount(amount int) {
 	player.mux.Lock()
-	player.coinCount++
+	player.coinCount += amount
 	player.mux.Unlock()
 }
 
+// SNAKE
 type Snake struct {
 	Element
 }
@@ -84,33 +85,30 @@ func (s *Snake) String() string {
 }
 func (snake *Snake) Interact(element interface{}) bool {
 	switch element.(type) {
-	case *Snake:
-		return false
 	case *Player:
 		player := element.(*Player)
 		player.Kill()
 		return true
-	case *Coin:
-		return false
-	case *Rock:
-		return false
 	case *Empty:
 		return true
 	default:
-		panic("No interaction defined")
+		return false
 	}
 
 	return false
 }
 
+// COIN
 type Coin struct {
 	Element
+	amount int
 }
 
 func (c *Coin) String() string {
 	return "C"
 }
 
+// ROCK
 type Rock struct {
 	Element
 }
@@ -119,12 +117,57 @@ func (r *Rock) String() string {
 	return "R"
 }
 
+// EMPTY
 type Empty struct {
 	Element
 }
 
 func (e *Empty) String() string {
 	return " "
+}
+
+type Building struct {
+	Element
+	code string
+}
+
+func (building *Building) String() string {
+	return building.code
+}
+
+func (player *Player) BuildWall(world *World) bool {
+	wallCost := 5
+
+	if player.coinCount < wallCost {
+		return false
+	}
+
+	up := Vector{x: 0, y: -1}
+	upRight := Vector{x: 1, y: -1}
+
+	upCell := nextCell(world, player.subWorldCoord, player.gridCoord, up)
+	upElement := upCell.element
+
+	upRightCell := nextCell(world, player.subWorldCoord, player.gridCoord, upRight)
+	upRightElement := upRightCell.element
+
+	if isEmpty(upElement) && isEmpty(upRightElement) {
+		player.mux.Lock()
+		player.coinCount -= wallCost
+		player.mux.Unlock()
+
+		upCell.mux.Lock()
+		upCell.element = &Building{code: "<"}
+		upCell.mux.Unlock()
+
+		upRightCell.mux.Lock()
+		upRightCell.element = &Building{code: ">"}
+		upRightCell.mux.Unlock()
+
+		return true
+	}
+
+	return false
 }
 
 // creates a player
@@ -162,7 +205,7 @@ func initializeSnake(world *World) Snake {
 // creates a Coin
 // returns a pair of Coord of SubWorld
 func placeCoin(subWorld *SubWorld) Coord {
-	coin := Coin{}
+	coin := Coin{amount: rand.Intn(MAX_COIN_AMOUNT) + 1}
 	return placeElementRandomLocationWithLock(subWorld, &coin)
 }
 
@@ -173,12 +216,16 @@ func placeRock(subWorld *SubWorld) Coord {
 	return placeElementRandomLocationWithLock(subWorld, &rock)
 }
 
+func isEmpty(element interface{}) bool {
+	_, isEmpty := element.(*Empty)
+	return isEmpty
+}
+
 func placeElementRandomLocationWithLock(subWorld *SubWorld, element interface{}) Coord {
 	x, y := randomPair(GRID_SIZE)
 	coord := Coord{x: x, y: y}
 
-	_, isEmpty := subWorld.grid[x][y].element.(*Empty)
-	if isEmpty {
+	if isEmpty(subWorld.grid[x][y].element) {
 		cell := &subWorld.grid[x][y]
 
 		cell.mux.Lock()
@@ -206,7 +253,7 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 
 	nextSubWorld := &world.subWorlds[nextSubWorldCoord.x][nextSubWorldCoord.y]
 
-	nextElement := getElement(nextSubWorld, nextCoord)
+	nextElement := nextElement(world, subWorldCoord, coord, vector)
 
 	override := false
 	switch element.(type) {
@@ -224,6 +271,7 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 		prevCell := &subWorld.grid[coord.x][coord.y]
 
 		prevCell.mux.Lock()
+		// should we put coords in this empty cell?
 		prevCell.element = &Empty{}
 		prevCell.mux.Unlock()
 
@@ -238,8 +286,20 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 	return nextSubWorldCoord, nextCoord
 }
 
-func getElement(subWorld *SubWorld, coord Coord) interface{} {
-	return subWorld.grid[coord.x][coord.y].element
+func nextCell(world *World, subWorldCoord Coord, coord Coord, vector Vector) *Cell {
+	nextSubWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
+	nextSubWorld := &world.subWorlds[nextSubWorldCoord.x][nextSubWorldCoord.y]
+	nextCell := getCell(nextSubWorld, nextCoord)
+
+	return nextCell
+}
+
+func nextElement(world *World, subWorldCoord Coord, coord Coord, vector Vector) interface{} {
+	return nextCell(world, subWorldCoord, coord, vector).element
+}
+
+func getCell(subWorld *SubWorld, coord Coord) *Cell {
+	return &subWorld.grid[coord.x][coord.y]
 }
 
 func wrap(base int, add int, max int) int {
@@ -448,15 +508,20 @@ func startTerminalClient(world *World) {
 			moveVector := Vector{x: 0, y: 0}
 			if ev.Ch == 119 { // w
 				moveVector.y = -1
+				movePlayer(world, &player, moveVector)
 			} else if ev.Ch == 97 { // a
 				moveVector.x = -1
+				movePlayer(world, &player, moveVector)
 			} else if ev.Ch == 115 { // s
 				moveVector.y = 1
+				movePlayer(world, &player, moveVector)
 			} else if ev.Ch == 100 { // d
 				moveVector.x = 1
+				movePlayer(world, &player, moveVector)
+			} else if ev.Ch == 0 { // space
+				player.BuildWall(world)
 			}
 
-			movePlayer(world, &player, moveVector)
 			checkAlive(&player)
 
 			termbox.Flush()
@@ -471,19 +536,22 @@ func initializeWorld() World {
 
 	for i := 0; i < WORLD_SIZE; i++ {
 		for j := 0; j < WORLD_SIZE; j++ {
-			subWorlds[i][j] = initializeSubWorld()
+			subWorlds[i][j] = initializeSubWorld(Coord{x: i, y: j})
 		}
 	}
 
 	return World{subWorlds: subWorlds}
 }
 
-func initializeSubWorld() SubWorld {
+func initializeSubWorld(subWorldCoord Coord) SubWorld {
 	subWorld := SubWorld{}
 
 	for i := 0; i < GRID_SIZE; i++ {
 		for j := 0; j < GRID_SIZE; j++ {
-			subWorld.grid[i][j].element = &Empty{}
+			empty := Empty{}
+			empty.subWorldCoord = subWorldCoord
+			empty.gridCoord = Coord{x: i, y: j}
+			subWorld.grid[i][j].element = &empty
 		}
 	}
 

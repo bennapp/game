@@ -66,7 +66,6 @@ what happens to your stuff (resources building etc) when you die or log off
 ## Server v0
 ~~Object Design - Player~~
 ~~cell w/ mutex not subworld~~
-- direction
 - coin, building wall (2x1), HP
 - Architecture - View on Subworlds
 - Cell Pagination - in Memory
