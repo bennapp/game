@@ -46,6 +46,7 @@ type Player struct {
 	mux       sync.Mutex
 	coinCount int
 	alive     bool
+	hp int
 }
 
 func (p *Player) String() string {
@@ -75,6 +76,16 @@ func (player *Player) IncCoinCount(amount int) {
 	player.mux.Unlock()
 }
 
+func (player *Player) decreaseHp(damage int) {
+	player.mux.Lock()
+	player.hp -= damage
+	player.mux.Unlock()
+
+	if player.hp < 0 {
+		player.Kill()
+	}
+}
+
 // SNAKE
 type Snake struct {
 	Element
@@ -83,11 +94,16 @@ type Snake struct {
 func (s *Snake) String() string {
 	return "S"
 }
+
+func (s *Snake) Attack(player *Player) {
+	player.decreaseHp(1)
+}
+
 func (snake *Snake) Interact(element interface{}) bool {
 	switch element.(type) {
 	case *Player:
 		player := element.(*Player)
-		player.Kill()
+		snake.Attack(player)
 		return true
 	case *Empty:
 		return true
@@ -176,7 +192,7 @@ func initializePlayer(world *World) Player {
 	x, y := randomPair(WORLD_SIZE)
 	subWorld := world.subWorlds[x][y]
 
-	player := Player{alive: true}
+	player := Player{alive: true, hp: 10}
 	subWorldCoord := Coord{x: x, y: y}
 	gridCoord := placeElementRandomLocationWithLock(&subWorld, &player)
 
@@ -360,7 +376,7 @@ func render(world *World, player *Player) {
 		clearScreen()
 		printWorld(world)
 		printStat(player)
-		time.Sleep(250 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 
@@ -467,7 +483,7 @@ func spawnGoldInWorld(world *World) {
 	for {
 		randomSubWorld := randomSubWorld(world)
 		spawnGoldInSubWorld(randomSubWorld)
-		time.Sleep(4000 * time.Millisecond)
+		time.Sleep(1000 * time.Millisecond)
 	}
 }
 
@@ -477,6 +493,7 @@ func spawnGoldInSubWorld(subWorld *SubWorld) {
 
 func printStat(player *Player) {
 	fmt.Printf("Coin: %d", player.coinCount)
+	fmt.Printf("HP: %d", player.hp)
 	fmt.Println()
 }
 
@@ -565,7 +582,7 @@ func initializeSubWorld(subWorldCoord Coord) SubWorld {
 func spawnSnakes(world *World) {
 	for {
 		go snakeWalk(world)
-		time.Sleep(2000 * time.Millisecond)
+		time.Sleep(3000 * time.Millisecond)
 	}
 }
 

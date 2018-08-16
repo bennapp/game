@@ -64,15 +64,13 @@ what happens to your stuff (resources building etc) when you die or log off
 
 
 ## Server v0
-~~Object Design - Player~~
-~~cell w/ mutex not subworld~~
-- coin, building wall (2x1), HP
-- Architecture - View on Subworlds
-- Cell Pagination - in Memory
-- Figure out architecture for - Action Function
-- logging system <0,1, PLAYER1> destory <0,2 ROCK> -> <0,2 EMPTY>, PLAYER stone++, (get coin, build, destroy)
-- Load resource from DB
-- Write to DB
+- ~~Object Design - Player~~
+- ~~cell w/ mutex not subworld~~
+- ~~coin, building wall (2x1)~~
+- HP
+- player limited view
+- logging
+- storing state in redis DB
 
 ## Client v0
 
