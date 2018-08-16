@@ -68,7 +68,7 @@ what happens to your stuff (resources building etc) when you die or log off
 - ~~cell w/ mutex not subworld~~
 - ~~coin, building wall (2x1)~~
 - ~~HP~~
-- player limited view
+- ~~player limited view~~
 - logging
 - storing state in redis DB
 

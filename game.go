@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 	"time"
 )
@@ -46,7 +45,7 @@ type Player struct {
 	mux       sync.Mutex
 	coinCount int
 	alive     bool
-	hp int
+	hp        int
 }
 
 func (p *Player) String() string {
@@ -356,25 +355,26 @@ func isOutOfBound(x int, y int, bound int) bool {
 	return x < 0 || y < 0 || x >= bound || y >= bound
 }
 
-func printWorld(world *World) {
-	for wy := 0; wy < WORLD_SIZE; wy++ {
-		for gy := 0; gy < GRID_SIZE; gy++ {
-			for wx := 0; wx < WORLD_SIZE; wx++ {
-				for gx := 0; gx < GRID_SIZE; gx++ {
-					fmt.Printf("%v ", world.subWorlds[wx][wy].grid[gx][gy].element)
-				}
-				fmt.Printf("|")
-			}
-			fmt.Println()
+func printWorld(world *World, player *Player) {
+	v := Vector{x: -5, y: -5}
+	visionDistance := 11
+
+	for i := 0; i < visionDistance; i++ {
+		for j := 0; j < visionDistance; j++ {
+			fmt.Printf("%v ", nextCell(world, player.subWorldCoord, player.gridCoord, v).element)
+			//fmt.Print(v)
+			v.x += 1
 		}
-		fmt.Println(strings.Repeat(" -", (WORLD_SIZE*GRID_SIZE)+2))
+		v.x = -5
+		fmt.Println()
+		v.y += 1
 	}
 }
 
 func render(world *World, player *Player) {
 	for {
 		clearScreen()
-		printWorld(world)
+		printWorld(world, player)
 		printStat(player)
 		time.Sleep(100 * time.Millisecond)
 	}
@@ -493,8 +493,8 @@ func spawnGoldInSubWorld(subWorld *SubWorld) {
 
 func printStat(player *Player) {
 	fmt.Printf("Coin: %d", player.coinCount)
-	fmt.Printf("HP: %d", player.hp)
 	fmt.Println()
+	fmt.Printf("HP: %d", player.hp)
 }
 
 func checkAlive(player *Player) {
