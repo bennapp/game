@@ -69,7 +69,6 @@ what happens to your stuff (resources building etc) when you die or log off
 - ~~coin, building wall (2x1)~~
 - ~~HP~~
 - ~~player limited view~~
-- logging
 - storing state in redis DB
 
 ## Client v0
@@ -80,6 +79,7 @@ what happens to your stuff (resources building etc) when you die or log off
 - Multi player
 - Dynamicically generated map
 - Respawn
+- Logging
 
 ### server notes
 - logging advantages / consistent action consumption advantages

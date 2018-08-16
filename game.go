@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"sync"
 	"time"
+	"github.com/gomodule/redigo/redis"
+	"log"
 )
 
 const GRID_SIZE = 8
@@ -592,13 +594,25 @@ func initializeWorldElements(world *World) {
 }
 
 func main() {
-	rand.Seed(12345)
+	//rand.Seed(12345)
+	//
+	//world := initializeWorld()
+	//
+	//initializeWorldElements(&world)
+	//
+	//startTerminalClient(&world)
 
-	world := initializeWorld()
+	c, err := redis.Dial("tcp", ":6789")
+	if err != nil {
+		log.Fatalf("Could not connect: %v\n", err)
+	}
+	defer c.Close()
 
-	initializeWorldElements(&world)
+	ret, _ := c.Do("SET","fleet", "truck1", "POINT", "33", "-115")
+	fmt.Printf("%s\n", ret)
 
-	startTerminalClient(&world)
+	ret, _ = c.Do("GET","fleet", "truck1")
+	fmt.Printf("%s\n", ret)
 
 	// TESTS
 	//fmt.Println(carry(0, 3, 3) == 1)
