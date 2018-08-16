@@ -1,7 +1,7 @@
 package main
 
 import "github.com/nsf/termbox-go"
-
+import "github.com/go-redis/redis"
 import (
 	"fmt"
 	"math/rand"
@@ -9,8 +9,6 @@ import (
 	"os/exec"
 	"sync"
 	"time"
-	"github.com/gomodule/redigo/redis"
-	"log"
 )
 
 const GRID_SIZE = 8
@@ -602,17 +600,22 @@ func main() {
 	//
 	//startTerminalClient(&world)
 
-	c, err := redis.Dial("tcp", ":6789")
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+
+	err := client.Set("key", "value", 0).Err()
 	if err != nil {
-		log.Fatalf("Could not connect: %v\n", err)
+		panic(err)
 	}
-	defer c.Close()
 
-	ret, _ := c.Do("SET","fleet", "truck1", "POINT", "33", "-115")
-	fmt.Printf("%s\n", ret)
-
-	ret, _ = c.Do("GET","fleet", "truck1")
-	fmt.Printf("%s\n", ret)
+	val, err := client.Get("key").Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("key", val)
 
 	// TESTS
 	//fmt.Println(carry(0, 3, 3) == 1)
