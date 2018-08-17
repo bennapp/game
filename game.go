@@ -34,6 +34,11 @@ type Cell struct {
 	mux     sync.Mutex
 	element interface{}
 }
+
+func (coord *Coord) Key() string {
+	fmt.Sprintf("%v,%v", coord.x, coord.y)
+}
+
 type Element struct {
 	subWorldCoord Coord
 	gridCoord     Coord
@@ -117,10 +122,15 @@ func (snake *Snake) Interact(element interface{}) bool {
 type Coin struct {
 	Element
 	amount int
+	id     int
 }
 
 func (c *Coin) String() string {
 	return "C"
+}
+
+func (coin *Coin) Key() string {
+	fmt.Sprintf("coin:%v:%v", coin.id, coin.amount)
 }
 
 // ROCK
@@ -148,6 +158,48 @@ type Building struct {
 
 func (building *Building) String() string {
 	return building.code
+}
+
+var redisClient *redis.Client
+
+func initializeRedisClient() {
+	redisClient = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+}
+
+func redisSet(key string, value string) {
+	err := redisClient.Set(key, value, 0).Err()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func storeCoord(coord Coord, id string) {
+	redisSet(coord.Key(), id)
+}
+
+func storeCoin(coord Coord, coin *Coin) {
+	storeCoord(coord, coin.Key())
+}
+
+func isEmpty(coord Coord) bool {
+	_, err := redisClient.Get(coord.Key()).Result()
+	if err == nil {
+		return false
+	} else {
+		return true
+	}
+}
+
+func storeElement(coord Coord, element interface{}) {
+	switch v := element.(type) {
+	case *Coin:
+		storeCoin(coord, v)
+		//default:
+	}
 }
 
 func (player *Player) BuildWall(world *World) bool {
@@ -231,20 +283,15 @@ func placeRock(subWorld *SubWorld) Coord {
 	return placeElementRandomLocationWithLock(subWorld, &rock)
 }
 
-func isEmpty(element interface{}) bool {
-	_, isEmpty := element.(*Empty)
-	return isEmpty
-}
-
 func placeElementRandomLocationWithLock(subWorld *SubWorld, element interface{}) Coord {
 	x, y := randomPair(GRID_SIZE)
 	coord := Coord{x: x, y: y}
 
-	if isEmpty(subWorld.grid[x][y].element) {
+	if isEmpty(coord) {
 		cell := &subWorld.grid[x][y]
 
 		cell.mux.Lock()
-		cell.element = element
+		storeElement(coord, element)
 		cell.mux.Unlock()
 	} else {
 		coord = placeElementRandomLocationWithLock(subWorld, element)
@@ -553,24 +600,15 @@ func initializeWorld() World {
 
 	for i := 0; i < WORLD_SIZE; i++ {
 		for j := 0; j < WORLD_SIZE; j++ {
-			subWorlds[i][j] = initializeSubWorld(Coord{x: i, y: j})
+			subWorlds[i][j] = initializeSubWorld()
 		}
 	}
 
 	return World{subWorlds: subWorlds}
 }
 
-func initializeSubWorld(subWorldCoord Coord) SubWorld {
+func initializeSubWorld() SubWorld {
 	subWorld := SubWorld{}
-
-	for i := 0; i < GRID_SIZE; i++ {
-		for j := 0; j < GRID_SIZE; j++ {
-			empty := Empty{}
-			empty.subWorldCoord = subWorldCoord
-			empty.gridCoord = Coord{x: i, y: j}
-			subWorld.grid[i][j].element = &empty
-		}
-	}
 
 	for i := 0; i < 10; i++ {
 		placeRock(&subWorld)
@@ -594,28 +632,20 @@ func initializeWorldElements(world *World) {
 func main() {
 	//rand.Seed(12345)
 	//
+
+	initializeRedisClient()
+
 	//world := initializeWorld()
 	//
 	//initializeWorldElements(&world)
 	//
 	//startTerminalClient(&world)
 
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-
-	err := client.Set("key", "value", 0).Err()
-	if err != nil {
-		panic(err)
-	}
-
-	val, err := client.Get("key").Result()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("key", val)
+	//val, err := redisClient.Get("key").Result()
+	//if err != nil {
+	//	panic(err)
+	//}
+	//fmt.Println("key", val)
 
 	// TESTS
 	//fmt.Println(carry(0, 3, 3) == 1)
