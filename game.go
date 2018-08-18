@@ -3,13 +3,13 @@ package main
 import "github.com/nsf/termbox-go"
 import "github.com/go-redis/redis"
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
 	"os/exec"
 	"sync"
 	"time"
-	"errors"
 )
 
 const GRID_SIZE = 8
@@ -295,8 +295,13 @@ func initializeSnake(world *World) Snake {
 	return snake
 }
 
+func nextCoinId() int {
+	coinIdInc++
+	return coinIdInc
+}
+
 func buildCoin() *Coin {
-	coin := &Coin{amount: rand.Intn(MAX_COIN_AMOUNT) + 1, id: coinIdInc++}
+	coin := &Coin{amount: rand.Intn(MAX_COIN_AMOUNT) + 1, id: nextCoinId()}
 	storeCoin(coin)
 	return coin
 }
@@ -668,7 +673,6 @@ func spawnSnakes(world *World) {
 		time.Sleep(3000 * time.Millisecond)
 	}
 }
-
 
 func runWorldElements(world *World) {
 	//go spawnSnakes(world)
