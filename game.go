@@ -300,8 +300,12 @@ func nextCoinId() int {
 	return coinIdInc
 }
 
-func buildCoin() *Coin {
-	coin := &Coin{amount: rand.Intn(MAX_COIN_AMOUNT) + 1, id: nextCoinId()}
+func initializeCoin() *Coin {
+	return &Coin{amount: rand.Intn(MAX_COIN_AMOUNT) + 1, id: nextCoinId()}
+}
+
+func buildAndStoreCoin() *Coin {
+	coin := initializeCoin()
 	storeCoin(coin)
 	return coin
 }
@@ -574,7 +578,7 @@ func spawnCoinsInWorld(world *World) {
 }
 
 func spawnCoinInSubWorld(subWorld *SubWorld) {
-	coin := buildCoin()
+	coin := initializeCoin()
 	placeCoin(subWorld, coin)
 }
 
@@ -656,7 +660,7 @@ func initializeSubWorld() SubWorld {
 		}
 
 		for i := 0; i < 2; i++ {
-			coin := buildCoin()
+			coin := buildAndStoreCoin()
 			placeCoin(&subWorld, coin)
 		}
 
