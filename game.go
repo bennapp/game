@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"sync"
 	"time"
+	"errors"
 )
 
 const GRID_SIZE = 8
@@ -36,7 +37,7 @@ type Cell struct {
 }
 
 func (coord *Coord) Key() string {
-	fmt.Sprintf("%v,%v", coord.x, coord.y)
+	return fmt.Sprintf("%v,%v", coord.x, coord.y)
 }
 
 type Element struct {
@@ -129,13 +130,21 @@ func (c *Coin) String() string {
 	return "C"
 }
 
-func (coin *Coin) Key() string {
-	fmt.Sprintf("coin:%v:%v", coin.id, coin.amount)
+func (coin *Coin) Id() string {
+	return fmt.Sprintf("coin:%v", coin.id)
+}
+
+func (coin *Coin) Val() string {
+	return fmt.Sprintf("amount:%v", coin.amount)
 }
 
 // ROCK
 type Rock struct {
 	Element
+}
+
+func (rock *Rock) Id() string {
+	return fmt.Sprintf("rock")
 }
 
 func (r *Rock) String() string {
@@ -160,7 +169,10 @@ func (building *Building) String() string {
 	return building.code
 }
 
+// GLOBALS
 var redisClient *redis.Client
+var firstBoot bool
+var coinIdInc int
 
 func initializeRedisClient() {
 	redisClient = redis.NewClient(&redis.Options{
@@ -177,12 +189,24 @@ func redisSet(key string, value string) {
 	}
 }
 
+func storeObject(id string, object string) {
+	redisSet(id, object)
+}
+
+func storeCoin(coin *Coin) {
+	storeObject(coin.Id(), coin.Val())
+}
+
 func storeCoord(coord Coord, id string) {
 	redisSet(coord.Key(), id)
 }
 
-func storeCoin(coord Coord, coin *Coin) {
-	storeCoord(coord, coin.Key())
+func storeCoinCoord(coord Coord, coin *Coin) {
+	storeCoord(coord, coin.Id())
+}
+
+func storeRockCoord(coord Coord, rock *Rock) {
+	storeCoord(coord, rock.Id())
 }
 
 func isEmpty(coord Coord) bool {
@@ -197,7 +221,9 @@ func isEmpty(coord Coord) bool {
 func storeElement(coord Coord, element interface{}) {
 	switch v := element.(type) {
 	case *Coin:
-		storeCoin(coord, v)
+		storeCoinCoord(coord, v)
+	case *Rock:
+		storeRockCoord(coord, v)
 		//default:
 	}
 }
@@ -269,21 +295,26 @@ func initializeSnake(world *World) Snake {
 	return snake
 }
 
+func buildCoin() *Coin {
+	coin := &Coin{amount: rand.Intn(MAX_COIN_AMOUNT) + 1, id: coinIdInc++}
+	storeCoin(coin)
+	return coin
+}
+
 // creates a Coin
 // returns a pair of Coord of SubWorld
-func placeCoin(subWorld *SubWorld) Coord {
-	coin := Coin{amount: rand.Intn(MAX_COIN_AMOUNT) + 1}
-	return placeElementRandomLocationWithLock(subWorld, &coin)
+func placeCoin(subWorld *SubWorld, coin *Coin) {
+	placeElementRandomLocationWithLock(subWorld, coin)
 }
 
 // creates a Rock
 // returns a pair of Coord of SubWorld
-func placeRock(subWorld *SubWorld) Coord {
+func placeRock(subWorld *SubWorld) {
 	rock := Rock{}
-	return placeElementRandomLocationWithLock(subWorld, &rock)
+	placeElementRandomLocationWithLock(subWorld, &rock)
 }
 
-func placeElementRandomLocationWithLock(subWorld *SubWorld, element interface{}) Coord {
+func placeElementRandomLocationWithLock(subWorld *SubWorld, element interface{}) (Coord, error) {
 	x, y := randomPair(GRID_SIZE)
 	coord := Coord{x: x, y: y}
 
@@ -293,11 +324,11 @@ func placeElementRandomLocationWithLock(subWorld *SubWorld, element interface{})
 		cell.mux.Lock()
 		storeElement(coord, element)
 		cell.mux.Unlock()
-	} else {
-		coord = placeElementRandomLocationWithLock(subWorld, element)
-	}
 
-	return coord
+		return coord, nil
+	} else {
+		return coord, errors.New("No Space available")
+	}
 }
 
 func movePlayer(world *World, player *Player, vector Vector) {
@@ -469,7 +500,7 @@ func findPlayer(subWorld *SubWorld) Coord {
 	return Coord{x: x, y: y}
 }
 
-func snakeWalk(world *World) {
+func spawnSnake(world *World) {
 	snake := initializeSnake(world)
 
 	for {
@@ -526,16 +557,20 @@ func randomSubWorld(world *World) *SubWorld {
 	return &world.subWorlds[coord.x][coord.y]
 }
 
-func spawnGoldInWorld(world *World) {
+func spawnCoinsInWorld(world *World) {
+	sleepTime := 10000 * time.Millisecond
+
 	for {
 		randomSubWorld := randomSubWorld(world)
-		spawnGoldInSubWorld(randomSubWorld)
-		time.Sleep(1000 * time.Millisecond)
+		spawnCoinInSubWorld(randomSubWorld)
+		time.Sleep(sleepTime)
+		sleepTime += sleepTime
 	}
 }
 
-func spawnGoldInSubWorld(subWorld *SubWorld) {
-	placeCoin(subWorld)
+func spawnCoinInSubWorld(subWorld *SubWorld) {
+	coin := buildCoin()
+	placeCoin(subWorld, coin)
 }
 
 func printStat(player *Player) {
@@ -610,8 +645,18 @@ func initializeWorld() World {
 func initializeSubWorld() SubWorld {
 	subWorld := SubWorld{}
 
-	for i := 0; i < 10; i++ {
-		placeRock(&subWorld)
+	if firstBoot {
+		for i := 0; i < 10; i++ {
+			placeRock(&subWorld)
+		}
+
+		for i := 0; i < 2; i++ {
+			coin := buildCoin()
+			placeCoin(&subWorld, coin)
+		}
+
+		// snake := buildSnake()
+		// placeSnake(&subWorld, snake)
 	}
 
 	return subWorld
@@ -619,26 +664,28 @@ func initializeSubWorld() SubWorld {
 
 func spawnSnakes(world *World) {
 	for {
-		go snakeWalk(world)
+		go spawnSnake(world)
 		time.Sleep(3000 * time.Millisecond)
 	}
 }
 
-func initializeWorldElements(world *World) {
-	go spawnSnakes(world)
-	go spawnGoldInWorld(world)
+
+func runWorldElements(world *World) {
+	//go spawnSnakes(world)
+	go spawnCoinsInWorld(world)
 }
 
 func main() {
-	//rand.Seed(12345)
-	//
+	rand.Seed(12345)
+
+	firstBoot = true
 
 	initializeRedisClient()
 
-	//world := initializeWorld()
-	//
-	//initializeWorldElements(&world)
-	//
+	world := initializeWorld()
+
+	runWorldElements(&world)
+
 	//startTerminalClient(&world)
 
 	//val, err := redisClient.Get("key").Result()
