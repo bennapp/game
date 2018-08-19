@@ -53,10 +53,12 @@ type Player struct {
 	alive     bool
 	hp        int
 }
-
 func (p *Player) String() string {
 	return "P"
 }
+
+func initializePlayer
+
 func (player *Player) Interact(element interface{}) bool {
 	switch v := element.(type) {
 	case *Coin:
@@ -80,7 +82,6 @@ func (player *Player) IncCoinCount(amount int) {
 	player.coinCount += amount
 	player.mux.Unlock()
 }
-
 func (player *Player) decreaseHp(damage int) {
 	player.mux.Lock()
 	player.hp -= damage
@@ -95,15 +96,12 @@ func (player *Player) decreaseHp(damage int) {
 type Snake struct {
 	Element
 }
-
 func (s *Snake) String() string {
 	return "S"
 }
-
 func (s *Snake) Attack(player *Player) {
 	player.decreaseHp(1)
 }
-
 func (snake *Snake) Interact(element interface{}) bool {
 	switch element.(type) {
 	case *Player:
@@ -125,15 +123,12 @@ type Coin struct {
 	amount int
 	id     int
 }
-
 func (c *Coin) String() string {
 	return "C"
 }
-
 func (coin *Coin) Id() string {
 	return fmt.Sprintf("coin:%v", coin.id)
 }
-
 func (coin *Coin) Val() string {
 	return fmt.Sprintf("amount:%v", coin.amount)
 }
@@ -142,11 +137,9 @@ func (coin *Coin) Val() string {
 type Rock struct {
 	Element
 }
-
 func (rock *Rock) Id() string {
 	return fmt.Sprintf("rock")
 }
-
 func (r *Rock) String() string {
 	return "R"
 }
@@ -155,16 +148,13 @@ func (r *Rock) String() string {
 type Empty struct {
 	Element
 }
-
 func (e *Empty) String() string {
 	return " "
 }
-
 type Building struct {
 	Element
 	code string
 }
-
 func (building *Building) String() string {
 	return building.code
 }
@@ -269,7 +259,16 @@ func initializePlayer(world *World) Player {
 	x, y := randomPair(WORLD_SIZE)
 	subWorld := world.subWorlds[x][y]
 
+
+	if firstBoot {
+
+	} else {
+		// find the player
+	}
+
 	player := Player{alive: true, hp: 10}
+
+
 	subWorldCoord := Coord{x: x, y: y}
 	gridCoord := placeElementRandomLocationWithLock(&subWorld, &player)
 
@@ -694,7 +693,7 @@ func main() {
 
 	runWorldElements(&world)
 
-	//startTerminalClient(&world)
+	startTerminalClient(&world)
 
 	//val, err := redisClient.Get("key").Result()
 	//if err != nil {
