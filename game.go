@@ -3,11 +3,12 @@ package main
 import "github.com/nsf/termbox-go"
 import "github.com/go-redis/redis"
 import (
-	"errors"
 	"fmt"
 	"math/rand"
 	"os"
 	"os/exec"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -21,7 +22,8 @@ type World struct {
 }
 type Grid [GRID_SIZE][GRID_SIZE]Cell
 type SubWorld struct {
-	grid Grid
+	coord Coord
+	grid  Grid
 }
 type Coord struct {
 	x int
@@ -52,13 +54,12 @@ type Player struct {
 	coinCount int
 	alive     bool
 	hp        int
+	id        int
 }
+
 func (p *Player) String() string {
 	return "P"
 }
-
-func initializePlayer
-
 func (player *Player) Interact(element interface{}) bool {
 	switch v := element.(type) {
 	case *Coin:
@@ -91,11 +92,18 @@ func (player *Player) decreaseHp(damage int) {
 		player.Kill()
 	}
 }
+func (player *Player) Id() string {
+	return fmt.Sprintf("player:%v", player.id)
+}
+func (player *Player) Val() string {
+	return fmt.Sprintf("coinCount:%v,alive:%v,hp:%v", player.coinCount, player.alive, player.hp)
+}
 
 // SNAKE
 type Snake struct {
 	Element
 }
+
 func (s *Snake) String() string {
 	return "S"
 }
@@ -123,6 +131,7 @@ type Coin struct {
 	amount int
 	id     int
 }
+
 func (c *Coin) String() string {
 	return "C"
 }
@@ -137,6 +146,7 @@ func (coin *Coin) Val() string {
 type Rock struct {
 	Element
 }
+
 func (rock *Rock) Id() string {
 	return fmt.Sprintf("rock")
 }
@@ -148,13 +158,16 @@ func (r *Rock) String() string {
 type Empty struct {
 	Element
 }
+
 func (e *Empty) String() string {
 	return " "
 }
+
 type Building struct {
 	Element
 	code string
 }
+
 func (building *Building) String() string {
 	return building.code
 }
@@ -183,20 +196,24 @@ func storeObject(id string, object string) {
 	redisSet(id, object)
 }
 
+func storePlayer(player *Player) {
+	storeObject(player.Id(), player.Val())
+}
+
 func storeCoin(coin *Coin) {
 	storeObject(coin.Id(), coin.Val())
 }
 
-func storeCoord(coord Coord, id string) {
-	redisSet(coord.Key(), id)
+func storeCoord(subWorld *SubWorld, coord Coord, id string) {
+	redisSet(fmt.Sprintf("%v:%v", subWorld.coord.Key()+coord.Key()), id)
 }
 
-func storeCoinCoord(coord Coord, coin *Coin) {
-	storeCoord(coord, coin.Id())
+func storeCoinCoord(subWorld *SubWorld, coord Coord, coin *Coin) {
+	storeCoord(subWorld, coord, coin.Id())
 }
 
-func storeRockCoord(coord Coord, rock *Rock) {
-	storeCoord(coord, rock.Id())
+func storeRockCoord(subWorld *SubWorld, coord Coord, rock *Rock) {
+	storeCoord(subWorld, coord, rock.Id())
 }
 
 func isEmpty(coord Coord) bool {
@@ -208,12 +225,12 @@ func isEmpty(coord Coord) bool {
 	}
 }
 
-func storeElement(coord Coord, element interface{}) {
+func storeElement(subWorld *SubWorld, coord Coord, element interface{}) {
 	switch v := element.(type) {
 	case *Coin:
-		storeCoinCoord(coord, v)
+		storeCoinCoord(subWorld, coord, v)
 	case *Rock:
-		storeRockCoord(coord, v)
+		storeRockCoord(subWorld, coord, v)
 		//default:
 	}
 }
@@ -253,27 +270,50 @@ func (player *Player) BuildWall(world *World) bool {
 	return false
 }
 
+func playerPlayerString(playerString string) *Player {
+	keyValues := strings.Split(playerString, ",")
+
+	// coinCount:%v,alive:%v,hp:%v
+	coinCountString := strings.Split(keyValues[0], "coinCount:")[1]
+	aliveString := strings.Split(keyValues[0], "alive:")[1]
+	hpString := strings.Split(keyValues[0], "hp:")[1]
+
+	coinCount, _ := strconv.Atoi(coinCountString)
+	hp, _ := strconv.Atoi(hpString)
+	alive := aliveString == "true"
+
+	return &Player{coinCount: coinCount, alive: alive, hp: hp}
+}
+
+func playerKey(id int) string {
+	return fmt.Sprintf("player:%v", id)
+}
+
 // creates a player
 // returns a pair of Coord of World, SubWorld
-func initializePlayer(world *World) Player {
+func initializePlayer(world *World) *Player {
 	x, y := randomPair(WORLD_SIZE)
 	subWorld := world.subWorlds[x][y]
 
-
+	var player *Player
 	if firstBoot {
+		player = &Player{id: 1, alive: true, hp: 10}
 
+		subWorldCoord := Coord{x: x, y: y}
+		gridCoord := placeElementRandomLocationWithLock(&subWorld, player)
+
+		player.subWorldCoord = subWorldCoord
+		player.gridCoord = gridCoord
+
+		storePlayer(player)
 	} else {
-		// find the player
+		playerString, err := redisClient.Get(playerKey(1)).Result()
+		if err != nil {
+			panic(err)
+		}
+
+		player = playerPlayerString(playerString)
 	}
-
-	player := Player{alive: true, hp: 10}
-
-
-	subWorldCoord := Coord{x: x, y: y}
-	gridCoord := placeElementRandomLocationWithLock(&subWorld, &player)
-
-	player.subWorldCoord = subWorldCoord
-	player.gridCoord = gridCoord
 
 	return player
 }
@@ -322,7 +362,7 @@ func placeRock(subWorld *SubWorld) {
 	placeElementRandomLocationWithLock(subWorld, &rock)
 }
 
-func placeElementRandomLocationWithLock(subWorld *SubWorld, element interface{}) (Coord, error) {
+func placeElementRandomLocationWithLock(subWorld *SubWorld, element interface{}) Coord {
 	x, y := randomPair(GRID_SIZE)
 	coord := Coord{x: x, y: y}
 
@@ -330,13 +370,13 @@ func placeElementRandomLocationWithLock(subWorld *SubWorld, element interface{})
 		cell := &subWorld.grid[x][y]
 
 		cell.mux.Lock()
-		storeElement(coord, element)
+		storeElement(&subWorld, coord, element)
 		cell.mux.Unlock()
-
-		return coord, nil
 	} else {
-		return coord, errors.New("No Space available")
+		coord = placeElementRandomLocationWithLock(subWorld, element)
 	}
+
+	return coord
 }
 
 func movePlayer(world *World, player *Player, vector Vector) {
@@ -603,7 +643,7 @@ func startTerminalClient(world *World) {
 
 	player := initializePlayer(world)
 
-	go render(world, &player)
+	go render(world, player)
 
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
@@ -615,21 +655,21 @@ func startTerminalClient(world *World) {
 			moveVector := Vector{x: 0, y: 0}
 			if ev.Ch == 119 { // w
 				moveVector.y = -1
-				movePlayer(world, &player, moveVector)
+				movePlayer(world, player, moveVector)
 			} else if ev.Ch == 97 { // a
 				moveVector.x = -1
-				movePlayer(world, &player, moveVector)
+				movePlayer(world, player, moveVector)
 			} else if ev.Ch == 115 { // s
 				moveVector.y = 1
-				movePlayer(world, &player, moveVector)
+				movePlayer(world, player, moveVector)
 			} else if ev.Ch == 100 { // d
 				moveVector.x = 1
-				movePlayer(world, &player, moveVector)
+				movePlayer(world, player, moveVector)
 			} else if ev.Ch == 0 { // space
 				player.BuildWall(world)
 			}
 
-			checkAlive(&player)
+			checkAlive(player)
 
 			termbox.Flush()
 		case termbox.EventError:
@@ -643,15 +683,15 @@ func initializeWorld() World {
 
 	for i := 0; i < WORLD_SIZE; i++ {
 		for j := 0; j < WORLD_SIZE; j++ {
-			subWorlds[i][j] = initializeSubWorld()
+			subWorlds[i][j] = initializeSubWorld(i, j)
 		}
 	}
 
 	return World{subWorlds: subWorlds}
 }
 
-func initializeSubWorld() SubWorld {
-	subWorld := SubWorld{}
+func initializeSubWorld(i int, j int) SubWorld {
+	subWorld := SubWorld{coord: Coord{x: i, y: j}}
 
 	if firstBoot {
 		for i := 0; i < 10; i++ {
