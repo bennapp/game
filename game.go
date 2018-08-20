@@ -82,6 +82,7 @@ func (player *Player) Kill() {
 func (player *Player) IncCoinCount(amount int) {
 	player.mux.Lock()
 	player.coinCount += amount
+	storePlayer(player)
 	player.mux.Unlock()
 }
 func (player *Player) decreaseHp(damage int) {
@@ -97,22 +98,48 @@ func (player *Player) Id() string {
 	return fmt.Sprintf("player:%v", player.id)
 }
 func (player *Player) Val() string {
-	return fmt.Sprintf("coinCount:%v,alive:%v,hp:%v", player.coinCount, player.alive, player.hp)
+	// Bug fix, use dashes because cords use commas. FIXME: use commas for all attr delimiters
+	return fmt.Sprintf("coinCount:%v-alive:%v-hp:%v-subWorldCoord:%v-gridCoord:%v",
+		player.coinCount,
+		player.alive,
+		player.hp,
+		player.subWorldCoord.Key(),
+		player.gridCoord.Key(),
+	)
 }
 
-func initializePlayerFromValues(values string) Player {
-	keyValues := strings.Split(values, ",")
+func initializePlayerFromValues(elementId string, values string) Player {
+	keyValues := strings.Split(values, "-")
 
-	// coinCount:%v,alive:%v,hp:%v
+	idString := strings.Split(elementId, "player:")[1]
+
 	coinCountString := strings.Split(keyValues[0], "coinCount:")[1]
 	aliveString := strings.Split(keyValues[1], "alive:")[1]
 	hpString := strings.Split(keyValues[2], "hp:")[1]
 
+	subWorldCoordString := strings.Split(keyValues[3], "subWorldCoord:")[1]
+	subWorldCoordStringX := strings.Split(subWorldCoordString, ",")[0]
+	subWorldCoordX, _ := strconv.Atoi(subWorldCoordStringX)
+	subWorldCoordStringY := strings.Split(subWorldCoordString, ",")[1]
+	subWorldCoordY, _ := strconv.Atoi(subWorldCoordStringY)
+
+	gridCoordString := strings.Split(keyValues[4], "gridCoord:")[1]
+	gridCoordStringX := strings.Split(gridCoordString, ",")[0]
+	gridCoordX, _ := strconv.Atoi(gridCoordStringX)
+	gridCoordStringY := strings.Split(gridCoordString, ",")[1]
+	gridCoordY, _ := strconv.Atoi(gridCoordStringY)
+
+	id, _ := strconv.Atoi(idString)
 	coinCount, _ := strconv.Atoi(coinCountString)
 	hp, _ := strconv.Atoi(hpString)
 	alive := aliveString == "true"
 
-	return Player{coinCount: coinCount, alive: alive, hp: hp}
+	player := Player{id: id, coinCount: coinCount, alive: alive, hp: hp}
+
+	player.subWorldCoord = Coord{x: subWorldCoordX, y: subWorldCoordY}
+	player.gridCoord = Coord{x: gridCoordX, y: gridCoordY}
+
+	return player
 }
 
 // SNAKE
@@ -351,7 +378,7 @@ func initializePlayer(world *World) *Player {
 			panic(err)
 		}
 
-		player = initializePlayerFromValues(playerValues)
+		player = initializePlayerFromValues("player:1", playerValues)
 	}
 
 	return &player
@@ -483,7 +510,7 @@ func elementFromElementId(elementId string) interface{} {
 	case "rock":
 		element = initializeRockFromValues(elementValues)
 	case "player":
-		element = initializePlayerFromValues(elementValues)
+		element = initializePlayerFromValues(elementId, elementValues)
 		//case "snake":
 		//	element = initializeSnakeFromValues(elementValues)
 	}
@@ -494,7 +521,8 @@ func elementFromElementId(elementId string) interface{} {
 func elementFromCoords(nextSubWorldCoord Coord, nextCoord Coord) interface{} {
 	elementId, _ := redisClient.Get(coordKey(nextSubWorldCoord, nextCoord)).Result()
 
-	if elementId == "" {
+	// FIXME: weird bug where we are storing player with id 0
+	if elementId == "" || elementId == "player:0" {
 		return Empty{}
 	} else {
 		return elementFromElementId(elementId)
