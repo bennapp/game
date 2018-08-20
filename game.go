@@ -63,10 +63,10 @@ func (p Player) String() string {
 }
 func (player *Player) Interact(element interface{}) bool {
 	switch v := element.(type) {
-	case *Coin:
+	case Coin:
 		player.IncCoinCount(v.amount)
 		return true
-	case *Empty:
+	case Empty:
 		return true
 	default:
 		return false
@@ -100,12 +100,27 @@ func (player *Player) Val() string {
 	return fmt.Sprintf("coinCount:%v,alive:%v,hp:%v", player.coinCount, player.alive, player.hp)
 }
 
+func initializePlayerFromValues(values string) Player {
+	keyValues := strings.Split(values, ",")
+
+	// coinCount:%v,alive:%v,hp:%v
+	coinCountString := strings.Split(keyValues[0], "coinCount:")[1]
+	aliveString := strings.Split(keyValues[1], "alive:")[1]
+	hpString := strings.Split(keyValues[2], "hp:")[1]
+
+	coinCount, _ := strconv.Atoi(coinCountString)
+	hp, _ := strconv.Atoi(hpString)
+	alive := aliveString == "true"
+
+	return Player{coinCount: coinCount, alive: alive, hp: hp}
+}
+
 // SNAKE
 type Snake struct {
 	Element
 }
 
-func (s Snake) String() string {
+func (s *Snake) String() string {
 	return "S"
 }
 func (s *Snake) Attack(player *Player) {
@@ -236,6 +251,10 @@ func storeRockCoord(subWorld *SubWorld, coord Coord, rock *Rock) {
 	storeCoord(subWorld, coord, rock.Id())
 }
 
+func storePlayerCoord(subWorld *SubWorld, coord Coord, player *Player) {
+	storeCoord(subWorld, coord, player.Id())
+}
+
 func setEmptyValue(subWorldCoord Coord, coord Coord) {
 	// Look into this, not sure this is right
 	// can we set value as nil, or should it be empty string
@@ -250,11 +269,11 @@ func isEmpty(coord Coord) bool {
 	// Look into this, not sure this is right
 	// can we check that value == nil (?)
 
-	_, err := redisClient.Get(coord.Key()).Result()
-	if err == nil {
-		return false
-	} else {
+	val, _ := redisClient.Get(coord.Key()).Result()
+	if val == "" {
 		return true
+	} else {
+		return false
 	}
 }
 
@@ -264,6 +283,8 @@ func storeElement(subWorld *SubWorld, coord Coord, element interface{}) {
 		storeCoinCoord(subWorld, coord, v)
 	case *Rock:
 		storeRockCoord(subWorld, coord, v)
+	case *Player:
+		storePlayerCoord(subWorld, coord, v)
 		//default:
 	}
 }
@@ -303,21 +324,6 @@ func storeElement(subWorld *SubWorld, coord Coord, element interface{}) {
 //	return false
 //}
 
-func playerPlayerString(playerString string) *Player {
-	keyValues := strings.Split(playerString, ",")
-
-	// coinCount:%v,alive:%v,hp:%v
-	coinCountString := strings.Split(keyValues[0], "coinCount:")[1]
-	aliveString := strings.Split(keyValues[0], "alive:")[1]
-	hpString := strings.Split(keyValues[0], "hp:")[1]
-
-	coinCount, _ := strconv.Atoi(coinCountString)
-	hp, _ := strconv.Atoi(hpString)
-	alive := aliveString == "true"
-
-	return &Player{coinCount: coinCount, alive: alive, hp: hp}
-}
-
 func playerKey(id int) string {
 	return fmt.Sprintf("player:%v", id)
 }
@@ -328,9 +334,9 @@ func initializePlayer(world *World) *Player {
 	x, y := randomPair(WORLD_SIZE)
 	subWorld := world.subWorlds[x][y]
 
-	var player *Player
+	var player Player
 	if firstBoot {
-		player = &Player{id: 1, alive: true, hp: 10}
+		player = Player{id: 1, alive: true, hp: 10}
 
 		subWorldCoord := Coord{x: x, y: y}
 		gridCoord := placeElementRandomLocationWithLock(&subWorld, player)
@@ -338,17 +344,17 @@ func initializePlayer(world *World) *Player {
 		player.subWorldCoord = subWorldCoord
 		player.gridCoord = gridCoord
 
-		storePlayer(player)
+		storePlayer(&player)
 	} else {
-		playerString, err := redisClient.Get(playerKey(1)).Result()
+		playerValues, err := redisClient.Get(playerKey(1)).Result()
 		if err != nil {
 			panic(err)
 		}
 
-		player = playerPlayerString(playerString)
+		player = initializePlayerFromValues(playerValues)
 	}
 
-	return player
+	return &player
 }
 
 // creates a snakeCell
@@ -442,15 +448,13 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 	}
 
 	if override {
-		// Should the & be here?
-		prevCell := &subWorld.grid[coord.x][coord.y]
+		prevCell := subWorld.grid[coord.x][coord.y]
 
 		prevCell.mux.Lock()
 		setEmptyValue(subWorldCoord, coord)
 		prevCell.mux.Unlock()
 
-		// Should the & be here?
-		nextCell := &nextSubWorld.grid[nextCoord.x][nextCoord.y]
+		nextCell := nextSubWorld.grid[nextCoord.x][nextCoord.y]
 		nextCell.mux.Lock()
 		storeElement(nextSubWorld, nextCoord, element)
 		nextCell.mux.Unlock()
@@ -478,6 +482,8 @@ func elementFromElementId(elementId string) interface{} {
 		element = initializeCoinFromValues(elementValues)
 	case "rock":
 		element = initializeRockFromValues(elementValues)
+	case "player":
+		element = initializePlayerFromValues(elementValues)
 		//case "snake":
 		//	element = initializeSnakeFromValues(elementValues)
 	}
@@ -486,9 +492,9 @@ func elementFromElementId(elementId string) interface{} {
 }
 
 func elementFromCoords(nextSubWorldCoord Coord, nextCoord Coord) interface{} {
-	elementId, err := redisClient.Get(coordKey(nextSubWorldCoord, nextCoord)).Result()
+	elementId, _ := redisClient.Get(coordKey(nextSubWorldCoord, nextCoord)).Result()
 
-	if err != nil {
+	if elementId == "" {
 		return Empty{}
 	} else {
 		return elementFromElementId(elementId)
