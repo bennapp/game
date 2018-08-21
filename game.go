@@ -233,6 +233,7 @@ func (building Building) String() string {
 // GLOBALS
 var redisClient *redis.Client
 var firstBoot bool
+var debug bool
 var coinIdInc int
 
 func initializeRedisClient() {
@@ -459,11 +460,11 @@ func movePlayer(world *World, player *Player, vector Vector) {
 func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector, element interface{}) (Coord, Coord) {
 	subWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
 
-	nextSubWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
+	nextSubWorldCoord, nextCoord, _ := subWorldMove(subWorldCoord, coord, vector)
 
 	nextSubWorld := &world.subWorlds[nextSubWorldCoord.x][nextSubWorldCoord.y]
 
-	nextElement := nextElement(world, subWorldCoord, coord, vector)
+	nextElement, _ := nextElement(world, subWorldCoord, coord, vector)
 
 	override := false
 	switch element.(type) {
@@ -495,14 +496,6 @@ func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector
 	return nextSubWorldCoord, nextCoord
 }
 
-func nextCell(world *World, subWorldCoord Coord, coord Coord, vector Vector) *Cell {
-	nextSubWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
-	nextSubWorld := &world.subWorlds[nextSubWorldCoord.x][nextSubWorldCoord.y]
-	nextCell := getCell(nextSubWorld, nextCoord)
-
-	return nextCell
-}
-
 func elementFromElementId(elementId string) interface{} {
 	elementValues, _ := redisClient.Get(elementId).Result()
 
@@ -531,13 +524,9 @@ func elementFromCoords(nextSubWorldCoord Coord, nextCoord Coord) interface{} {
 	}
 }
 
-func nextElement(world *World, subWorldCoord Coord, coord Coord, vector Vector) interface{} {
-	nextSubWorldCoord, nextCoord := subWorldMove(subWorldCoord, coord, vector)
-	return elementFromCoords(nextSubWorldCoord, nextCoord)
-}
-
-func getCell(subWorld *SubWorld, coord Coord) *Cell {
-	return &subWorld.grid[coord.x][coord.y]
+func nextElement(world *World, subWorldCoord Coord, coord Coord, vector Vector) (interface{}, bool) {
+	nextSubWorldCoord, nextCoord, moved := subWorldMove(subWorldCoord, coord, vector)
+	return elementFromCoords(nextSubWorldCoord, nextCoord), moved
 }
 
 func wrap(base int, add int, max int) int {
@@ -560,7 +549,7 @@ func carry(base int, add int, max int) int {
 	}
 }
 
-func subWorldMove(subWorldCoord Coord, gridCoord Coord, vector Vector) (Coord, Coord) {
+func subWorldMove(subWorldCoord Coord, gridCoord Coord, vector Vector) (Coord, Coord, bool) {
 	wX := subWorldCoord.x + carry(gridCoord.x, vector.x, GRID_SIZE)
 	wY := subWorldCoord.y + carry(gridCoord.y, vector.y, GRID_SIZE)
 
@@ -568,10 +557,10 @@ func subWorldMove(subWorldCoord Coord, gridCoord Coord, vector Vector) (Coord, C
 	gY := wrap(gridCoord.y, vector.y, GRID_SIZE)
 
 	if isOutOfBound(wX, wY, WORLD_SIZE) {
-		return subWorldCoord, gridCoord
+		return subWorldCoord, gridCoord, false
 	}
 
-	return Coord{x: wX, y: wY}, Coord{x: gX, y: gY}
+	return Coord{x: wX, y: wY}, Coord{x: gX, y: gY}, true
 }
 
 func isOutOfBound(x int, y int, bound int) bool {
@@ -584,7 +573,26 @@ func printWorld(world *World, player *Player) {
 
 	for i := 0; i < visionDistance; i++ {
 		for j := 0; j < visionDistance; j++ {
-			fmt.Printf("%v ", nextElement(world, player.subWorldCoord, player.gridCoord, v))
+			element, valid := nextElement(world, player.subWorldCoord, player.gridCoord, v)
+			if valid {
+				fmt.Printf("%v ", element)
+			}
+			v.x += 1
+		}
+		v.x = -5
+		fmt.Println()
+		v.y += 1
+	}
+}
+
+func printDebugWorld(world *World, player *Player) {
+	v := Coord{x: -5, y: -5}
+	visionDistance := 11
+
+	for i := 0; i < visionDistance; i++ {
+		for j := 0; j < visionDistance; j++ {
+			val, _ := redisClient.Get(coordKey(player.subWorldCoord, v)).Result()
+			fmt.Printf(val)
 			v.x += 1
 		}
 		v.x = -5
@@ -597,7 +605,19 @@ func render(world *World, player *Player) {
 	for {
 		clearScreen()
 		printWorld(world, player)
-		printStat(player)
+		fmt.Println()
+
+		if debug {
+			printDebugWorld(world, player)
+			printStat(player)
+
+			keys, _ := redisClient.Keys("player:*").Result()
+			for _, key := range keys {
+				val, _ := redisClient.Get(key).Result()
+				fmt.Printf("[%v--%v]", key, val)
+			}
+		}
+
 		time.Sleep(100 * time.Millisecond)
 	}
 }
@@ -727,6 +747,7 @@ func printStat(player *Player) {
 	fmt.Printf("Coin: %d", player.coinCount)
 	fmt.Println()
 	fmt.Printf("HP: %d", player.hp)
+	fmt.Println()
 }
 
 func checkAlive(player *Player) {
@@ -828,6 +849,7 @@ func main() {
 	rand.Seed(12345)
 
 	firstBoot = false
+	debug = true
 
 	initializeRedisClient()
 
