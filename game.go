@@ -59,7 +59,7 @@ type Player struct {
 }
 
 func (p Player) String() string {
-	return "P"
+	return fmt.Sprintf("%v", p.id)
 }
 func (player *Player) Interact(element interface{}) bool {
 	switch v := element.(type) {
@@ -762,7 +762,6 @@ func startTerminalClient(world *World) {
 	if err != nil {
 		panic(err)
 	}
-	defer termbox.Close()
 
 	player := initializePlayer(world)
 
@@ -772,6 +771,9 @@ func startTerminalClient(world *World) {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyCtrlQ {
+				storePlayer(player)
+				termbox.Close()
+				clearScreen()
 				os.Exit(3)
 			}
 
