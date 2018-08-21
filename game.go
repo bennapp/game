@@ -65,6 +65,7 @@ func (player *Player) Interact(element interface{}) bool {
 	switch v := element.(type) {
 	case Coin:
 		player.IncCoinCount(v.amount)
+		v.Destroy()
 		return true
 	case Empty:
 		return true
@@ -184,6 +185,9 @@ func (coin *Coin) Id() string {
 func (coin *Coin) Val() string {
 	return fmt.Sprintf("amount:%v", coin.amount)
 }
+func (coin *Coin) Destroy() {
+	setEmptyObject(coin.Id())
+}
 
 func initializeCoinFromValues(values string) Coin {
 	amountString := strings.Split(values, "amount:")[1]
@@ -245,7 +249,6 @@ func redisSet(key string, value string) {
 		panic(err)
 	}
 }
-
 func storeObject(id string, object string) {
 	redisSet(id, object)
 }
@@ -253,7 +256,6 @@ func storeObject(id string, object string) {
 func storePlayer(player *Player) {
 	storeObject(player.Id(), player.Val())
 }
-
 func storeCoin(coin *Coin) {
 	storeObject(coin.Id(), coin.Val())
 }
@@ -261,7 +263,6 @@ func storeCoin(coin *Coin) {
 func coordKey(subWorldCoord Coord, coord Coord) string {
 	return fmt.Sprintf("%v:%v", subWorldCoord.Key(), coord.Key())
 }
-
 func subWorldCoordKey(subWorld *SubWorld, coord Coord) string {
 	return coordKey(subWorld.coord, coord)
 }
@@ -273,23 +274,26 @@ func storeCoord(subWorld *SubWorld, coord Coord, id string) {
 func storeCoinCoord(subWorld *SubWorld, coord Coord, coin *Coin) {
 	storeCoord(subWorld, coord, coin.Id())
 }
-
 func storeRockCoord(subWorld *SubWorld, coord Coord, rock *Rock) {
 	storeCoord(subWorld, coord, rock.Id())
 }
-
 func storePlayerCoord(subWorld *SubWorld, coord Coord, player *Player) {
 	storeCoord(subWorld, coord, player.Id())
 }
 
-func setEmptyValue(subWorldCoord Coord, coord Coord) {
-	// Look into this, not sure this is right
-	// can we set value as nil, or should it be empty string
-
-	err := redisClient.Set(coordKey(subWorldCoord, coord), nil, 0).Err()
+func emptykey(key string) {
+	err := redisClient.Set(key, nil, 0).Err()
 	if err != nil {
 		panic(err)
 	}
+}
+
+func setEmptyValue(subWorldCoord Coord, coord Coord) {
+	emptykey(coordKey(subWorldCoord, coord))
+}
+
+func setEmptyObject(id string) {
+	emptykey(id)
 }
 
 func isEmpty(coord Coord) bool {
@@ -312,6 +316,7 @@ func storeElement(subWorld *SubWorld, coord Coord, element interface{}) {
 		storeRockCoord(subWorld, coord, v)
 	case *Player:
 		storePlayerCoord(subWorld, coord, v)
+		storePlayer(v)
 		//default:
 	}
 }
@@ -350,7 +355,6 @@ func storeElement(subWorld *SubWorld, coord Coord, element interface{}) {
 //
 //	return false
 //}
-
 func playerKey(id int) string {
 	return fmt.Sprintf("player:%v", id)
 }
@@ -452,7 +456,6 @@ func movePlayer(world *World, player *Player, vector Vector) {
 //func moveSnake(world *World, snake *Snake, vector Vector) {
 //	snake.subWorldCoord, snake.gridCoord = moveCharacter(world, snake.subWorldCoord, snake.gridCoord, vector, snake)
 //}
-
 func moveCharacter(world *World, subWorldCoord Coord, coord Coord, vector Vector, element interface{}) (Coord, Coord) {
 	subWorld := &world.subWorlds[subWorldCoord.x][subWorldCoord.y]
 
@@ -521,8 +524,7 @@ func elementFromElementId(elementId string) interface{} {
 func elementFromCoords(nextSubWorldCoord Coord, nextCoord Coord) interface{} {
 	elementId, _ := redisClient.Get(coordKey(nextSubWorldCoord, nextCoord)).Result()
 
-	// FIXME: weird bug where we are storing player with id 0
-	if elementId == "" || elementId == "player:0" {
+	if elementId == "" {
 		return Empty{}
 	} else {
 		return elementFromElementId(elementId)
@@ -825,7 +827,7 @@ func runWorldElements(world *World) {
 func main() {
 	rand.Seed(12345)
 
-	firstBoot = true
+	firstBoot = false
 
 	initializeRedisClient()
 
