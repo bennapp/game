@@ -719,7 +719,7 @@ func spawnCoinsInWorld(world *World) {
 }
 
 func spawnCoinInSubWorld(subWorld *SubWorld) {
-	coin := initializeCoin()
+	coin := buildAndStoreCoin()
 	placeCoin(subWorld, coin)
 }
 
