@@ -9,80 +9,16 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
-import "./gs"
+import (
+	"./el"
+	"./gs"
+)
 
 const MAX_COIN_AMOUNT = 10
 
-type Element struct {
-	subWorldCoord gs.Coord
-	gridCoord     gs.Coord
-}
-
-// PLAYER
-type Player struct {
-	Element
-	mux       sync.Mutex
-	coinCount int
-	alive     bool
-	hp        int
-	id        int
-}
-
-func (p Player) String() string {
-	return fmt.Sprintf("%v", p.id)
-}
-func (player *Player) Interact(element interface{}) bool {
-	switch v := element.(type) {
-	case Coin:
-		player.IncCoinCount(v.amount)
-		v.Destroy()
-		return true
-	case Empty:
-		return true
-	default:
-		return false
-	}
-
-	return false
-}
-func (player *Player) Kill() {
-	player.mux.Lock()
-	player.alive = false
-	player.mux.Unlock()
-}
-func (player *Player) IncCoinCount(amount int) {
-	player.mux.Lock()
-	player.coinCount += amount
-	storePlayer(player)
-	player.mux.Unlock()
-}
-func (player *Player) decreaseHp(damage int) {
-	player.mux.Lock()
-	player.hp -= damage
-	player.mux.Unlock()
-
-	if player.hp < 0 {
-		player.Kill()
-	}
-}
-func (player *Player) Id() string {
-	return fmt.Sprintf("player:%v", player.id)
-}
-func (player *Player) Val() string {
-	// Bug fix, use dashes because cords use commas. FIXME: use commas for all attr delimiters
-	return fmt.Sprintf("coinCount:%v-alive:%v-hp:%v-subWorldCoord:%v-gridCoord:%v",
-		player.coinCount,
-		player.alive,
-		player.hp,
-		player.subWorldCoord.Key(),
-		player.gridCoord.Key(),
-	)
-}
-
-func initializePlayerFromValues(elementId string, values string) Player {
+func initializePlayerFromValues(elementId string, values string) el.Player {
 	keyValues := strings.Split(values, "-")
 
 	idString := strings.Split(elementId, "player:")[1]
@@ -108,99 +44,22 @@ func initializePlayerFromValues(elementId string, values string) Player {
 	hp, _ := strconv.Atoi(hpString)
 	alive := aliveString == "true"
 
-	player := Player{id: id, coinCount: coinCount, alive: alive, hp: hp}
+	player := el.NewPlayer(id, coinCount, alive, hp)
 
-	player.subWorldCoord = gs.NewCoord(subWorldCoordX, subWorldCoordY)
-	player.gridCoord = gs.NewCoord(gridCoordX, gridCoordY)
+	player.SubWorldCoord = gs.NewCoord(subWorldCoordX, subWorldCoordY)
+	player.GridCoord = gs.NewCoord(gridCoordX, gridCoordY)
 
 	return player
 }
 
-// SNAKE
-type Snake struct {
-	Element
-}
-
-func (s *Snake) String() string {
-	return "S"
-}
-func (s *Snake) Attack(player *Player) {
-	player.decreaseHp(1)
-}
-func (snake *Snake) Interact(element interface{}) bool {
-	switch element.(type) {
-	case *Player:
-		player := element.(*Player)
-		snake.Attack(player)
-		return true
-	case *Empty:
-		return true
-	default:
-		return false
-	}
-
-	return false
-}
-
-// COIN
-type Coin struct {
-	Element
-	amount int
-	id     int
-}
-
-func (c Coin) String() string {
-	return "C"
-}
-func (coin *Coin) Id() string {
-	return fmt.Sprintf("coin:%v", coin.id)
-}
-func (coin *Coin) Val() string {
-	return fmt.Sprintf("amount:%v", coin.amount)
-}
-func (coin *Coin) Destroy() {
-	setEmptyObject(coin.Id())
-}
-
-func initializeCoinFromValues(values string) Coin {
+func initializeCoinFromValues(values string) el.Coin {
 	amountString := strings.Split(values, "amount:")[1]
 	amount, _ := strconv.Atoi(amountString)
-	return Coin{amount: amount}
+	return el.NewCoin{amount: amount}
 }
 
-// ROCK
-type Rock struct {
-	Element
-}
-
-func (rock *Rock) Id() string {
-	return fmt.Sprintf("rock")
-}
-func (r Rock) String() string {
-	return "R"
-}
-
-func initializeRockFromValues(_ string) Rock {
-	return Rock{}
-}
-
-// EMPTY
-type Empty struct {
-	Element
-}
-
-func (e Empty) String() string {
-	return " "
-}
-
-// BUILDING
-type Building struct {
-	Element
-	code string
-}
-
-func (building Building) String() string {
-	return building.code
+func initializeRockFromValues(_ string) el.Rock {
+	return el.NewRock()
 }
 
 // GLOBALS
