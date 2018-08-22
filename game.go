@@ -52,10 +52,14 @@ func initializePlayerFromValues(elementId string, values string) el.Player {
 	return player
 }
 
-func initializeCoinFromValues(values string) el.Coin {
+func initializeCoinFromValues(elementId string, values string) *el.Coin {
 	amountString := strings.Split(values, "amount:")[1]
 	amount, _ := strconv.Atoi(amountString)
-	return el.NewCoin{amount: amount}
+
+	idString := strings.Split(elementId, "player:")[1]
+	id, _ := strconv.Atoi(idString)
+
+	return el.NewCoin(amount, id)
 }
 
 func initializeRockFromValues(_ string) el.Rock {
@@ -86,10 +90,10 @@ func storeObject(id string, object string) {
 	redisSet(id, object)
 }
 
-func storePlayer(player *Player) {
+func storePlayer(player *el.Player) {
 	storeObject(player.Id(), player.Val())
 }
-func storeCoin(coin *Coin) {
+func storeCoin(coin *el.Coin) {
 	storeObject(coin.Id(), coin.Val())
 }
 
@@ -104,13 +108,13 @@ func storeCoord(subWorld *gs.SubWorld, coord gs.Coord, id string) {
 	redisSet(subWorldCoordKey(subWorld, coord), id)
 }
 
-func storeCoinCoord(subWorld *gs.SubWorld, coord gs.Coord, coin *Coin) {
+func storeCoinCoord(subWorld *gs.SubWorld, coord gs.Coord, coin *el.Coin) {
 	storeCoord(subWorld, coord, coin.Id())
 }
-func storeRockCoord(subWorld *gs.SubWorld, coord gs.Coord, rock *Rock) {
+func storeRockCoord(subWorld *gs.SubWorld, coord gs.Coord, rock *el.Rock) {
 	storeCoord(subWorld, coord, rock.Id())
 }
-func storePlayerCoord(subWorld *gs.SubWorld, coord gs.Coord, player *Player) {
+func storePlayerCoord(subWorld *gs.SubWorld, coord gs.Coord, player *el.Player) {
 	storeCoord(subWorld, coord, player.Id())
 }
 
@@ -143,11 +147,11 @@ func isEmpty(coord gs.Coord) bool {
 
 func storeElement(subWorld *gs.SubWorld, coord gs.Coord, element interface{}) {
 	switch v := element.(type) {
-	case *Coin:
+	case *el.Coin:
 		storeCoinCoord(subWorld, coord, v)
-	case *Rock:
+	case *el.Rock:
 		storeRockCoord(subWorld, coord, v)
-	case *Player:
+	case *el.Player:
 		storePlayerCoord(subWorld, coord, v)
 		storePlayer(v)
 		//default:
@@ -164,10 +168,10 @@ func storeElement(subWorld *gs.SubWorld, coord gs.Coord, element interface{}) {
 //	up := Vector{x: 0, y: -1}
 //	upRight := Vector{x: 1, y: -1}
 //
-//	upCell := nextCell(gs, player.subWorldCoord, player.gridCoord, up)
+//	upCell := nextCell(gs, player.SubWorldCoord, player.GridCoord, up)
 //	upElement := upCell.element
 //
-//	upRightCell := nextCell(gs, player.subWorldCoord, player.gridCoord, upRight)
+//	upRightCell := nextCell(gs, player.SubWorldCoord, player.GridCoord, upRight)
 //	upRightElement := upRightCell.element
 //
 //	if isEmpty(upElement) && isEmpty(upRightElement) {
@@ -194,19 +198,19 @@ func playerKey(id int) string {
 
 // creates a player
 // returns a pair of Coord of World, SubWorld
-func initializePlayer(world *gs.World) *Player {
+func initializePlayer(world *gs.World) *el.Player {
 	x, y := randomPair(gs.WORLD_SIZE)
 	subWorld := world.SubWorlds()[x][y]
 
-	var player Player
+	var player el.Player
 	if firstBoot {
-		player = Player{id: 1, alive: true, hp: 10}
+		player = el.NewPlayer(1, 0, true, 10)
 
 		subWorldCoord := gs.NewCoord(x, y)
 		gridCoord := placeElementRandomLocationWithLock(&subWorld, player)
 
-		player.subWorldCoord = subWorldCoord
-		player.gridCoord = gridCoord
+		player.SubWorldCoord = subWorldCoord
+		player.GridCoord = gridCoord
 
 		storePlayer(&player)
 	} else {
@@ -223,16 +227,16 @@ func initializePlayer(world *gs.World) *Player {
 
 // creates a snakeCell
 // returns a pair of Coord of World, SubWorld
-func initializeSnake(world *gs.World) Snake {
+func initializeSnake(world *gs.World) el.Snake {
 	x, y := randomPair(gs.WORLD_SIZE)
 	subWorld := world.SubWorlds()[x][y]
 
-	snake := Snake{}
+	snake := el.Snake{}
 	subWorldCoord := gs.NewCoord(x, y)
 	gridCoord := placeElementRandomLocationWithLock(&subWorld, &snake)
 
-	snake.subWorldCoord = subWorldCoord
-	snake.gridCoord = gridCoord
+	snake.SubWorldCoord = subWorldCoord
+	snake.GridCoord = gridCoord
 
 	return snake
 }
@@ -242,11 +246,11 @@ func nextCoinId() int {
 	return coinIdInc
 }
 
-func initializeCoin() *Coin {
-	return &Coin{amount: rand.Intn(MAX_COIN_AMOUNT) + 1, id: nextCoinId()}
+func initializeCoin() *el.Coin {
+	return el.NewCoin(rand.Intn(MAX_COIN_AMOUNT)+1, nextCoinId())
 }
 
-func buildAndStoreCoin() *Coin {
+func buildAndStoreCoin() *el.Coin {
 	coin := initializeCoin()
 	storeCoin(coin)
 	return coin
@@ -254,14 +258,14 @@ func buildAndStoreCoin() *Coin {
 
 // creates a Coin
 // returns a pair of Coord of SubWorld
-func placeCoin(subWorld *gs.SubWorld, coin *Coin) {
+func placeCoin(subWorld *gs.SubWorld, coin *el.Coin) {
 	placeElementRandomLocationWithLock(subWorld, coin)
 }
 
 // creates a Rock
 // returns a pair of Coord of SubWorld
 func placeRock(subWorld *gs.SubWorld) {
-	rock := Rock{}
+	rock := el.Rock{}
 	placeElementRandomLocationWithLock(subWorld, &rock)
 }
 
@@ -282,13 +286,14 @@ func placeElementRandomLocationWithLock(subWorld *gs.SubWorld, element interface
 	return coord
 }
 
-func movePlayer(world *gs.World, player *Player, vector gs.Vector) {
-	player.subWorldCoord, player.gridCoord = moveCharacter(world, player.subWorldCoord, player.gridCoord, vector, player)
+func movePlayer(world *gs.World, player *el.Player, vector gs.Vector) {
+	player.SubWorldCoord, player.GridCoord = moveCharacter(world, player.SubWorldCoord, player.GridCoord, vector, player)
 }
 
-//func moveSnake(gs *World, snake *Snake, vector Vector) {
-//	snake.subWorldCoord, snake.gridCoord = moveCharacter(gs, snake.subWorldCoord, snake.gridCoord, vector, snake)
-//}
+func moveSnake(gs *gs.World, snake *el.Snake, vector gs.Vector) {
+	snake.SubWorldCoord, snake.GridCoord = moveCharacter(gs, snake.SubWorldCoord, snake.GridCoord, vector, snake)
+}
+
 func moveCharacter(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector, element interface{}) (gs.Coord, gs.Coord) {
 	subWorld := world.SubWorlds()[subWorldCoord.X][subWorldCoord.Y]
 
@@ -300,11 +305,11 @@ func moveCharacter(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vect
 
 	override := false
 	switch element.(type) {
-	case *Snake:
-		snake := element.(*Snake)
+	case *el.Snake:
+		snake := element.(*el.Snake)
 		override = snake.Interact(nextElement)
-	case *Player:
-		player := element.(*Player)
+	case *el.Player:
+		player := element.(*el.Player)
 		override = player.Interact(nextElement)
 	default:
 		panic("I don't know how to move this type")
@@ -334,7 +339,7 @@ func elementFromElementId(elementId string) interface{} {
 	var element interface{}
 	switch strings.Split(elementId, ":")[0] {
 	case "coin":
-		element = initializeCoinFromValues(elementValues)
+		element = initializeCoinFromValues(elementId, elementValues)
 	case "rock":
 		element = initializeRockFromValues(elementValues)
 	case "player":
@@ -350,7 +355,7 @@ func elementFromCoords(nextSubWorldCoord gs.Coord, nextCoord gs.Coord) interface
 	elementId, _ := redisClient.Get(coordKey(nextSubWorldCoord, nextCoord)).Result()
 
 	if elementId == "" {
-		return Empty{}
+		return el.Empty{}
 	} else {
 		return elementFromElementId(elementId)
 	}
@@ -399,13 +404,13 @@ func isOutOfBound(x int, y int, bound int) bool {
 	return x < 0 || y < 0 || x >= bound || y >= bound
 }
 
-func printWorld(world *gs.World, player *Player) {
+func printWorld(world *gs.World, player *el.Player) {
 	v := gs.NewVector(-5, -5)
 	visionDistance := 11
 
 	for i := 0; i < visionDistance; i++ {
 		for j := 0; j < visionDistance; j++ {
-			element, valid := nextElement(world, player.subWorldCoord, player.gridCoord, v)
+			element, valid := nextElement(world, player.SubWorldCoord, player.GridCoord, v)
 			if valid {
 				fmt.Printf("%v ", element)
 			}
@@ -417,13 +422,13 @@ func printWorld(world *gs.World, player *Player) {
 	}
 }
 
-func printDebugWorld(world *gs.World, player *Player) {
+func printDebugWorld(world *gs.World, player *el.Player) {
 	v := gs.NewCoord(-5, -5)
 	visionDistance := 11
 
 	for i := 0; i < visionDistance; i++ {
 		for j := 0; j < visionDistance; j++ {
-			val, _ := redisClient.Get(coordKey(player.subWorldCoord, v)).Result()
+			val, _ := redisClient.Get(coordKey(player.SubWorldCoord, v)).Result()
 			fmt.Printf(val)
 			v.X += 1
 		}
@@ -433,7 +438,7 @@ func printDebugWorld(world *gs.World, player *Player) {
 	}
 }
 
-func render(world *gs.World, player *Player) {
+func render(world *gs.World, player *el.Player) {
 	for {
 		clearScreen()
 		printWorld(world, player)
@@ -484,13 +489,13 @@ func convertToOneMove(n int) int {
 	}
 }
 
-//func findPlayer(subWorld *gs.SubWorld) Coord {
+//func findPlayer(subWorld *gs.SubWorld) gs.Coord {
 //	x := -1
 //	y := -1
 //
-//	for i := 0; i < GRID_SIZE; i++ {
-//		for j := 0; j < GRID_SIZE; j++ {
-//			_, isPlayer := subWorld.grid[i][j].element.(*Player)
+//	for i := 0; i < gs.GRID_SIZE; i++ {
+//		for j := 0; j < gs.GRID_SIZE; j++ {
+//			//_, isPlayer := subWorld.grid[i][j].element.(*Player)
 //			if isPlayer {
 //				x = i
 //				y = j
@@ -499,35 +504,35 @@ func convertToOneMove(n int) int {
 //		}
 //	}
 //
-//	return Coord{x: x, y: y}
+//	return gs.Coord{X: x, Y: y}
 //}
-
-//func spawnSnake(gs *World) {
-//	snake := initializeSnake(gs)
+//
+//func spawnSnake(gsWorld *gs.World) {
+//	snake := initializeSnake(gsWorld)
 //
 //	for {
-//		if snake.gridCoord.x == -1 && snake.gridCoord.y == -1 {
+//		if snake.GridCoord.X == -1 && snake.GridCoord.Y == -1 {
 //			return
 //		}
 //
-//		playerLocation := findPlayer(&gs.subWorlds[snake.subWorldCoord.x][snake.subWorldCoord.y])
+//		playerLocation := findPlayer(&gsWorld.SubWorlds()[snake.SubWorldCoord.X][snake.SubWorldCoord.Y])
 //
-//		moveVector := Vector{x: 0, y: 0}
+//		moveVector := gs.Vector{X: 0, Y: 0}
 //
 //		if isFound(playerLocation) {
-//			diffX := playerLocation.x - snake.gridCoord.x
-//			diffY := playerLocation.y - snake.gridCoord.y
+//			diffX := playerLocation.X - snake.GridCoord.X
+//			diffY := playerLocation.Y - snake.GridCoord.Y
 //
 //			if abs(diffX) > abs(diffY) {
-//				moveVector.x = convertToOneMove(diffX)
+//				moveVector.X = convertToOneMove(diffX)
 //			} else {
-//				moveVector.y = convertToOneMove(diffY)
+//				moveVector.Y = convertToOneMove(diffY)
 //			}
 //		} else {
 //			moveVector = randomVector()
 //		}
 //
-//		moveSnake(gs, &snake, moveVector)
+//		moveSnake(gsWorld, &snake, moveVector)
 //		time.Sleep(250 * time.Millisecond)
 //	}
 //}
@@ -575,15 +580,15 @@ func spawnCoinInSubWorld(subWorld *gs.SubWorld) {
 	placeCoin(subWorld, coin)
 }
 
-func printStat(player *Player) {
-	fmt.Printf("Coin: %d", player.coinCount)
+func printStat(player *el.Player) {
+	fmt.Printf("Coin: %d", player.CoinCount())
 	fmt.Println()
-	fmt.Printf("HP: %d", player.hp)
+	fmt.Printf("HP: %d", player.Hp())
 	fmt.Println()
 }
 
-func checkAlive(player *Player) {
-	if !player.alive {
+func checkAlive(player *el.Player) {
+	if !player.Alive() {
 		fmt.Println("You Died")
 		os.Exit(0)
 	}
@@ -659,24 +664,21 @@ func initializeSubWorld(i int, j int) gs.SubWorld {
 			coin := buildAndStoreCoin()
 			placeCoin(&subWorld, coin)
 		}
-
-		// snake := buildSnake()
-		// placeSnake(&subWorld, snake)
 	}
 
 	return subWorld
 }
 
-//func spawnSnakes(gs *World) {
+//func spawnSnakes(gsWorld *World) {
 //	for {
-//		go spawnSnake(gs)
+//		go spawnSnake(gsWorld)
 //		time.Sleep(3000 * time.Millisecond)
 //	}
 //}
 
-func runWorldElements(world *gs.World) {
+func runWorldElements(gs *gs.World) {
 	//go spawnSnakes(gs)
-	go spawnCoinsInWorld(world)
+	go spawnCoinsInWorld(gs)
 }
 
 func main() {

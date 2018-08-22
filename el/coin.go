@@ -22,6 +22,6 @@ func (coin *Coin) Destroy() {
 	setEmptyObject(coin.Id())
 }
 
-func NewCoin(amount int) {
-	return
+func NewCoin(amount int, id int) *Coin {
+	return &Coin{amount: amount, id: id}
 }

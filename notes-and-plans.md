@@ -92,3 +92,6 @@ what happens to your stuff (resources building etc) when you die or log off
 
 #### Future Thoughts
 should the player be on a vector and not grid?
+
+#### Known Bugs
+- The coin ID incrementation is not globally unique. We should be using built in redis inc for this.  
