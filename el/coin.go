@@ -1,6 +1,7 @@
 package el
 
 import "fmt"
+import "../rc"
 
 // COIN
 type Coin struct {

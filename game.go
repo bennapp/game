@@ -72,14 +72,6 @@ var firstBoot bool
 var debug bool
 var coinIdInc int
 
-func initializeRedisClient() {
-	redisClient = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
-}
-
 func redisSet(key string, value string) {
 	err := redisClient.Set(key, value, 0).Err()
 	if err != nil {

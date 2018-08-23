@@ -17,6 +17,7 @@ type Player struct {
 func (p Player) String() string {
 	return fmt.Sprintf("%v", p.id)
 }
+
 func (player *Player) Interact(element interface{}) bool {
 	switch v := element.(type) {
 	case Coin:
@@ -31,18 +32,20 @@ func (player *Player) Interact(element interface{}) bool {
 
 	return false
 }
+
 func (player *Player) Kill() {
 	player.mux.Lock()
 	player.alive = false
 	player.mux.Unlock()
 }
+
 func (player *Player) IncCoinCount(amount int) {
 	player.mux.Lock()
 	player.coinCount += amount
-	storePlayer(player)
 	player.mux.Unlock()
 }
-func (player *Player) decreaseHp(damage int) {
+
+func (player *Player) DecreaseHp(damage int) {
 	player.mux.Lock()
 	player.hp -= damage
 	player.mux.Unlock()
@@ -51,9 +54,11 @@ func (player *Player) decreaseHp(damage int) {
 		player.Kill()
 	}
 }
+
 func (player *Player) Id() string {
 	return fmt.Sprintf("player:%v", player.id)
 }
+
 func (player *Player) Val() string {
 	// Bug fix, use dashes because cords use commas. FIXME: use commas for all attr delimiters
 	return fmt.Sprintf("coinCount:%v-alive:%v-hp:%v-subWorldCoord:%v-gridCoord:%v",
