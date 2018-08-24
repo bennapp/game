@@ -1,153 +1,96 @@
 package main
 
 import "github.com/nsf/termbox-go"
-import "github.com/go-redis/redis"
 import (
 	"fmt"
 	"math/rand"
 	"os"
 	"os/exec"
-	"strconv"
-	"strings"
 	"time"
 )
 import (
 	"./el"
 	"./gs"
+	"./rc"
 )
 
 const MAX_COIN_AMOUNT = 10
 
-func initializePlayerFromValues(elementId string, values string) el.Player {
-	keyValues := strings.Split(values, "-")
-
-	idString := strings.Split(elementId, "player:")[1]
-
-	coinCountString := strings.Split(keyValues[0], "coinCount:")[1]
-	aliveString := strings.Split(keyValues[1], "alive:")[1]
-	hpString := strings.Split(keyValues[2], "hp:")[1]
-
-	subWorldCoordString := strings.Split(keyValues[3], "subWorldCoord:")[1]
-	subWorldCoordStringX := strings.Split(subWorldCoordString, ",")[0]
-	subWorldCoordX, _ := strconv.Atoi(subWorldCoordStringX)
-	subWorldCoordStringY := strings.Split(subWorldCoordString, ",")[1]
-	subWorldCoordY, _ := strconv.Atoi(subWorldCoordStringY)
-
-	gridCoordString := strings.Split(keyValues[4], "gridCoord:")[1]
-	gridCoordStringX := strings.Split(gridCoordString, ",")[0]
-	gridCoordX, _ := strconv.Atoi(gridCoordStringX)
-	gridCoordStringY := strings.Split(gridCoordString, ",")[1]
-	gridCoordY, _ := strconv.Atoi(gridCoordStringY)
-
-	id, _ := strconv.Atoi(idString)
-	coinCount, _ := strconv.Atoi(coinCountString)
-	hp, _ := strconv.Atoi(hpString)
-	alive := aliveString == "true"
-
-	player := el.NewPlayer(id, coinCount, alive, hp)
-
-	player.SubWorldCoord = gs.NewCoord(subWorldCoordX, subWorldCoordY)
-	player.GridCoord = gs.NewCoord(gridCoordX, gridCoordY)
-
-	return player
-}
-
-func initializeCoinFromValues(elementId string, values string) *el.Coin {
-	amountString := strings.Split(values, "amount:")[1]
-	amount, _ := strconv.Atoi(amountString)
-
-	idString := strings.Split(elementId, "player:")[1]
-	id, _ := strconv.Atoi(idString)
-
-	return el.NewCoin(amount, id)
-}
-
-func initializeRockFromValues(_ string) el.Rock {
-	return el.NewRock()
-}
-
 // GLOBALS
-var redisClient *redis.Client
+var elementFactory *el.ElementFactory
 var firstBoot bool
 var debug bool
 var coinIdInc int
 
-func redisSet(key string, value string) {
-	err := redisClient.Set(key, value, 0).Err()
-	if err != nil {
-		panic(err)
-	}
-}
-func storeObject(id string, object string) {
-	redisSet(id, object)
-}
-
-func storePlayer(player *el.Player) {
-	storeObject(player.Id(), player.Val())
-}
-func storeCoin(coin *el.Coin) {
-	storeObject(coin.Id(), coin.Val())
-}
-
-func coordKey(subWorldCoord gs.Coord, coord gs.Coord) string {
-	return fmt.Sprintf("%v:%v", subWorldCoord.Key(), coord.Key())
-}
-func subWorldCoordKey(subWorld *gs.SubWorld, coord gs.Coord) string {
-	return coordKey(subWorld.Coord(), coord)
-}
-
-func storeCoord(subWorld *gs.SubWorld, coord gs.Coord, id string) {
-	redisSet(subWorldCoordKey(subWorld, coord), id)
-}
-
-func storeCoinCoord(subWorld *gs.SubWorld, coord gs.Coord, coin *el.Coin) {
-	storeCoord(subWorld, coord, coin.Id())
-}
-func storeRockCoord(subWorld *gs.SubWorld, coord gs.Coord, rock *el.Rock) {
-	storeCoord(subWorld, coord, rock.Id())
-}
-func storePlayerCoord(subWorld *gs.SubWorld, coord gs.Coord, player *el.Player) {
-	storeCoord(subWorld, coord, player.Id())
-}
-
-func emptykey(key string) {
-	err := redisClient.Set(key, nil, 0).Err()
-	if err != nil {
-		panic(err)
-	}
-}
-
-func setEmptyValue(subWorldCoord gs.Coord, coord gs.Coord) {
-	emptykey(coordKey(subWorldCoord, coord))
-}
-
-func setEmptyObject(id string) {
-	emptykey(id)
-}
-
-func isEmpty(coord gs.Coord) bool {
+//func redisSet(key string, value string) {
+//	err := redisClient.Set(key, value, 0).Err()
+//	if err != nil {
+//		panic(err)
+//	}
+//}
+//func storeObject(id string, object string) {
+//	redisSet(id, object)
+//}
+//
+//func storePlayer(player *el.Player) {
+//	storeObject(player.Id(), player.Val())
+//}
+//func storeCoin(coin *el.Coin) {
+//	storeObject(coin.Id(), coin.Val())
+//}
+//
+//func coordKey(subWorldCoord gs.Coord, coord gs.Coord) string {
+//	return fmt.Sprintf("%v:%v", subWorldCoord.Key(), coord.Key())
+//}
+//func subWorldCoordKey(subWorld *gs.SubWorld, coord gs.Coord) string {
+//	return coordKey(subWorld.Coord(), coord)
+//}
+//
+//func storeCoord(subWorld *gs.SubWorld, coord gs.Coord, id string) {
+//	redisSet(subWorldCoordKey(subWorld, coord), id)
+//}
+//
+//func storeCoinCoord(subWorld *gs.SubWorld, coord gs.Coord, coin *el.Coin) {
+//	storeCoord(subWorld, coord, coin.Id())
+//}
+//func storeRockCoord(subWorld *gs.SubWorld, coord gs.Coord, rock *el.Rock) {
+//	storeCoord(subWorld, coord, rock.Id())
+//}
+//func storePlayerCoord(subWorld *gs.SubWorld, coord gs.Coord, player *el.Player) {
+//	storeCoord(subWorld, coord, player.Id())
+//}
+//
+//func emptykey(key string) {
+//	err := redisClient.Set(key, nil, 0).Err()
+//	if err != nil {
+//		panic(err)
+//	}
+//}
+//
+//func setEmptyValue(subWorldCoord gs.Coord, coord gs.Coord) {
+//	emptykey(coordKey(subWorldCoord, coord))
+//}
+//
+//func setEmptyObject(id string) {
+//	emptykey(id)
+//}
+//
+func isEmpty(subWorldCoord gs.Coord, coord gs.Coord) bool {
 	// Look into this, not sure this is right
 	// can we check that value == nil (?)
+	location := el.NewLocation(subWorldCoord, coord)
+	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey())
 
-	val, _ := redisClient.Get(coord.Key()).Result()
-	if val == "" {
-		return true
-	} else {
-		return false
-	}
+	return element.(*el.Element).IsEmpty()
 }
 
-func storeElement(subWorld *gs.SubWorld, coord gs.Coord, element interface{}) {
-	switch v := element.(type) {
-	case *el.Coin:
-		storeCoinCoord(subWorld, coord, v)
-	case *el.Rock:
-		storeRockCoord(subWorld, coord, v)
-	case *el.Player:
-		storePlayerCoord(subWorld, coord, v)
-		storePlayer(v)
-		//default:
-	}
+func storeElement(subWorld *gs.SubWorld, coord gs.Coord, dbo rc.Dbo) {
+	element := elementFactory.CreateNew(el.ELEMENT)
+	element.(*el.Element).DboKey = dbo.Key()
+	element.(*el.Element).SubWorldCoord = subWorld.Coord()
+	element.(*el.Element).GridCoord = coord
+
+	elementFactory.Save(element)
 }
 
 //func (player *Player) BuildWall(gs *World) bool {
@@ -194,9 +137,13 @@ func initializePlayer(world *gs.World) *el.Player {
 	x, y := randomPair(gs.WORLD_SIZE)
 	subWorld := world.SubWorlds()[x][y]
 
-	var player el.Player
+	var player *el.Player
 	if firstBoot {
-		player = el.NewPlayer(1, 0, true, 10)
+		player = elementFactory.CreateNew(el.PLAYER).(*el.Player)
+		player.CoinCount = 0
+		player.Alive = true
+		player.Hp = 10
+		player.Id = 1
 
 		subWorldCoord := gs.NewCoord(x, y)
 		gridCoord := placeElementRandomLocationWithLock(&subWorld, player)
@@ -204,34 +151,29 @@ func initializePlayer(world *gs.World) *el.Player {
 		player.SubWorldCoord = subWorldCoord
 		player.GridCoord = gridCoord
 
-		storePlayer(&player)
+		elementFactory.Save(player)
 	} else {
-		playerValues, err := redisClient.Get(playerKey(1)).Result()
-		if err != nil {
-			panic(err)
-		}
-
-		player = initializePlayerFromValues("player:1", playerValues)
+		player = elementFactory.LoadFromId(el.PLAYER, 1).(*el.Player)
 	}
 
-	return &player
+	return player
 }
 
 // creates a snakeCell
 // returns a pair of Coord of World, SubWorld
-func initializeSnake(world *gs.World) el.Snake {
-	x, y := randomPair(gs.WORLD_SIZE)
-	subWorld := world.SubWorlds()[x][y]
-
-	snake := el.Snake{}
-	subWorldCoord := gs.NewCoord(x, y)
-	gridCoord := placeElementRandomLocationWithLock(&subWorld, &snake)
-
-	snake.SubWorldCoord = subWorldCoord
-	snake.GridCoord = gridCoord
-
-	return snake
-}
+//func initializeSnake(world *gs.World) el.Snake {
+//	x, y := randomPair(gs.WORLD_SIZE)
+//	subWorld := world.SubWorlds()[x][y]
+//
+//	snake := el.Snake{}
+//	subWorldCoord := gs.NewCoord(x, y)
+//	gridCoord := placeElementRandomLocationWithLock(&subWorld, &snake)
+//
+//	snake.SubWorldCoord = subWorldCoord
+//	snake.GridCoord = gridCoord
+//
+//	return snake
+//}
 
 func nextCoinId() int {
 	coinIdInc++
@@ -239,40 +181,44 @@ func nextCoinId() int {
 }
 
 func initializeCoin() *el.Coin {
-	return el.NewCoin(rand.Intn(MAX_COIN_AMOUNT)+1, nextCoinId())
+	coin := elementFactory.CreateNew(el.COIN)
+	coin.(*el.Coin).Amount = rand.Intn(MAX_COIN_AMOUNT)
+
+	return coin.(*el.Coin)
 }
 
 func buildAndStoreCoin() *el.Coin {
 	coin := initializeCoin()
-	storeCoin(coin)
+
+	elementFactory.Save(coin)
+
 	return coin
 }
 
 // creates a Coin
-// returns a pair of Coord of SubWorld
 func placeCoin(subWorld *gs.SubWorld, coin *el.Coin) {
 	placeElementRandomLocationWithLock(subWorld, coin)
 }
 
 // creates a Rock
-// returns a pair of Coord of SubWorld
 func placeRock(subWorld *gs.SubWorld) {
-	rock := el.Rock{}
-	placeElementRandomLocationWithLock(subWorld, &rock)
+	rock := elementFactory.CreateNew(el.ROCK)
+	elementFactory.Save(rock)
+	placeElementRandomLocationWithLock(subWorld, rock)
 }
 
-func placeElementRandomLocationWithLock(subWorld *gs.SubWorld, element interface{}) gs.Coord {
+func placeElementRandomLocationWithLock(subWorld *gs.SubWorld, dbo rc.Dbo) gs.Coord {
 	x, y := randomPair(gs.GRID_SIZE)
 	coord := gs.NewCoord(x, y)
 
-	if isEmpty(coord) {
+	if isEmpty(subWorld.Coord(), coord) {
 		cell := subWorld.Grid()[x][y]
 
 		cell.Mux().Lock()
-		storeElement(subWorld, coord, element)
+		storeElement(subWorld, coord, dbo)
 		cell.Mux().Unlock()
 	} else {
-		coord = placeElementRandomLocationWithLock(subWorld, element)
+		coord = placeElementRandomLocationWithLock(subWorld, dbo)
 	}
 
 	return coord
@@ -282,11 +228,11 @@ func movePlayer(world *gs.World, player *el.Player, vector gs.Vector) {
 	player.SubWorldCoord, player.GridCoord = moveCharacter(world, player.SubWorldCoord, player.GridCoord, vector, player)
 }
 
-func moveSnake(gs *gs.World, snake *el.Snake, vector gs.Vector) {
-	snake.SubWorldCoord, snake.GridCoord = moveCharacter(gs, snake.SubWorldCoord, snake.GridCoord, vector, snake)
-}
+//func moveSnake(gs *gs.World, snake *el.Snake, vector gs.Vector) {
+//	snake.SubWorldCoord, snake.GridCoord = moveCharacter(gs, snake.SubWorldCoord, snake.GridCoord, vector, snake)
+//}
 
-func moveCharacter(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector, element interface{}) (gs.Coord, gs.Coord) {
+func moveCharacter(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector, element rc.Dbo) (gs.Coord, gs.Coord) {
 	subWorld := world.SubWorlds()[subWorldCoord.X][subWorldCoord.Y]
 
 	nextSubWorldCoord, nextCoord, _ := subWorldMove(subWorldCoord, coord, vector)
@@ -297,9 +243,9 @@ func moveCharacter(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vect
 
 	override := false
 	switch element.(type) {
-	case *el.Snake:
-		snake := element.(*el.Snake)
-		override = snake.Interact(nextElement)
+	//case *el.Snake:
+	//	snake := element.(*el.Snake)
+	//	override = snake.Interact(nextElement)
 	case *el.Player:
 		player := element.(*el.Player)
 		override = player.Interact(nextElement)
@@ -311,7 +257,7 @@ func moveCharacter(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vect
 		prevCell := subWorld.Grid()[coord.X][coord.Y]
 
 		prevCell.Mux().Lock()
-		setEmptyValue(subWorldCoord, coord)
+		elementFactory.Delete(nextElement)
 		prevCell.Mux().Unlock()
 
 		nextCell := nextSubWorld.Grid()[nextCoord.X][nextCoord.Y]
@@ -325,35 +271,26 @@ func moveCharacter(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vect
 	return nextSubWorldCoord, nextCoord
 }
 
-func elementFromElementId(elementId string) interface{} {
-	elementValues, _ := redisClient.Get(elementId).Result()
-
-	var element interface{}
-	switch strings.Split(elementId, ":")[0] {
-	case "coin":
-		element = initializeCoinFromValues(elementId, elementValues)
-	case "rock":
-		element = initializeRockFromValues(elementValues)
-	case "player":
-		element = initializePlayerFromValues(elementId, elementValues)
-		//case "snake":
-		//	element = initializeSnakeFromValues(elementValues)
-	}
+func elementFromKey(key string) rc.Dbo {
+	t, _ := rc.SplitKey(key)
+	element := elementFactory.LoadFromKey(t, key)
 
 	return element
 }
 
-func elementFromCoords(nextSubWorldCoord gs.Coord, nextCoord gs.Coord) interface{} {
-	elementId, _ := redisClient.Get(coordKey(nextSubWorldCoord, nextCoord)).Result()
+func elementFromCoords(subWorldCoord gs.Coord, coord gs.Coord) rc.Dbo {
 
-	if elementId == "" {
-		return el.Empty{}
+	location := el.NewLocation(subWorldCoord, coord)
+	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
+
+	if element.IsEmpty() {
+		return element
 	} else {
-		return elementFromElementId(elementId)
+		return elementFromKey(element.DboKey)
 	}
 }
 
-func nextElement(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector) (interface{}, bool) {
+func nextElement(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector) (rc.Dbo, bool) {
 	nextSubWorldCoord, nextCoord, moved := subWorldMove(subWorldCoord, coord, vector)
 	return elementFromCoords(nextSubWorldCoord, nextCoord), moved
 }
@@ -414,37 +351,37 @@ func printWorld(world *gs.World, player *el.Player) {
 	}
 }
 
-func printDebugWorld(world *gs.World, player *el.Player) {
-	v := gs.NewCoord(-5, -5)
-	visionDistance := 11
-
-	for i := 0; i < visionDistance; i++ {
-		for j := 0; j < visionDistance; j++ {
-			val, _ := redisClient.Get(coordKey(player.SubWorldCoord, v)).Result()
-			fmt.Printf(val)
-			v.X += 1
-		}
-		v.X = -5
-		fmt.Println()
-		v.Y += 1
-	}
-}
+//func printDebugWorld(world *gs.World, player *el.Player) {
+//	v := gs.NewCoord(-5, -5)
+//	visionDistance := 11
+//
+//	for i := 0; i < visionDistance; i++ {
+//		for j := 0; j < visionDistance; j++ {
+//			val, _ := redisClient.Get(coordKey(player.SubWorldCoord, v)).Result()
+//			fmt.Printf(val)
+//			v.X += 1
+//		}
+//		v.X = -5
+//		fmt.Println()
+//		v.Y += 1
+//	}
+//}
 
 func render(world *gs.World, player *el.Player) {
 	for {
 		clearScreen()
 		printWorld(world, player)
 		fmt.Println()
+		printStat(player)
 
 		if debug {
-			printDebugWorld(world, player)
-			printStat(player)
-
-			keys, _ := redisClient.Keys("player:*").Result()
-			for _, key := range keys {
-				val, _ := redisClient.Get(key).Result()
-				fmt.Printf("[%v--%v]", key, val)
-			}
+			//printDebugWorld(world, player)
+			//
+			//keys, _ := redisClient.Keys("player:*").Result()
+			//for _, key := range keys {
+			//	val, _ := redisClient.Get(key).Result()
+			//	fmt.Printf("[%v--%v]", key, val)
+			//}
 		}
 
 		time.Sleep(100 * time.Millisecond)
@@ -573,14 +510,14 @@ func spawnCoinInSubWorld(subWorld *gs.SubWorld) {
 }
 
 func printStat(player *el.Player) {
-	fmt.Printf("Coin: %d", player.CoinCount())
+	fmt.Printf("Coin: %d", player.CoinCount)
 	fmt.Println()
-	fmt.Printf("HP: %d", player.Hp())
+	fmt.Printf("HP: %d", player.Hp)
 	fmt.Println()
 }
 
 func checkAlive(player *el.Player) {
-	if !player.Alive() {
+	if !player.Alive {
 		fmt.Println("You Died")
 		os.Exit(0)
 	}
@@ -600,7 +537,7 @@ func startTerminalClient(world *gs.World) {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyCtrlQ {
-				storePlayer(player)
+				elementFactory.Save(player)
 				termbox.Close()
 				clearScreen()
 				os.Exit(3)
@@ -668,6 +605,11 @@ func initializeSubWorld(i int, j int) gs.SubWorld {
 //	}
 //}
 
+func initializeElementFactory() {
+	elementFactory = el.Factory(firstBoot)
+	elementFactory.Init()
+}
+
 func runWorldElements(gs *gs.World) {
 	//go spawnSnakes(gs)
 	go spawnCoinsInWorld(gs)
@@ -679,7 +621,7 @@ func main() {
 	firstBoot = true
 	debug = true
 
-	initializeRedisClient()
+	initializeElementFactory()
 
 	world := initializeWorld()
 

@@ -1,7 +1,7 @@
 package el
 
 type Building struct {
-	Element
+	Location
 	code string
 }
 

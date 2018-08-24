@@ -2,7 +2,7 @@ package el
 
 // EMPTY
 type Empty struct {
-	Element
+	Location
 }
 
 func (e Empty) String() string {

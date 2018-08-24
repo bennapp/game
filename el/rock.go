@@ -1,18 +1,43 @@
 package el
 
-import "fmt"
+import (
+	"../rc"
+	"fmt"
+)
+
+const ROCK = "rock"
 
 type Rock struct {
-	Element
+	Location
 }
 
-func (rock *Rock) Id() string {
-	return fmt.Sprintf("rock")
-}
-func (r Rock) String() string {
+func (rock *Rock) String() string {
 	return "R"
 }
 
-func NewRock() Rock {
-	return Rock{}
+func (rock *Rock) Type() string {
+	return ROCK
+}
+
+func (rock *Rock) Id() int {
+	return -1
+}
+
+func (rock *Rock) Key() string {
+	return rc.GenerateKey(ROCK, -1)
+}
+
+func (rock *Rock) Serialize() string {
+	return fmt.Sprintf("")
+}
+
+func (rock *Rock) Deserialize(key string, values string) {
+}
+
+func NewRock() *Rock {
+	return &Rock{}
+}
+
+func newRockDbo(id int) rc.Dbo {
+	return &Rock{}
 }

@@ -1,29 +1,23 @@
 package rc
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type Dbo interface {
 	Type() string
-	Id() int
+	Key() string
 	Serialize() string
-	Deserialize(v string) Dbo
-	DboManager() RedisManager
+	Deserialize(key string, v string)
 }
 
-func generateKey(o Dbo) string {
-	return fmt.Sprintf("%s:%v", o.Type(), o.Id())
+func GenerateKey(t string, id int) string {
+	return fmt.Sprintf("%s:%v", t, id)
 }
 
-func Save(o Dbo) {
-	err := o.DboManager().Client(o).Set(generateKey(o), o.Serialize(), 0).Err()
-	if err != nil {
-		panic(err)
-	}
-}
+func SplitKey(key string) (string, string) {
+	split := strings.Split(key, ":")
 
-func Delete(o Dbo) {
-	err := o.DboManager().Client(o).Set(generateKey(o), nil, 0).Err()
-	if err != nil {
-		panic(err)
-	}
+	return split[0], split[1]
 }

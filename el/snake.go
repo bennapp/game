@@ -1,14 +1,14 @@
 package el
 
 type Snake struct {
-	Element
+	Location
 }
 
 func (s *Snake) String() string {
 	return "S"
 }
 func (s *Snake) Attack(player *Player) {
-	player.decreaseHp(1)
+	player.DecreaseHp(1)
 }
 func (snake *Snake) Interact(element interface{}) bool {
 	switch element.(type) {

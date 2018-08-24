@@ -1,28 +1,86 @@
 package el
 
 import (
+	"../gs"
+	"../rc"
 	"fmt"
+	"strconv"
+	"strings"
 	"sync"
 )
 
+const PLAYER = "player"
+
 type Player struct {
-	Element
+	Location
 	mux       sync.Mutex
-	coinCount int
-	alive     bool
-	hp        int
-	id        int
+	CoinCount int
+	Alive     bool
+	Hp        int
+	Id        int
 }
 
-func (p Player) String() string {
-	return fmt.Sprintf("%v", p.id)
+func (player Player) String() string {
+	return fmt.Sprintf("%v", player.Id)
+}
+
+func (player Player) Type() string {
+	return PLAYER
+}
+
+func (player *Player) Key() string {
+	return rc.GenerateKey(PLAYER, player.Id)
+}
+
+func (player *Player) Serialize() string {
+	// Bug fix, use dashes because cords use commas. FIXME: use commas for all attr delimiters
+	return fmt.Sprintf("CoinCount:%v-Alive:%v-Hp:%v-subWorldCoord:%v-gridCoord:%v",
+		player.CoinCount,
+		player.Alive,
+		player.Hp,
+		player.SubWorldCoord.Key(),
+		player.GridCoord.Key(),
+	)
+}
+
+func (player *Player) Deserialize(key string, values string) {
+	keyValues := strings.Split(values, "-")
+
+	coinCountString := strings.Split(keyValues[0], "CoinCount:")[1]
+	aliveString := strings.Split(keyValues[1], "Alive:")[1]
+	hpString := strings.Split(keyValues[2], "Hp:")[1]
+
+	subWorldCoordString := strings.Split(keyValues[3], "subWorldCoord:")[1]
+	subWorldCoordStringX := strings.Split(subWorldCoordString, ",")[0]
+	subWorldCoordX, _ := strconv.Atoi(subWorldCoordStringX)
+	subWorldCoordStringY := strings.Split(subWorldCoordString, ",")[1]
+	subWorldCoordY, _ := strconv.Atoi(subWorldCoordStringY)
+
+	gridCoordString := strings.Split(keyValues[4], "gridCoord:")[1]
+	gridCoordStringX := strings.Split(gridCoordString, ",")[0]
+	gridCoordX, _ := strconv.Atoi(gridCoordStringX)
+	gridCoordStringY := strings.Split(gridCoordString, ",")[1]
+	gridCoordY, _ := strconv.Atoi(gridCoordStringY)
+
+	coinCount, _ := strconv.Atoi(coinCountString)
+	hp, _ := strconv.Atoi(hpString)
+	alive := aliveString == "true"
+
+	id, _ := rc.SplitKey(key)
+
+	player.Id, _ = strconv.Atoi(id)
+	player.CoinCount = coinCount
+	player.Alive = alive
+	player.Hp = hp
+	player.SubWorldCoord = gs.NewCoord(subWorldCoordX, subWorldCoordY)
+	player.GridCoord = gs.NewCoord(gridCoordX, gridCoordY)
 }
 
 func (player *Player) Interact(element interface{}) bool {
 	switch v := element.(type) {
 	case Coin:
-		player.IncCoinCount(v.amount)
-		v.Destroy()
+		player.IncCoinCount(v.Amount)
+		//v.Destroy()
 		return true
 	case Empty:
 		return true
@@ -35,57 +93,34 @@ func (player *Player) Interact(element interface{}) bool {
 
 func (player *Player) Kill() {
 	player.mux.Lock()
-	player.alive = false
+	player.Alive = false
 	player.mux.Unlock()
 }
 
 func (player *Player) IncCoinCount(amount int) {
 	player.mux.Lock()
-	player.coinCount += amount
+	player.CoinCount += amount
 	player.mux.Unlock()
 }
 
 func (player *Player) DecreaseHp(damage int) {
 	player.mux.Lock()
-	player.hp -= damage
+	player.Hp -= damage
 	player.mux.Unlock()
 
-	if player.hp < 0 {
+	if player.Hp < 0 {
 		player.Kill()
 	}
 }
 
-func (player *Player) Id() string {
-	return fmt.Sprintf("player:%v", player.id)
-}
-
-func (player *Player) Val() string {
-	// Bug fix, use dashes because cords use commas. FIXME: use commas for all attr delimiters
-	return fmt.Sprintf("coinCount:%v-alive:%v-hp:%v-subWorldCoord:%v-gridCoord:%v",
-		player.coinCount,
-		player.alive,
-		player.hp,
-		player.SubWorldCoord.Key(),
-		player.GridCoord.Key(),
-	)
-}
-
 func NewPlayer(id int, coinCount int, alive bool, hp int) Player {
-	return Player{id: id, coinCount: coinCount, alive: alive, hp: hp}
+	return Player{Id: id, CoinCount: coinCount, Alive: alive, Hp: hp}
+}
+
+func newPlayerDbo(id int) rc.Dbo {
+	return &Player{Id: id}
 }
 
 func (player *Player) Mux() *sync.Mutex {
 	return &player.mux
-}
-
-func (player *Player) CoinCount() int {
-	return player.coinCount
-}
-
-func (player *Player) Alive() bool {
-	return player.alive
-}
-
-func (player *Player) Hp() int {
-	return player.hp
 }

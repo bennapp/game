@@ -1,6 +1,9 @@
 package rc
 
-import "github.com/go-redis/redis"
+import (
+	"fmt"
+	"github.com/go-redis/redis"
+)
 
 var INSTANCE RedisManager
 
@@ -8,12 +11,12 @@ type RedisManager struct {
 	client *redis.Client
 }
 
-func Manager() RedisManager {
+func Manager() *RedisManager {
 	if &INSTANCE == nil {
 		initializeRedisClient()
 	}
 
-	return INSTANCE
+	return &INSTANCE
 }
 
 func initializeRedisClient() {
@@ -29,4 +32,37 @@ func initializeRedisClient() {
 func (manager *RedisManager) Client(v interface{}) *redis.Client {
 	//TODO : return different redis client for different types
 	return INSTANCE.client
+}
+
+func (manager *RedisManager) Save(o Dbo) {
+	client := manager.Client(o.Key())
+	fmt.Printf("manager.go: client found for key: %s\n", o.Key())
+
+	serialize := o.Serialize()
+	fmt.Printf("manager.go: serialize success: %s\n", serialize)
+
+	err := client.Set(o.Key(), serialize, 0).Err()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (manager *RedisManager) Delete(o Dbo) {
+	err := manager.Client(o.Key()).Set(o.Key(), nil, 0).Err()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (manager *RedisManager) LoadFromId(t string, id int) string {
+	return manager.LoadFromKey(GenerateKey(t, id))
+}
+
+func (manager *RedisManager) LoadFromKey(key string) string {
+	val, err := manager.Client(key).Get(key).Result()
+	if err != nil {
+		panic(err)
+	}
+
+	return val
 }
