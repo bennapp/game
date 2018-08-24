@@ -1,26 +1,25 @@
 package rc
 
 import (
-	"fmt"
 	"github.com/go-redis/redis"
 )
 
-var INSTANCE RedisManager
+var INSTANCE *RedisManager
 
 type RedisManager struct {
 	client *redis.Client
 }
 
 func Manager() *RedisManager {
-	if &INSTANCE == nil {
+	if INSTANCE == nil {
 		initializeRedisClient()
 	}
 
-	return &INSTANCE
+	return INSTANCE
 }
 
 func initializeRedisClient() {
-	INSTANCE = RedisManager{
+	INSTANCE = &RedisManager{
 		client: redis.NewClient(&redis.Options{
 			Addr:     "localhost:6379",
 			Password: "", // no password set
@@ -36,10 +35,10 @@ func (manager *RedisManager) Client(v interface{}) *redis.Client {
 
 func (manager *RedisManager) Save(o Dbo) {
 	client := manager.Client(o.Key())
-	fmt.Printf("manager.go: client found for key: %s\n", o.Key())
+	//fmt.Printf("manager.go: Client found for key: %s\n", o.Key())
 
 	serialize := o.Serialize()
-	fmt.Printf("manager.go: serialize success: %s\n", serialize)
+	//fmt.Printf("manager.go: Serialize success: %s\n", serialize)
 
 	err := client.Set(o.Key(), serialize, 0).Err()
 	if err != nil {
@@ -59,10 +58,13 @@ func (manager *RedisManager) LoadFromId(t string, id int) string {
 }
 
 func (manager *RedisManager) LoadFromKey(key string) string {
-	val, err := manager.Client(key).Get(key).Result()
-	if err != nil {
-		panic(err)
-	}
+	//fmt.Printf("manager.go: Loading from Key: %s\n", key)
+
+	val, _ := manager.Client(key).Get(key).Result()
+
+	//if err != nil {
+	//	panic(err)
+	//}
 
 	return val
 }

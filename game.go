@@ -143,7 +143,7 @@ func initializePlayer(world *gs.World) *el.Player {
 		player.CoinCount = 0
 		player.Alive = true
 		player.Hp = 10
-		player.Id = 1
+		player.Id = 1 //TODO - hard coded id; fix??
 
 		subWorldCoord := gs.NewCoord(x, y)
 		gridCoord := placeElementRandomLocationWithLock(&subWorld, player)
@@ -241,6 +241,8 @@ func moveCharacter(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vect
 
 	nextElement, _ := nextElement(world, subWorldCoord, coord, vector)
 
+	//fmt.Printf("game.go: NextElement key: %s, value: %s\n", nextElement.String(), nextElement.Serialize())
+
 	override := false
 	switch element.(type) {
 	//case *el.Snake:
@@ -257,7 +259,7 @@ func moveCharacter(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vect
 		prevCell := subWorld.Grid()[coord.X][coord.Y]
 
 		prevCell.Mux().Lock()
-		elementFactory.Delete(nextElement)
+		removeCoords(subWorldCoord, coord)
 		prevCell.Mux().Unlock()
 
 		nextCell := nextSubWorld.Grid()[nextCoord.X][nextCoord.Y]
@@ -278,14 +280,22 @@ func elementFromKey(key string) rc.Dbo {
 	return element
 }
 
-func elementFromCoords(subWorldCoord gs.Coord, coord gs.Coord) rc.Dbo {
+//TODO - create removeCoords in manager.go
+func removeCoords(subWorldCoord gs.Coord, coord gs.Coord) {
+	location := el.NewLocation(subWorldCoord, coord)
+	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
+	elementFactory.Delete(element)
+}
 
+func elementFromCoords(subWorldCoord gs.Coord, coord gs.Coord) rc.Dbo {
 	location := el.NewLocation(subWorldCoord, coord)
 	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
 
 	if element.IsEmpty() {
-		return element
+		//fmt.Printf("game.go: Element is empty.\n")
+		return &el.Empty{}
 	} else {
+		//fmt.Printf("game.go: Load From Key: %s\n", element.DboKey)
 		return elementFromKey(element.DboKey)
 	}
 }
@@ -341,7 +351,7 @@ func printWorld(world *gs.World, player *el.Player) {
 		for j := 0; j < visionDistance; j++ {
 			element, valid := nextElement(world, player.SubWorldCoord, player.GridCoord, v)
 			if valid {
-				fmt.Printf("%v ", element)
+				fmt.Printf("%v ", element.String())
 			}
 			v.X += 1
 		}
@@ -618,7 +628,7 @@ func runWorldElements(gs *gs.World) {
 func main() {
 	rand.Seed(12345)
 
-	firstBoot = true
+	firstBoot = false
 	debug = true
 
 	initializeElementFactory()

@@ -66,7 +66,7 @@ func (player *Player) Deserialize(key string, values string) {
 	hp, _ := strconv.Atoi(hpString)
 	alive := aliveString == "true"
 
-	id, _ := rc.SplitKey(key)
+	_, id := rc.SplitKey(key)
 
 	player.Id, _ = strconv.Atoi(id)
 	player.CoinCount = coinCount
@@ -76,13 +76,13 @@ func (player *Player) Deserialize(key string, values string) {
 	player.GridCoord = gs.NewCoord(gridCoordX, gridCoordY)
 }
 
-func (player *Player) Interact(element interface{}) bool {
+func (player *Player) Interact(element rc.Dbo) bool {
 	switch v := element.(type) {
-	case Coin:
+	case *Coin:
 		player.IncCoinCount(v.Amount)
 		//v.Destroy()
 		return true
-	case Empty:
+	case *Empty:
 		return true
 	default:
 		return false

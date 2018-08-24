@@ -10,6 +10,7 @@ type Dbo interface {
 	Key() string
 	Serialize() string
 	Deserialize(key string, v string)
+	String() string
 }
 
 func GenerateKey(t string, id int) string {

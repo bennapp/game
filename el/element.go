@@ -26,8 +26,11 @@ func (element *Element) Serialize() string {
 	return element.DboKey
 }
 
-func (element *Element) Deserialize(key string, v string) {
+func (element *Element) Deserialize(key string, dboKey string) {
+	//fmt.Printf("element.go: Attempt to Deserialize. key: %s, val: %s\n", key, dboKey)
+
 	subWorld, coord := rc.SplitKey(key)
+	//fmt.Printf("element.go: Spliting key: %s, %s", subWorld, coord)
 
 	subWorldCoordStringX := strings.Split(subWorld, ",")[0]
 	subWorldCoordX, _ := strconv.Atoi(subWorldCoordStringX)
@@ -41,9 +44,16 @@ func (element *Element) Deserialize(key string, v string) {
 
 	element.SubWorldCoord = gs.NewCoord(subWorldCoordX, subWorldCoordY)
 	element.GridCoord = gs.NewCoord(gridCoordX, gridCoordY)
+
+	element.DboKey = dboKey
+}
+
+func (element *Element) String() string {
+	return " "
 }
 
 func (element *Element) IsEmpty() bool {
+	//fmt.Printf("element.go: DboKey: %s\n", element.DboKey)
 	return element.DboKey == ""
 }
 
