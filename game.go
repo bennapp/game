@@ -1,5 +1,6 @@
 package main
 
+/*
 import "github.com/nsf/termbox-go"
 import (
 	"fmt"
@@ -33,10 +34,10 @@ var coinIdInc int
 //}
 //
 //func storePlayer(player *el.Player) {
-//	storeObject(player.Id(), player.Val())
+//	storeObject(player.id(), player.Val())
 //}
 //func storeCoin(coin *el.Coin) {
-//	storeObject(coin.Id(), coin.Val())
+//	storeObject(coin.id(), coin.Val())
 //}
 //
 //func coordKey(subWorldCoord gs.Coord, coord gs.Coord) string {
@@ -51,13 +52,13 @@ var coinIdInc int
 //}
 //
 //func storeCoinCoord(subWorld *gs.SubWorld, coord gs.Coord, coin *el.Coin) {
-//	storeCoord(subWorld, coord, coin.Id())
+//	storeCoord(subWorld, coord, coin.id())
 //}
 //func storeRockCoord(subWorld *gs.SubWorld, coord gs.Coord, rock *el.Rock) {
-//	storeCoord(subWorld, coord, rock.Id())
+//	storeCoord(subWorld, coord, rock.id())
 //}
 //func storePlayerCoord(subWorld *gs.SubWorld, coord gs.Coord, player *el.Player) {
-//	storeCoord(subWorld, coord, player.Id())
+//	storeCoord(subWorld, coord, player.id())
 //}
 //
 //func emptykey(key string) {
@@ -133,9 +134,9 @@ func playerKey(id int) string {
 
 // creates a player
 // returns a pair of Coord of World, SubWorld
-func initializePlayer(world *gs.World) *el.Player {
+func initializePlayer(wo *gs.World) *el.Player {
 	x, y := randomPair(gs.WORLD_SIZE)
-	subWorld := world.SubWorlds()[x][y]
+	subWorld := wo.SubWorlds()[x][y]
 
 	var player *el.Player
 	if firstBoot {
@@ -143,7 +144,7 @@ func initializePlayer(world *gs.World) *el.Player {
 		player.CoinCount = 0
 		player.Alive = true
 		player.Hp = 10
-		player.Id = 1 //TODO - hard coded id; fix??
+		player.id = 1 //TODO - hard coded id; fix??
 
 		subWorldCoord := gs.NewCoord(x, y)
 		gridCoord := placeElementRandomLocationWithLock(&subWorld, player)
@@ -161,9 +162,9 @@ func initializePlayer(world *gs.World) *el.Player {
 
 // creates a snakeCell
 // returns a pair of Coord of World, SubWorld
-//func initializeSnake(world *gs.World) el.Snake {
+//func initializeSnake(wo *gs.World) el.Snake {
 //	x, y := randomPair(gs.WORLD_SIZE)
-//	subWorld := world.SubWorlds()[x][y]
+//	subWorld := wo.SubWorlds()[x][y]
 //
 //	snake := el.Snake{}
 //	subWorldCoord := gs.NewCoord(x, y)
@@ -224,22 +225,22 @@ func placeElementRandomLocationWithLock(subWorld *gs.SubWorld, dbo rc.Dbo) gs.Co
 	return coord
 }
 
-func movePlayer(world *gs.World, player *el.Player, vector gs.Vector) {
-	player.SubWorldCoord, player.GridCoord = moveCharacter(world, player.SubWorldCoord, player.GridCoord, vector, player)
+func movePlayer(wo *gs.World, player *el.Player, vector gs.Vector) {
+	player.SubWorldCoord, player.GridCoord = moveCharacter(wo, player.SubWorldCoord, player.GridCoord, vector, player)
 }
 
 //func moveSnake(gs *gs.World, snake *el.Snake, vector gs.Vector) {
 //	snake.SubWorldCoord, snake.GridCoord = moveCharacter(gs, snake.SubWorldCoord, snake.GridCoord, vector, snake)
 //}
 
-func moveCharacter(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector, element rc.Dbo) (gs.Coord, gs.Coord) {
-	subWorld := world.SubWorlds()[subWorldCoord.X][subWorldCoord.Y]
+func moveCharacter(wo *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector, element rc.Dbo) (gs.Coord, gs.Coord) {
+	subWorld := wo.SubWorlds()[subWorldCoord.X][subWorldCoord.Y]
 
 	nextSubWorldCoord, nextCoord, _ := subWorldMove(subWorldCoord, coord, vector)
 
-	nextSubWorld := world.SubWorlds()[nextSubWorldCoord.X][nextSubWorldCoord.Y]
+	nextSubWorld := wo.SubWorlds()[nextSubWorldCoord.X][nextSubWorldCoord.Y]
 
-	nextElement, _ := nextElement(world, subWorldCoord, coord, vector)
+	nextElement, _ := nextElement(wo, subWorldCoord, coord, vector)
 
 	//fmt.Printf("game.go: NextElement key: %s, value: %s\n", nextElement.String(), nextElement.Serialize())
 
@@ -300,7 +301,7 @@ func elementFromCoords(subWorldCoord gs.Coord, coord gs.Coord) rc.Dbo {
 	}
 }
 
-func nextElement(world *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector) (rc.Dbo, bool) {
+func nextElement(wo *gs.World, subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector) (rc.Dbo, bool) {
 	nextSubWorldCoord, nextCoord, moved := subWorldMove(subWorldCoord, coord, vector)
 	return elementFromCoords(nextSubWorldCoord, nextCoord), moved
 }
@@ -343,13 +344,13 @@ func isOutOfBound(x int, y int, bound int) bool {
 	return x < 0 || y < 0 || x >= bound || y >= bound
 }
 
-func printWorld(world *gs.World, player *el.Player) {
+func printWorld(wo *gs.World, player *el.Player) {
 	v := gs.NewVector(-5, -5)
 	visionDistance := 11
 
 	for i := 0; i < visionDistance; i++ {
 		for j := 0; j < visionDistance; j++ {
-			element, valid := nextElement(world, player.SubWorldCoord, player.GridCoord, v)
+			element, valid := nextElement(wo, player.SubWorldCoord, player.GridCoord, v)
 			if valid {
 				fmt.Printf("%v ", element.String())
 			}
@@ -361,7 +362,7 @@ func printWorld(world *gs.World, player *el.Player) {
 	}
 }
 
-//func printDebugWorld(world *gs.World, player *el.Player) {
+//func printDebugWorld(wo *gs.World, player *el.Player) {
 //	v := gs.NewCoord(-5, -5)
 //	visionDistance := 11
 //
@@ -377,15 +378,15 @@ func printWorld(world *gs.World, player *el.Player) {
 //	}
 //}
 
-func render(world *gs.World, player *el.Player) {
+func render(wo *gs.World, player *el.Player) {
 	for {
 		clearScreen()
-		printWorld(world, player)
+		printWorld(wo, player)
 		fmt.Println()
 		printStat(player)
 
 		if debug {
-			//printDebugWorld(world, player)
+			//printDebugWorld(wo, player)
 			//
 			//keys, _ := redisClient.Keys("player:*").Result()
 			//for _, key := range keys {
@@ -497,17 +498,17 @@ func randomSubWorldCoord() gs.Coord {
 	return gs.NewCoord(x, y)
 }
 
-func randomSubWorld(world *gs.World) gs.SubWorld {
+func randomSubWorld(wo *gs.World) gs.SubWorld {
 	coord := randomSubWorldCoord()
 
-	return world.SubWorlds()[coord.X][coord.Y]
+	return wo.SubWorlds()[coord.X][coord.Y]
 }
 
-func spawnCoinsInWorld(world *gs.World) {
+func spawnCoinsInWorld(wo *gs.World) {
 	sleepTime := 10000 * time.Millisecond
 
 	for {
-		randomSubWorld := randomSubWorld(world)
+		randomSubWorld := randomSubWorld(wo)
 		spawnCoinInSubWorld(&randomSubWorld)
 		time.Sleep(sleepTime)
 		sleepTime += sleepTime
@@ -533,21 +534,22 @@ func checkAlive(player *el.Player) {
 	}
 }
 
-func startTerminalClient(world *gs.World) {
+func startTerminalClient(wo *gs.World) {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
 	}
 
-	player := initializePlayer(world)
+	player := initializePlayer(wo)
 
-	go render(world, player)
+	go render(wo, player)
 
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyCtrlQ {
 				elementFactory.Save(player)
+				//TODO - save globalId
 				termbox.Close()
 				clearScreen()
 				os.Exit(3)
@@ -556,16 +558,16 @@ func startTerminalClient(world *gs.World) {
 			moveVector := gs.NewVector(0, 0)
 			if ev.Ch == 119 { // w
 				moveVector.Y = -1
-				movePlayer(world, player, moveVector)
+				movePlayer(wo, player, moveVector)
 			} else if ev.Ch == 97 { // a
 				moveVector.X = -1
-				movePlayer(world, player, moveVector)
+				movePlayer(wo, player, moveVector)
 			} else if ev.Ch == 115 { // s
 				moveVector.Y = 1
-				movePlayer(world, player, moveVector)
+				movePlayer(wo, player, moveVector)
 			} else if ev.Ch == 100 { // d
 				moveVector.X = 1
-				movePlayer(world, player, moveVector)
+				movePlayer(wo, player, moveVector)
 				//} else if ev.Ch == 0 { // space
 				//	player.BuildWall(gs)
 			}
@@ -633,11 +635,11 @@ func main() {
 
 	initializeElementFactory()
 
-	world := initializeWorld()
+	wo := initializeWorld()
 
-	runWorldElements(&world)
+	runWorldElements(&wo)
 
-	startTerminalClient(&world)
+	startTerminalClient(&wo)
 
 	// TESTS
 	//fmt.Println(carry(0, 3, 3) == 1)
@@ -657,3 +659,4 @@ func main() {
 	//fmt.Println(wrap(0, -3, 4) == 1)
 	//fmt.Println(wrap(0, -4, 4) == 0)
 }
+*/

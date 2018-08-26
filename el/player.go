@@ -17,11 +17,16 @@ type Player struct {
 	CoinCount int
 	Alive     bool
 	Hp        int
-	Id        int
+	Avatar    string //TODO - change this to limit to 1 character; also this is not saved
+	id        int
 }
 
 func (player Player) String() string {
-	return fmt.Sprintf("%v", player.Id)
+	if player.Avatar == "" {
+		player.Avatar = "P"
+	}
+
+	return player.Avatar
 }
 
 func (player Player) Type() string {
@@ -29,11 +34,12 @@ func (player Player) Type() string {
 }
 
 func (player *Player) Key() string {
-	return rc.GenerateKey(PLAYER, player.Id)
+	return rc.GenerateKey(PLAYER, player.id)
 }
 
 func (player *Player) Serialize() string {
 	// Bug fix, use dashes because cords use commas. FIXME: use commas for all attr delimiters
+	// TODO - consider using json
 	return fmt.Sprintf("CoinCount:%v-Alive:%v-Hp:%v-subWorldCoord:%v-gridCoord:%v",
 		player.CoinCount,
 		player.Alive,
@@ -68,7 +74,7 @@ func (player *Player) Deserialize(key string, values string) {
 
 	_, id := rc.SplitKey(key)
 
-	player.Id, _ = strconv.Atoi(id)
+	player.id, _ = strconv.Atoi(id)
 	player.CoinCount = coinCount
 	player.Alive = alive
 	player.Hp = hp
@@ -114,11 +120,11 @@ func (player *Player) DecreaseHp(damage int) {
 }
 
 func NewPlayer(id int, coinCount int, alive bool, hp int) Player {
-	return Player{Id: id, CoinCount: coinCount, Alive: alive, Hp: hp}
+	return Player{id: id, CoinCount: coinCount, Alive: alive, Hp: hp}
 }
 
 func newPlayerDbo(id int) rc.Dbo {
-	return &Player{Id: id}
+	return &Player{id: id}
 }
 
 func (player *Player) Mux() *sync.Mutex {

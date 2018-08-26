@@ -69,7 +69,7 @@ what happens to your stuff (resources building etc) when you die or log off
 - ~~coin, building wall (2x1)~~
 - ~~HP~~
 - ~~player limited view~~
-- storing state in redis DB
+- ~~storing state in redis DB~~
 
 ## Client v0
 

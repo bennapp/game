@@ -28,9 +28,14 @@ func initializeRedisClient() {
 	}
 }
 
+func (manager *RedisManager) FlushAll() {
+	//ALL Client flush
+	manager.client.FlushAll()
+}
+
 func (manager *RedisManager) Client(v interface{}) *redis.Client {
 	//TODO : return different redis client for different types
-	return INSTANCE.client
+	return manager.client
 }
 
 func (manager *RedisManager) Save(o Dbo) {
