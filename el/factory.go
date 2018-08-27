@@ -17,14 +17,16 @@ type ElementFactory struct {
 	globalId   int
 }
 
-func Factory(firstBoot bool) *ElementFactory {
+func Factory() *ElementFactory {
 	if INSTANCE == nil {
 		fmt.Println("factory.go: No ElementFactory Instance found. Creating.")
 
 		dboManager := rc.Manager()
 		globalId := 1
 
-		if !firstBoot {
+		globalIdString := dboManager.LoadFromKey(GLOBALID)
+
+		if globalIdString != "" {
 			globalId, _ = strconv.Atoi(dboManager.LoadFromKey(GLOBALID))
 		}
 
@@ -33,12 +35,13 @@ func Factory(firstBoot bool) *ElementFactory {
 			factoryMap: make(map[string]DboFactory),
 			globalId:   globalId,
 		}
-	}
 
+		INSTANCE.init()
+	}
 	return INSTANCE
 }
 
-//creates a blank Dbo with a new Id
+//creates a blank Dbo with a new id
 func (elementFactory *ElementFactory) CreateNew(t string) rc.Dbo {
 	return elementFactory.Create(t, true)
 }
@@ -102,15 +105,28 @@ func (elementFactory *ElementFactory) Register(name string, factory DboFactory) 
 	elementFactory.factoryMap[name] = factory
 }
 
-func (elementFactory *ElementFactory) Init() {
+func (elementFactory *ElementFactory) init() {
 	elementFactory.Register(COIN, newCoinDbo)
 	elementFactory.Register(ROCK, newRockDbo)
 	elementFactory.Register(PLAYER, newPlayerDbo)
 	elementFactory.Register(ELEMENT, newElementDbo)
-	fmt.Println("factory.go: Finished Factory init.")
+	fmt.Println("factory.go: Finished registering DboFactoring.")
+}
+
+func (elementFactory *ElementFactory) Reset() {
+	elementFactory.dboManager.Client("ALL").FlushAll()
+	elementFactory.globalId = 1
 }
 
 func (elementFactory *ElementFactory) nextGlobalId() int {
 	elementFactory.globalId++
 	return elementFactory.globalId
+}
+
+func (elementFactory *ElementFactory) Close() {
+	err := elementFactory.dboManager.Client(GLOBALID).Set(GLOBALID, elementFactory.globalId, 0).Err()
+
+	if err != nil {
+		panic(err)
+	}
 }
