@@ -8,7 +8,7 @@ This is a toy project to experiment with GoLang.
 
 ## Run
 `go run newWorld.go` - flushes the db and regenerate the map
-`go run createPlater.go` - get the Id of the player
+`go run createPlayer.go` - get the Id of the player
 `go run client.go` - set the Id of player then run this
 `go run coin.go` - spawns coin
 

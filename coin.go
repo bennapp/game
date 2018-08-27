@@ -11,7 +11,7 @@ func main() {
 	fmt.Printf("coin.go: running World Elements\n")
 
 	wo.Init()
-	wo.SpawnCoinsInWorld()
+	go wo.SpawnCoinsInWorld()
 
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {

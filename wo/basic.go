@@ -109,7 +109,7 @@ func moveCharacter(subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector, ele
 
 	nextElement, _ := NextElement(subWorldCoord, coord, vector)
 
-	//fmt.Printf("game.go: NextElement key: %s, value: %s\n", NextElement.String(), NextElement.Serialize())
+	//fmt.Printf("basic.go: NextElement key: %s, value: %s\n", NextElement.String(), NextElement.Serialize())
 
 	override := false
 	switch element.(type) {
@@ -152,10 +152,10 @@ func elementFromCoords(subWorldCoord gs.Coord, coord gs.Coord) rc.Dbo {
 	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
 
 	if element.IsEmpty() {
-		//fmt.Printf("game.go: Element is empty.\n")
+		//fmt.Printf("basic.go: Element is empty.\n")
 		return &el.Empty{}
 	} else {
-		//fmt.Printf("game.go: Load From Key: %s\n", element.DboKey)
+		//fmt.Printf("basic.go: Load From Key: %s\n", element.DboKey)
 		return elementFromKey(element.DboKey)
 	}
 }
