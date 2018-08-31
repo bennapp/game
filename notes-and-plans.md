@@ -72,6 +72,7 @@ what happens to your stuff (resources building etc) when you die or log off
 - ~~storing state in redis DB~~
 
 ## Client v0
+- [X] client v0
 
 ## Adapter v0
 

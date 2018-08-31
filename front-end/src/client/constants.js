@@ -1,0 +1,14 @@
+const WIDTH = 500;
+const HEIGHT = 500;
+const NUM_CELLS = 5;
+const GRID_DISTANCE = WIDTH / NUM_CELLS;
+const GRID_OFFSET = GRID_DISTANCE / 2;
+
+
+export {
+  WIDTH,
+  HEIGHT,
+  GRID_DISTANCE,
+  NUM_CELLS,
+  GRID_OFFSET
+}
