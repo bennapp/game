@@ -10,7 +10,7 @@ func randomPair(n int) (int, int) {
 	return rand.Intn(n), rand.Intn(n)
 }
 
-func randomSubWorldCoord() gs.Coord {
+func RandomSubWorldCoord() gs.Coord {
 	x, y := randomPair(gs.WORLD_SIZE)
 
 	return gs.NewCoord(x, y)

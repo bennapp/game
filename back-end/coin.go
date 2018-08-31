@@ -1,29 +1,32 @@
 package main
 
 import (
+	"./gs"
 	"./wo"
 	"fmt"
-	"github.com/nsf/termbox-go"
-	"os"
+	"time"
 )
+
+func spawnCoinsInWorld() {
+	sleepTime := 10000 * time.Millisecond
+
+	for {
+		fmt.Printf("basic.go: spawning random coin.\n")
+		randomSubWorldCoord := wo.RandomSubWorldCoord()
+		spawnCoinInSubWorld(randomSubWorldCoord)
+		time.Sleep(sleepTime)
+		sleepTime += sleepTime
+	}
+}
+
+func spawnCoinInSubWorld(subWorldCoord gs.Coord) {
+	coin := wo.BuildAndStoreCoin()
+	wo.PlaceCoin(subWorldCoord, coin)
+}
 
 func main() {
 	fmt.Printf("coin.go: running World Elements\n")
 
 	wo.Init()
-	go wo.SpawnCoinsInWorld()
-
-	for {
-		switch ev := termbox.PollEvent(); ev.Type {
-		case termbox.EventKey:
-			if ev.Key == termbox.KeyCtrlQ {
-				wo.Close()
-				termbox.Close()
-				os.Exit(3)
-			}
-			termbox.Flush()
-		case termbox.EventError:
-			panic(ev.Err)
-		}
-	}
+	spawnCoinsInWorld()
 }

@@ -4,9 +4,7 @@ import (
 	"../el"
 	"../gs"
 	"../rc"
-	"fmt"
 	"math/rand"
-	"time"
 )
 
 const MAX_COIN_AMOUNT = 10
@@ -66,7 +64,7 @@ func initializeCoin() *el.Coin {
 	return coin.(*el.Coin)
 }
 
-func buildAndStoreCoin() *el.Coin {
+func BuildAndStoreCoin() *el.Coin {
 	coin := initializeCoin()
 
 	elementFactory.Save(coin)
@@ -75,7 +73,7 @@ func buildAndStoreCoin() *el.Coin {
 }
 
 // creates a Coin
-func placeCoin(subWorldCoord gs.Coord, coin *el.Coin) {
+func PlaceCoin(subWorldCoord gs.Coord, coin *el.Coin) {
 	placeElementRandomLocationWithLock(subWorldCoord, coin)
 }
 
@@ -179,23 +177,6 @@ func subWorldMove(subWorldCoord gs.Coord, gridCoord gs.Coord, vector gs.Vector) 
 	return gs.NewCoord(wX, wY), gs.NewCoord(gX, gY), true
 }
 
-func SpawnCoinsInWorld() {
-	sleepTime := 10000 * time.Millisecond
-
-	for {
-		fmt.Printf("basic.go: spawning random coin.\n")
-		randomSubWorldCoord := randomSubWorldCoord()
-		spawnCoinInSubWorld(randomSubWorldCoord)
-		time.Sleep(sleepTime)
-		sleepTime += sleepTime
-	}
-}
-
-func spawnCoinInSubWorld(subWorldCoord gs.Coord) {
-	coin := buildAndStoreCoin()
-	placeCoin(subWorldCoord, coin)
-}
-
 func InitializeWorld() {
 	for i := 0; i < gs.WORLD_SIZE; i++ {
 		for j := 0; j < gs.WORLD_SIZE; j++ {
@@ -212,8 +193,8 @@ func initializeSubWorld(subWorldCoord gs.Coord) {
 	}
 
 	for i := 0; i < 2; i++ {
-		coin := buildAndStoreCoin()
-		placeCoin(subWorldCoord, coin)
+		coin := BuildAndStoreCoin()
+		PlaceCoin(subWorldCoord, coin)
 	}
 }
 
