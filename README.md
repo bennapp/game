@@ -15,7 +15,7 @@ This is a toy project to experiment with GoLang.
 
 `go run createPlayer.go` - get the Id of the player
 
-`go run client.go` - set the Id of player then run this
+`go run terminalClient.go` - set the Id of player then run this, to test the backend via terminal
 
 `go run coin.go` - spawns coin
 
