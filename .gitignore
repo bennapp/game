@@ -1,3 +1,5 @@
 .idea/*
 game.exe
 dump.rdb
+.DS_Store
+front-end/node_modules/*
