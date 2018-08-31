@@ -14,19 +14,18 @@ const MAX_COIN_AMOUNT = 10
 // GLOBALS
 var elementFactory *el.ElementFactory
 
-func isEmpty(subWorldCoord gs.Coord, coord gs.Coord) bool {
+func isEmpty(coord gs.Coord) bool {
 	// Look into this, not sure this is right
 	// can we check that value == nil (?)
-	location := el.NewLocation(subWorldCoord, coord)
+	location := el.NewLocation(coord)
 	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey())
 
 	return element.(*el.Element).IsEmpty()
 }
 
-func storeElement(subWorldCoord gs.Coord, coord gs.Coord, dbo rc.Dbo) {
+func storeElement(coord gs.Coord, dbo rc.Dbo) {
 	element := elementFactory.CreateNew(el.ELEMENT)
 	element.(*el.Element).DboKey = dbo.Key()
-	element.(*el.Element).SubWorldCoord = subWorldCoord
 	element.(*el.Element).GridCoord = coord
 
 	elementFactory.Save(element)
@@ -39,8 +38,6 @@ func LoadPlayer(id int) *el.Player {
 // creates a player
 // returns a pair of Coord of World, SubWorld
 func InitializePlayer() *el.Player {
-	x, y := randomPair(gs.WORLD_SIZE)
-
 	var player *el.Player
 
 	player = elementFactory.CreateNew(el.PLAYER).(*el.Player)
@@ -48,10 +45,8 @@ func InitializePlayer() *el.Player {
 	player.Alive = true
 	player.Hp = 10
 
-	subWorldCoord := gs.NewCoord(x, y)
-	gridCoord := placeElementRandomLocationWithLock(subWorldCoord, player)
+	gridCoord := placeElementRandomLocationWithLock(player)
 
-	player.SubWorldCoord = subWorldCoord
 	player.GridCoord = gridCoord
 
 	elementFactory.Save(player)
@@ -75,39 +70,41 @@ func buildAndStoreCoin() *el.Coin {
 }
 
 // creates a Coin
-func placeCoin(subWorldCoord gs.Coord, coin *el.Coin) {
-	placeElementRandomLocationWithLock(subWorldCoord, coin)
+func placeCoin(coin *el.Coin) {
+	placeElementRandomLocationWithLock(coin)
 }
 
 // creates a Rock
-func placeRock(subWorldCoord gs.Coord) {
+func placeRock() {
 	rock := elementFactory.CreateNew(el.ROCK)
 	elementFactory.Save(rock)
-	placeElementRandomLocationWithLock(subWorldCoord, rock)
+	placeElementRandomLocationWithLock(rock)
 }
 
-func placeElementRandomLocationWithLock(subWorldCoord gs.Coord, dbo rc.Dbo) gs.Coord {
-	//TODO - refactor this to a method in coord
-	x, y := randomPair(gs.GRID_SIZE)
-	coord := gs.NewCoord(x, y)
+func placeElementRandomLocationWithLock(dbo rc.Dbo) gs.Coord {
+	coord := randomCoord()
 
-	if isEmpty(subWorldCoord, coord) {
-		storeElement(subWorldCoord, coord, dbo)
+	if isEmpty(coord) {
+		storeElement(coord, dbo)
 	} else {
-		coord = placeElementRandomLocationWithLock(subWorldCoord, dbo)
+		coord = placeElementRandomLocationWithLock(dbo)
 	}
 
 	return coord
 }
 
 func MovePlayer(player *el.Player, vector gs.Vector) {
-	player.SubWorldCoord, player.GridCoord = moveCharacter(player.SubWorldCoord, player.GridCoord, vector, player)
+	player.GridCoord = moveCharacter(player.GridCoord, vector, player)
 }
 
-func moveCharacter(subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector, element rc.Dbo) (gs.Coord, gs.Coord) {
-	nextSubWorldCoord, nextCoord, _ := subWorldMove(subWorldCoord, coord, vector)
+func moveCharacter(coord gs.Coord, vector gs.Vector, element rc.Dbo) gs.Coord {
+	nextCoord := gs.NewCoord(coord.X+vector.X, coord.Y+vector.Y)
 
-	nextElement, _ := NextElement(subWorldCoord, coord, vector)
+	if isOutOfBound(nextCoord.X, nextCoord.Y, gs.GRID_SIZE) {
+		return coord
+	}
+
+	nextElement, _ := NextElement(coord, vector)
 
 	//fmt.Printf("basic.go: NextElement key: %s, value: %s\n", NextElement.String(), NextElement.Serialize())
 
@@ -124,13 +121,12 @@ func moveCharacter(subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector, ele
 	}
 
 	if override {
-		removeCoords(subWorldCoord, coord)
-		storeElement(nextSubWorldCoord, nextCoord, element)
+		removeCoords(coord)
+		storeElement(nextCoord, element)
 	} else {
-		nextSubWorldCoord = subWorldCoord
 		nextCoord = coord
 	}
-	return nextSubWorldCoord, nextCoord
+	return nextCoord
 }
 
 func elementFromKey(key string) rc.Dbo {
@@ -141,14 +137,14 @@ func elementFromKey(key string) rc.Dbo {
 }
 
 //TODO - create removeCoords in manager.go
-func removeCoords(subWorldCoord gs.Coord, coord gs.Coord) {
-	location := el.NewLocation(subWorldCoord, coord)
+func removeCoords(coord gs.Coord) {
+	location := el.NewLocation(coord)
 	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
 	elementFactory.Delete(element)
 }
 
-func elementFromCoords(subWorldCoord gs.Coord, coord gs.Coord) rc.Dbo {
-	location := el.NewLocation(subWorldCoord, coord)
+func elementFromCoords(coord gs.Coord) rc.Dbo {
+	location := el.NewLocation(coord)
 	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
 
 	if element.IsEmpty() {
@@ -160,9 +156,14 @@ func elementFromCoords(subWorldCoord gs.Coord, coord gs.Coord) rc.Dbo {
 	}
 }
 
-func NextElement(subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector) (rc.Dbo, bool) {
-	nextSubWorldCoord, nextCoord, moved := subWorldMove(subWorldCoord, coord, vector)
-	return elementFromCoords(nextSubWorldCoord, nextCoord), moved
+func NextElement(coord gs.Coord, vector gs.Vector) (rc.Dbo, bool) {
+	nextCoord := gs.NewCoord(coord.X+vector.X, coord.Y+vector.Y)
+
+	if isOutOfBound(nextCoord.X, nextCoord.Y, gs.GRID_SIZE) {
+		return &el.Empty{}, false
+	}
+
+	return elementFromCoords(nextCoord), true
 }
 
 func subWorldMove(subWorldCoord gs.Coord, gridCoord gs.Coord, vector gs.Vector) (gs.Coord, gs.Coord, bool) {
@@ -184,36 +185,20 @@ func SpawnCoinsInWorld() {
 
 	for {
 		fmt.Printf("basic.go: spawning random coin.\n")
-		randomSubWorldCoord := randomSubWorldCoord()
-		spawnCoinInSubWorld(randomSubWorldCoord)
+		spawnCoinInWorld()
 		time.Sleep(sleepTime)
 		sleepTime += sleepTime
 	}
 }
 
-func spawnCoinInSubWorld(subWorldCoord gs.Coord) {
+func spawnCoinInWorld() {
 	coin := buildAndStoreCoin()
-	placeCoin(subWorldCoord, coin)
+	placeCoin(coin)
 }
 
 func InitializeWorld() {
-	for i := 0; i < gs.WORLD_SIZE; i++ {
-		for j := 0; j < gs.WORLD_SIZE; j++ {
-			subWorldCoord := gs.NewCoord(i, j)
-			initializeSubWorld(subWorldCoord)
-		}
-	}
-}
-
-func initializeSubWorld(subWorldCoord gs.Coord) {
-	//TODO - remove 10/2 hard coded value
-	for i := 0; i < 10; i++ {
-		placeRock(subWorldCoord)
-	}
-
-	for i := 0; i < 2; i++ {
-		coin := buildAndStoreCoin()
-		placeCoin(subWorldCoord, coin)
+	for i := 0; i < gs.GRID_SIZE*2; i++ {
+		placeRock()
 	}
 }
 

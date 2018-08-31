@@ -6,14 +6,13 @@ import (
 )
 
 type Location struct {
-	SubWorldCoord gs.Coord
-	GridCoord     gs.Coord
+	GridCoord gs.Coord
 }
 
 func (location *Location) LocationKey() string {
-	return fmt.Sprintf("%v:%v", location.SubWorldCoord.Key(), location.GridCoord.Key())
+	return fmt.Sprintf("%v", location.GridCoord.Key())
 }
 
-func NewLocation(subWorldCoord gs.Coord, gridCoord gs.Coord) *Location {
-	return &Location{SubWorldCoord: subWorldCoord, GridCoord: gridCoord}
+func NewLocation(gridCoord gs.Coord) *Location {
+	return &Location{GridCoord: gridCoord}
 }

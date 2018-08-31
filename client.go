@@ -24,7 +24,7 @@ func printWorld(player *el.Player) {
 
 	for i := 0; i < visionDistance; i++ {
 		for j := 0; j < visionDistance; j++ {
-			element, valid := wo.NextElement(player.SubWorldCoord, player.GridCoord, v)
+			element, valid := wo.NextElement(player.GridCoord, v)
 			if valid {
 				fmt.Printf("%v ", element.String())
 			}
