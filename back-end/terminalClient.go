@@ -113,7 +113,7 @@ func startTerminalClient(id int, char string) {
 func main() {
 	wo.Init()
 
-	id := 6090
+	id := 6086
 	char := "M"
 
 	startTerminalClient(id, char)

@@ -1,11 +1,7 @@
 package el
 
 import (
-	"../gs"
 	"../rc"
-	"fmt"
-	"strconv"
-	"strings"
 	"sync"
 )
 
@@ -35,46 +31,6 @@ func (player Player) Type() string {
 
 func (player *Player) Key() string {
 	return rc.GenerateKey(PLAYER, player.id)
-}
-
-func (player *Player) Serialize() string {
-	// Bug fix, use dashes because cords use commas. FIXME: use commas for all attr delimiters
-	// TODO - consider using json
-
-	str := fmt.Sprintf("CoinCount:%v-Alive:%v-Hp:%v-gridCoord:%v",
-		player.CoinCount,
-		player.Alive,
-		player.Hp,
-		player.GridCoord.Key(),
-	)
-
-	return str
-}
-
-func (player *Player) Deserialize(key string, values string) {
-	keyValues := strings.Split(values, "-")
-
-	coinCountString := strings.Split(keyValues[0], "CoinCount:")[1]
-	aliveString := strings.Split(keyValues[1], "Alive:")[1]
-	hpString := strings.Split(keyValues[2], "Hp:")[1]
-
-	gridCoordString := strings.Split(keyValues[3], "gridCoord:")[1]
-	gridCoordStringX := strings.Split(gridCoordString, ",")[0]
-	gridCoordX, _ := strconv.Atoi(gridCoordStringX)
-	gridCoordStringY := strings.Split(gridCoordString, ",")[1]
-	gridCoordY, _ := strconv.Atoi(gridCoordStringY)
-
-	coinCount, _ := strconv.Atoi(coinCountString)
-	hp, _ := strconv.Atoi(hpString)
-	alive := aliveString == "true"
-
-	_, id := rc.SplitKey(key)
-
-	player.id, _ = strconv.Atoi(id)
-	player.CoinCount = coinCount
-	player.Alive = alive
-	player.Hp = hp
-	player.GridCoord = gs.NewCoord(gridCoordX, gridCoordY)
 }
 
 func (player *Player) Interact(element rc.Dbo) bool {

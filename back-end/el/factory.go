@@ -2,6 +2,7 @@ package el
 
 import (
 	"../rc"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -74,9 +75,9 @@ func (elementFactory *ElementFactory) LoadFromId(t string, id int) rc.Dbo {
 func (elementFactory *ElementFactory) LoadFromKey(t string, key string) rc.Dbo {
 	blankDbo := elementFactory.Create(t, false)
 
-	val := elementFactory.dboManager.LoadFromKey(key)
+	val := []byte(elementFactory.dboManager.LoadFromKey(key))
 
-	blankDbo.Deserialize(key, val)
+	json.Unmarshal(val, &blankDbo)
 
 	return blankDbo
 }

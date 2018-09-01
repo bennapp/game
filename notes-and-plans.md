@@ -70,6 +70,8 @@ what happens to your stuff (resources building etc) when you die or log off
 - ~~HP~~
 - ~~player limited view~~
 - ~~storing state in redis DB~~
+- [X] remove subworlds and grids
+- [ ] convert data store to json
 
 ## Client v0
 - [X] client v0
