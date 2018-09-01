@@ -1,5 +1,4 @@
 import 'phaser'
-import ioClient from 'socket.io-client'
 import { WIDTH, HEIGHT } from './constants'
 
 import { World } from './gs/world'
@@ -29,6 +28,7 @@ var config = {
 
 new Phaser.Game(config);
 var world;
+var conn;
 
 function preload() {
   // TODO WEBPACK ASSETS
@@ -41,33 +41,52 @@ function preload() {
 function create() {
   var self = this;
   self.world = new World(self);
-  this.socket = ioClient('http://localhost:8081');
-  this.socket.on('currentPlayers', function (players) {
-    Object.keys(players).forEach(function (id) {
-      if (players[id].playerId === self.socket.id) {
-        addPlayer(self, players[id]);
-      } else {
-        addOtherPlayers(self, players[id]);
-      }
-    });
-  });
-  this.socket.on('newPlayer', function (playerInfo) {
-    addOtherPlayers(self, playerInfo);
-  });
-  this.socket.on('disconnect', function (playerId) {
+
+  if (window["WebSocket"]) {
+    console.log('websockts!');
+    conn = new WebSocket("ws://" + "localhost:8081" + "/ws");
+
+    conn.onopen = function (event) {
+      self.ship = new Player(self);
+    };
+
+    conn.onclose = function (event) {
+      console.log("Connection closed.");
+    };
+    conn.onmessage = function (event) {
+      console.log(JSON.parse(event.data));
+    };
+  } else {
+    console.log("Your browser does not support WebSockets.");
+  }
+
+  // this.socket = ioClient('http://localhost:8080');
+  // this.socket.on('currentPlayers', function (players) {
+  //   Object.keys(players).forEach(function (id) {
+  //     if (players[id].playerId === self.socket.id) {
+  //       addPlayer(self, players[id]);
+  //     } else {
+  //       addOtherPlayers(self, players[id]);
+  //     }
+  //   });
+  // });
+  // this.socket.on('newPlayer', function (playerInfo) {
+  //   addOtherPlayers(self, playerInfo);
+  // });
+  // this.socket.on('disconnect', function (playerId) {
     // self.otherPlayers.getChildren().forEach(function (otherPlayer) {
     //   if (playerId === otherPlayer.playerId) {
     //     otherPlayer.destroy();
     //   }
     // });
-  });
-  this.socket.on('playerMoved', function (playerInfo) {
+  // });
+  // this.socket.on('playerMoved', function (playerInfo) {
     // self.otherPlayers.getChildren().forEach(function (otherPlayer) {
     //   if (playerInfo.playerId === otherPlayer.playerId) {
     //     otherPlayer.setPosition(playerInfo.x, playerInfo.y);
     //   }
     // });
-  });
+  // });
 
   this.cursors = this.input.keyboard.createCursorKeys();
   self.upKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
@@ -77,24 +96,24 @@ function create() {
 
   // this.blueScoreText = this.add.text(16, 16, '', { fontSize: '32px', fill: '#0000FF' });
 
-  this.socket.on('scoreUpdate', function (scores) {
+  // this.socket.on('scoreUpdate', function (scores) {
     // self.blueScoreText.setText('CoinCount: ' + scores.blue);
-  });
+  // });
 
-  this.socket.on('starLocation', function (starLocation) {
+  // this.socket.on('starLocation', function (starLocation) {
     // if (self.star) self.star.destroy();
     // self.star = self.arcade.add.image(starLocation.x, starLocation.y, 'star');
     // self.arcade.add.overlap(self.ship, self.star, function () {
     //   this.socket.emit('starCollected');
     // }, null, self);
-  });
+  // });
 
   self.gameStateUpdate = (rawGameState) => {
     let jsonGameState = JSON.parse(rawGameState);
     this.world.setState(jsonGameState);
   };
 
-  this.socket.on('stateUpdate', self.gameStateUpdate);
+  // this.socket.on('stateUpdate', self.gameStateUpdate);
 
   let stubbedJsonGameState = {
     globalPlayerLocation: {
@@ -175,11 +194,11 @@ function create() {
   this.world.setState(stubbedJsonGameState);
 }
 
-function addPlayer(self) {
+// function addPlayer(self) {
   // Refactor later when we are ready to handle first response from server,
   // should set gamestate and player location
-  self.ship = new Player(self);
-}
+  // self.ship = new Player(self);
+// }
 
 function addOtherPlayers(self, playerInfo) {
   // const otherPlayer = self.add.sprite(playerInfo.x, playerInfo.y, 'otherPlayer').setOrigin(0.5, 0.5).setDisplaySize(53, 40);
@@ -206,7 +225,7 @@ function update(time, delta) {
     }
 
     if (direction) {
-      this.world.move(this.ship, time, direction, this.socket);
+      this.world.move(this.ship, time, direction, conn);
     }
   }
 }

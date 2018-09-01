@@ -14,13 +14,8 @@ module.exports = {
   externals: {
     uws: "uws"
   },
-  devServer: {
-    port: 3000,
-    open: true,
-    proxy: {
-      "/api": "http://localhost:8080"
-    }
-  },
+  mode: "development",
+  watch: true,
   plugins: [
     new HtmlWebpackPlugin({
       template: "./public/index.html",

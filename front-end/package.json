@@ -5,7 +5,7 @@
   "private": "true",
   "scripts": {
     "server": "node src/server/server.js",
-    "assets": "yarn run webpack-dev-server --mode development"
+    "assets": "yarn run webpack-serve"
   },
   "author": "Ben Nappier & Stanely Chang",
   "license": "MIT",
@@ -17,5 +17,8 @@
     "webpack": "^4.17.1",
     "webpack-cli": "^3.1.0",
     "webpack-dev-server": "^3.1.6"
+  },
+  "devDependencies": {
+    "webpack-serve": "^2.0.2"
   }
 }

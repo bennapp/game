@@ -39,7 +39,7 @@ class World {
     return true;
   }
 
-  move(player, time, direction, socket) {
+  move(player, time, direction, conn) {
     if (time > (this.lastMoveTime + this.repeatMoveDelay)) {
       var nextPosition = { x: 0, y: 0 };
 
@@ -73,7 +73,7 @@ class World {
           nextObject.destroy();
         }
 
-        socket.emit('playerMovement', this.globalPlayerLocation);
+        conn.send(JSON.stringify(this.globalPlayerLocation));
       }
     }
   }
