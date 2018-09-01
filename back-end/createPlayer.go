@@ -9,7 +9,7 @@ func main() {
 	wo.Init()
 	player := wo.InitializePlayer()
 
-	fmt.Printf("Created new player\nLocation: %s\nKey:%s",
+	fmt.Printf("Created new player\nLocation: %s\nKey:%s\n",
 		player.LocationKey(),
 		player.Key(),
 	)
