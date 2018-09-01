@@ -29,20 +29,13 @@ func (element *Element) Serialize() string {
 func (element *Element) Deserialize(key string, dboKey string) {
 	//fmt.Printf("element.go: Attempt to Deserialize. key: %s, val: %s\n", key, dboKey)
 
-	subWorld, coord := rc.SplitKey(key)
 	//fmt.Printf("element.go: Spliting key: %s, %s", subWorld, coord)
 
-	subWorldCoordStringX := strings.Split(subWorld, ",")[0]
-	subWorldCoordX, _ := strconv.Atoi(subWorldCoordStringX)
-	subWorldCoordStringY := strings.Split(subWorld, ",")[1]
-	subWorldCoordY, _ := strconv.Atoi(subWorldCoordStringY)
-
-	gridCoordStringX := strings.Split(coord, ",")[0]
+	gridCoordStringX := strings.Split(key, ",")[0]
 	gridCoordX, _ := strconv.Atoi(gridCoordStringX)
-	gridCoordStringY := strings.Split(coord, ",")[1]
+	gridCoordStringY := strings.Split(key, ",")[1]
 	gridCoordY, _ := strconv.Atoi(gridCoordStringY)
 
-	element.SubWorldCoord = gs.NewCoord(subWorldCoordX, subWorldCoordY)
 	element.GridCoord = gs.NewCoord(gridCoordX, gridCoordY)
 
 	element.DboKey = dboKey

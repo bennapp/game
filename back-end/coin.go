@@ -1,7 +1,6 @@
 package main
 
 import (
-	"./gs"
 	"./wo"
 	"fmt"
 	"time"
@@ -12,16 +11,15 @@ func spawnCoinsInWorld() {
 
 	for {
 		fmt.Printf("basic.go: spawning random coin.\n")
-		randomSubWorldCoord := wo.RandomSubWorldCoord()
-		spawnCoinInSubWorld(randomSubWorldCoord)
+		spawnCoin()
 		time.Sleep(sleepTime)
 		sleepTime += sleepTime
 	}
 }
 
-func spawnCoinInSubWorld(subWorldCoord gs.Coord) {
+func spawnCoin() {
 	coin := wo.BuildAndStoreCoin()
-	wo.PlaceCoin(subWorldCoord, coin)
+	wo.PlaceCoinRandomly(coin)
 }
 
 func main() {

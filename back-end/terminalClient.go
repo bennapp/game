@@ -7,15 +7,16 @@ import (
 	"fmt"
 	"github.com/nsf/termbox-go"
 	"os"
+	"os/exec"
 	"time"
 )
 
 func clearScreen() {
-	//cmd := exec.Command("cmd", "/c", "cls || clear")
-	//cmd.Stdout = os.Stdout
-	//cmd.Run()
+	cmd := exec.Command("cmd", "/c", "cls || clear")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 
-	print("\033[H\033[2J")
+	// print("\033[H\033[2J")
 }
 
 func printWorld(player *el.Player) {
@@ -24,7 +25,7 @@ func printWorld(player *el.Player) {
 
 	for i := 0; i < visionDistance; i++ {
 		for j := 0; j < visionDistance; j++ {
-			element, valid := wo.NextElement(player.SubWorldCoord, player.GridCoord, v)
+			element, valid := wo.NextElement(player.GridCoord, v)
 			if valid {
 				fmt.Printf("%v ", element.String())
 			}
@@ -112,7 +113,7 @@ func startTerminalClient(id int, char string) {
 func main() {
 	wo.Init()
 
-	id := 386
+	id := 6090
 	char := "M"
 
 	startTerminalClient(id, char)

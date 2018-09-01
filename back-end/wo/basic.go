@@ -12,19 +12,16 @@ const MAX_COIN_AMOUNT = 10
 // GLOBALS
 var elementFactory *el.ElementFactory
 
-func isEmpty(subWorldCoord gs.Coord, coord gs.Coord) bool {
-	// Look into this, not sure this is right
-	// can we check that value == nil (?)
-	location := el.NewLocation(subWorldCoord, coord)
+func isEmpty(coord gs.Coord) bool {
+	location := el.NewLocation(coord)
 	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey())
 
 	return element.(*el.Element).IsEmpty()
 }
 
-func storeElement(subWorldCoord gs.Coord, coord gs.Coord, dbo rc.Dbo) {
+func storeElement(coord gs.Coord, dbo rc.Dbo) {
 	element := elementFactory.CreateNew(el.ELEMENT)
 	element.(*el.Element).DboKey = dbo.Key()
-	element.(*el.Element).SubWorldCoord = subWorldCoord
 	element.(*el.Element).GridCoord = coord
 
 	elementFactory.Save(element)
@@ -37,8 +34,6 @@ func LoadPlayer(id int) *el.Player {
 // creates a player
 // returns a pair of Coord of World, SubWorld
 func InitializePlayer() *el.Player {
-	x, y := randomPair(gs.WORLD_SIZE)
-
 	var player *el.Player
 
 	player = elementFactory.CreateNew(el.PLAYER).(*el.Player)
@@ -46,10 +41,8 @@ func InitializePlayer() *el.Player {
 	player.Alive = true
 	player.Hp = 10
 
-	subWorldCoord := gs.NewCoord(x, y)
-	gridCoord := placeElementRandomLocationWithLock(subWorldCoord, player)
+	gridCoord := placeElementRandomLocationWithLock(player)
 
-	player.SubWorldCoord = subWorldCoord
 	player.GridCoord = gridCoord
 
 	elementFactory.Save(player)
@@ -73,39 +66,39 @@ func BuildAndStoreCoin() *el.Coin {
 }
 
 // creates a Coin
-func PlaceCoin(subWorldCoord gs.Coord, coin *el.Coin) {
-	placeElementRandomLocationWithLock(subWorldCoord, coin)
+func PlaceCoinRandomly(coin *el.Coin) {
+	placeElementRandomLocationWithLock(coin)
 }
 
 // creates a Rock
-func placeRock(subWorldCoord gs.Coord) {
+func placeRockRandomly() {
 	rock := elementFactory.CreateNew(el.ROCK)
 	elementFactory.Save(rock)
-	placeElementRandomLocationWithLock(subWorldCoord, rock)
+	placeElementRandomLocationWithLock(rock)
 }
 
-func placeElementRandomLocationWithLock(subWorldCoord gs.Coord, dbo rc.Dbo) gs.Coord {
+func placeElementRandomLocationWithLock(dbo rc.Dbo) gs.Coord {
 	//TODO - refactor this to a method in coord
-	x, y := randomPair(gs.GRID_SIZE)
+	x, y := randomPair(gs.WORLD_SIZE)
 	coord := gs.NewCoord(x, y)
 
-	if isEmpty(subWorldCoord, coord) {
-		storeElement(subWorldCoord, coord, dbo)
+	if isEmpty(coord) {
+		storeElement(coord, dbo)
 	} else {
-		coord = placeElementRandomLocationWithLock(subWorldCoord, dbo)
+		coord = placeElementRandomLocationWithLock(dbo)
 	}
 
 	return coord
 }
 
 func MovePlayer(player *el.Player, vector gs.Vector) {
-	player.SubWorldCoord, player.GridCoord = moveCharacter(player.SubWorldCoord, player.GridCoord, vector, player)
+	player.GridCoord = moveCharacter(player.GridCoord, vector, player)
 }
 
-func moveCharacter(subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector, element rc.Dbo) (gs.Coord, gs.Coord) {
-	nextSubWorldCoord, nextCoord, _ := subWorldMove(subWorldCoord, coord, vector)
+func moveCharacter(coord gs.Coord, vector gs.Vector, element rc.Dbo) gs.Coord {
+	nextCoord, _ := safeMove(coord, vector)
 
-	nextElement, _ := NextElement(subWorldCoord, coord, vector)
+	nextElement, _ := NextElement(coord, vector)
 
 	//fmt.Printf("basic.go: NextElement key: %s, value: %s\n", NextElement.String(), NextElement.Serialize())
 
@@ -122,13 +115,12 @@ func moveCharacter(subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector, ele
 	}
 
 	if override {
-		removeCoords(subWorldCoord, coord)
-		storeElement(nextSubWorldCoord, nextCoord, element)
+		removeCoords(coord)
+		storeElement(nextCoord, element)
 	} else {
-		nextSubWorldCoord = subWorldCoord
 		nextCoord = coord
 	}
-	return nextSubWorldCoord, nextCoord
+	return nextCoord
 }
 
 func elementFromKey(key string) rc.Dbo {
@@ -139,14 +131,14 @@ func elementFromKey(key string) rc.Dbo {
 }
 
 //TODO - create removeCoords in manager.go
-func removeCoords(subWorldCoord gs.Coord, coord gs.Coord) {
-	location := el.NewLocation(subWorldCoord, coord)
+func removeCoords(coord gs.Coord) {
+	location := el.NewLocation(coord)
 	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
 	elementFactory.Delete(element)
 }
 
-func elementFromCoords(subWorldCoord gs.Coord, coord gs.Coord) rc.Dbo {
-	location := el.NewLocation(subWorldCoord, coord)
+func elementFromCoords(coord gs.Coord) rc.Dbo {
+	location := el.NewLocation(coord)
 	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
 
 	if element.IsEmpty() {
@@ -158,43 +150,36 @@ func elementFromCoords(subWorldCoord gs.Coord, coord gs.Coord) rc.Dbo {
 	}
 }
 
-func NextElement(subWorldCoord gs.Coord, coord gs.Coord, vector gs.Vector) (rc.Dbo, bool) {
-	nextSubWorldCoord, nextCoord, moved := subWorldMove(subWorldCoord, coord, vector)
-	return elementFromCoords(nextSubWorldCoord, nextCoord), moved
+func NextElement(coord gs.Coord, vector gs.Vector) (rc.Dbo, bool) {
+	nextCoord, moved := safeMove(coord, vector)
+	return elementFromCoords(nextCoord), moved
 }
 
-func subWorldMove(subWorldCoord gs.Coord, gridCoord gs.Coord, vector gs.Vector) (gs.Coord, gs.Coord, bool) {
-	wX := subWorldCoord.X + carry(gridCoord.X, vector.X, gs.GRID_SIZE)
-	wY := subWorldCoord.Y + carry(gridCoord.Y, vector.Y, gs.GRID_SIZE)
+func safeMove(gridCoord gs.Coord, vector gs.Vector) (gs.Coord, bool) {
+	gX := gridCoord.X + vector.X
+	gY := gridCoord.Y + vector.Y
 
-	gX := wrap(gridCoord.X, vector.X, gs.GRID_SIZE)
-	gY := wrap(gridCoord.Y, vector.Y, gs.GRID_SIZE)
-
-	if isOutOfBound(wX, wY, gs.WORLD_SIZE) {
-		return subWorldCoord, gridCoord, false
+	if isOutOfBound(gX, gY, gs.WORLD_SIZE) {
+		return gridCoord, false
 	}
 
-	return gs.NewCoord(wX, wY), gs.NewCoord(gX, gY), true
+	return gs.NewCoord(gX, gY), true
 }
 
 func InitializeWorld() {
 	for i := 0; i < gs.WORLD_SIZE; i++ {
 		for j := 0; j < gs.WORLD_SIZE; j++ {
-			subWorldCoord := gs.NewCoord(i, j)
-			initializeSubWorld(subWorldCoord)
+			rockChance := rand.Intn(5)
+			if rockChance == 0 {
+				placeRockRandomly()
+			}
+
+			coinChance := rand.Intn(10)
+			if coinChance == 0 {
+				coin := BuildAndStoreCoin()
+				PlaceCoinRandomly(coin)
+			}
 		}
-	}
-}
-
-func initializeSubWorld(subWorldCoord gs.Coord) {
-	//TODO - remove 10/2 hard coded value
-	for i := 0; i < 10; i++ {
-		placeRock(subWorldCoord)
-	}
-
-	for i := 0; i < 2; i++ {
-		coin := BuildAndStoreCoin()
-		PlaceCoin(subWorldCoord, coin)
 	}
 }
 
