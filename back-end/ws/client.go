@@ -6,7 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/websocket"
+			"github.com/gorilla/websocket"
+	"encoding/json"
 )
 
 const (
@@ -122,6 +123,85 @@ func (c *Client) writePump() {
 	}
 }
 
+func (c *Client) beamState() {
+
+	//wo.Init()
+	//
+	//id := 386
+	//char := "M"
+	//
+	//player := wo.LoadPlayer(id)
+	//player.Avatar = char
+
+	//v := gs.NewVector(-5, -5)
+	//visionDistance := 11
+
+	//for i := 0; i < visionDistance; i++ {
+	//	for j := 0; j < visionDistance; j++ {
+	//		element, valid := wo.NextElement(player.SubWorldCoord, player.GridCoord, v)
+	//		if valid {
+	//			fmt.Printf("%v ", element.String())
+	//		}
+	//		v.X += 1
+	//	}
+	//	v.X = -5
+	//	fmt.Println()
+	//	v.Y += 1
+	//}
+
+	//	{
+	//    globalPlayerLocation: {
+	//      x: '2',
+	//      y: '2',
+	//    },
+	//    coordinates: {
+	//      "0,1": { type: 'coin', id: '33' },
+	//      "3,4": { type: 'rock', id: '-1' },
+	//      "1,1": { type: 'rock', id: '-1' },
+	//    },
+	//    objects: {
+	//      // player: {
+	//      //   "1": {
+	//      //     hp: "10",
+	//      //     alive: "true",
+	//      //     coinCount: "22",
+	//      //   },
+	//      //   "2": {
+	//      //     hp: "7",
+	//      //     alive: "true"
+	//      //   }
+	//      // },
+	//      coin: {
+	//        "33": {
+	//          amount: "11",
+	//        },
+	//      },
+	//      rock: {
+	//        "-1": {}
+	//      }
+	//    },
+	//  };
+
+	gameState := map[string]string{}
+
+	globalPlayerLocation := map[string]string{}
+	globalPlayerLocation["x"] = "10"
+	globalPlayerLocation["y"] = "10"
+
+	globalPlayerLocationString, _ := json.Marshal(globalPlayerLocation)
+	gameState["globalPlayerLocation"] = string(globalPlayerLocationString)
+
+	gameStateAsString, _ := json.Marshal(gameState)
+
+	for {
+
+		c.send <- []byte(gameStateAsString)
+		time.Sleep(1000 * time.Millisecond)
+	}
+
+
+}
+
 // serveWs handles websocket requests from the peer.
 func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool {
@@ -141,4 +221,5 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	// new goroutines.
 	go client.writePump()
 	go client.readPump()
+	go client.beamState()
 }
