@@ -64,14 +64,14 @@ what happens to your stuff (resources building etc) when you die or log off
 
 
 ## Server v0
-- ~~Object Design - Player~~
-- ~~cell w/ mutex not subworld~~
-- ~~coin, building wall (2x1)~~
-- ~~HP~~
-- ~~player limited view~~
-- ~~storing state in redis DB~~
+- [X]Object Design - Player
+- [X]cell w/ mutex not subworld
+- [X]coin, building wall (2x1)
+- [X]HP
+- [X]player limited view
+- [X]storing state in redis DB
 - [X] remove subworlds and grids
-- [ ] convert data store to json
+- [X] convert data store to json
 
 ## Client v0
 - [X] client v0
