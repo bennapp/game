@@ -1,6 +1,7 @@
 package rc
 
 import (
+	"encoding/json"
 	"github.com/go-redis/redis"
 )
 
@@ -40,12 +41,10 @@ func (manager *RedisManager) Client(v interface{}) *redis.Client {
 
 func (manager *RedisManager) Save(o Dbo) {
 	client := manager.Client(o.Key())
-	//fmt.Printf("manager.go: Client found for key: %s\n", o.Key())
 
-	serialize := o.Serialize()
-	//fmt.Printf("manager.go: Serialize success: %s\n", serialize)
+	serialize, err := json.Marshal(o)
 
-	err := client.Set(o.Key(), serialize, 0).Err()
+	err = client.Set(o.Key(), serialize, 0).Err()
 	if err != nil {
 		panic(err)
 	}
@@ -63,13 +62,7 @@ func (manager *RedisManager) LoadFromId(t string, id int) string {
 }
 
 func (manager *RedisManager) LoadFromKey(key string) string {
-	//fmt.Printf("manager.go: Loading from Key: %s\n", key)
-
 	val, _ := manager.Client(key).Get(key).Result()
-
-	//if err != nil {
-	//	panic(err)
-	//}
 
 	return val
 }

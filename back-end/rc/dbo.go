@@ -8,8 +8,6 @@ import (
 type Dbo interface {
 	Type() string
 	Key() string
-	Serialize() string
-	Deserialize(key string, v string)
 	String() string
 }
 

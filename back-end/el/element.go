@@ -1,10 +1,7 @@
 package el
 
 import (
-	"../gs"
 	"../rc"
-	"strconv"
-	"strings"
 )
 
 const ELEMENT = "element"
@@ -20,32 +17,6 @@ func (element *Element) Type() string {
 
 func (element *Element) Key() string {
 	return element.LocationKey()
-}
-
-func (element *Element) Serialize() string {
-	return element.DboKey
-}
-
-func (element *Element) Deserialize(key string, dboKey string) {
-	//fmt.Printf("element.go: Attempt to Deserialize. key: %s, val: %s\n", key, dboKey)
-
-	subWorld, coord := rc.SplitKey(key)
-	//fmt.Printf("element.go: Spliting key: %s, %s", subWorld, coord)
-
-	subWorldCoordStringX := strings.Split(subWorld, ",")[0]
-	subWorldCoordX, _ := strconv.Atoi(subWorldCoordStringX)
-	subWorldCoordStringY := strings.Split(subWorld, ",")[1]
-	subWorldCoordY, _ := strconv.Atoi(subWorldCoordStringY)
-
-	gridCoordStringX := strings.Split(coord, ",")[0]
-	gridCoordX, _ := strconv.Atoi(gridCoordStringX)
-	gridCoordStringY := strings.Split(coord, ",")[1]
-	gridCoordY, _ := strconv.Atoi(gridCoordStringY)
-
-	element.SubWorldCoord = gs.NewCoord(subWorldCoordX, subWorldCoordY)
-	element.GridCoord = gs.NewCoord(gridCoordX, gridCoordY)
-
-	element.DboKey = dboKey
 }
 
 func (element *Element) String() string {

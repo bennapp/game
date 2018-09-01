@@ -2,7 +2,6 @@ package el
 
 import (
 	"../rc"
-	"fmt"
 )
 
 const ROCK = "rock"
@@ -25,13 +24,6 @@ func (rock *Rock) Id() int {
 
 func (rock *Rock) Key() string {
 	return rc.GenerateKey(ROCK, -1)
-}
-
-func (rock *Rock) Serialize() string {
-	return fmt.Sprintf("")
-}
-
-func (rock *Rock) Deserialize(key string, values string) {
 }
 
 func NewRock() *Rock {
