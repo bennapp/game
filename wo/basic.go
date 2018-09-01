@@ -166,20 +166,6 @@ func NextElement(coord gs.Coord, vector gs.Vector) (rc.Dbo, bool) {
 	return elementFromCoords(nextCoord), true
 }
 
-func subWorldMove(subWorldCoord gs.Coord, gridCoord gs.Coord, vector gs.Vector) (gs.Coord, gs.Coord, bool) {
-	wX := subWorldCoord.X + carry(gridCoord.X, vector.X, gs.GRID_SIZE)
-	wY := subWorldCoord.Y + carry(gridCoord.Y, vector.Y, gs.GRID_SIZE)
-
-	gX := wrap(gridCoord.X, vector.X, gs.GRID_SIZE)
-	gY := wrap(gridCoord.Y, vector.Y, gs.GRID_SIZE)
-
-	if isOutOfBound(wX, wY, gs.WORLD_SIZE) {
-		return subWorldCoord, gridCoord, false
-	}
-
-	return gs.NewCoord(wX, wY), gs.NewCoord(gX, gY), true
-}
-
 func SpawnCoinsInWorld() {
 	sleepTime := 10000 * time.Millisecond
 

@@ -40,11 +40,10 @@ func (player *Player) Key() string {
 func (player *Player) Serialize() string {
 	// Bug fix, use dashes because cords use commas. FIXME: use commas for all attr delimiters
 	// TODO - consider using json
-	return fmt.Sprintf("CoinCount:%v-Alive:%v-Hp:%v-subWorldCoord:%v-gridCoord:%v",
+	return fmt.Sprintf("CoinCount:%v-Alive:%v-Hp:%v-gridCoord:%v",
 		player.CoinCount,
 		player.Alive,
 		player.Hp,
-		player.SubWorldCoord.Key(),
 		player.GridCoord.Key(),
 	)
 }
@@ -56,13 +55,7 @@ func (player *Player) Deserialize(key string, values string) {
 	aliveString := strings.Split(keyValues[1], "Alive:")[1]
 	hpString := strings.Split(keyValues[2], "Hp:")[1]
 
-	subWorldCoordString := strings.Split(keyValues[3], "subWorldCoord:")[1]
-	subWorldCoordStringX := strings.Split(subWorldCoordString, ",")[0]
-	subWorldCoordX, _ := strconv.Atoi(subWorldCoordStringX)
-	subWorldCoordStringY := strings.Split(subWorldCoordString, ",")[1]
-	subWorldCoordY, _ := strconv.Atoi(subWorldCoordStringY)
-
-	gridCoordString := strings.Split(keyValues[4], "gridCoord:")[1]
+	gridCoordString := strings.Split(keyValues[3], "gridCoord:")[1]
 	gridCoordStringX := strings.Split(gridCoordString, ",")[0]
 	gridCoordX, _ := strconv.Atoi(gridCoordStringX)
 	gridCoordStringY := strings.Split(gridCoordString, ",")[1]
@@ -78,7 +71,6 @@ func (player *Player) Deserialize(key string, values string) {
 	player.CoinCount = coinCount
 	player.Alive = alive
 	player.Hp = hp
-	player.SubWorldCoord = gs.NewCoord(subWorldCoordX, subWorldCoordY)
 	player.GridCoord = gs.NewCoord(gridCoordX, gridCoordY)
 }
 
