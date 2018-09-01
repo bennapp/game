@@ -68,12 +68,12 @@ func (elementFactory *ElementFactory) Create(t string, isNew bool) rc.Dbo {
 	}
 }
 
-func (elementFactory *ElementFactory) LoadFromId(t string, id int) rc.Dbo {
-	return elementFactory.LoadFromKey(t, rc.GenerateKey(t, id))
+func (elementFactory *ElementFactory) LoadFromId(elType string, id int) rc.Dbo {
+	return elementFactory.LoadFromKey(elType, rc.GenerateKey(elType, id))
 }
 
-func (elementFactory *ElementFactory) LoadFromKey(t string, key string) rc.Dbo {
-	blankDbo := elementFactory.Create(t, false)
+func (elementFactory *ElementFactory) LoadFromKey(elType string, key string) rc.Dbo {
+	blankDbo := elementFactory.Create(elType, false)
 
 	val := []byte(elementFactory.dboManager.LoadFromKey(key))
 

@@ -14,7 +14,7 @@ type Player struct {
 	Alive     bool
 	Hp        int
 	Avatar    string //TODO - change this to limit to 1 character; also this is not saved
-	id        int
+	Id        int
 }
 
 func (player Player) String() string {
@@ -30,7 +30,7 @@ func (player Player) Type() string {
 }
 
 func (player *Player) Key() string {
-	return rc.GenerateKey(PLAYER, player.id)
+	return rc.GenerateKey(PLAYER, player.Id)
 }
 
 func (player *Player) Interact(element rc.Dbo) bool {
@@ -71,7 +71,7 @@ func (player *Player) DecreaseHp(damage int) {
 }
 
 func newPlayerDbo(id int) rc.Dbo {
-	return &Player{id: id}
+	return &Player{Id: id}
 }
 
 func (player *Player) Mux() *sync.Mutex {
