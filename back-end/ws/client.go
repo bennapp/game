@@ -1,13 +1,16 @@
 package ws
 
 import (
+	"../gs"
+	"../rc"
+	"../wo"
 	"bytes"
+	"encoding/json"
+	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"time"
-
-			"github.com/gorilla/websocket"
-	"encoding/json"
 )
 
 const (
@@ -124,30 +127,11 @@ func (c *Client) writePump() {
 }
 
 func (c *Client) beamState() {
+	wo.Init()
 
-	//wo.Init()
-	//
-	//id := 386
-	//char := "M"
-	//
-	//player := wo.LoadPlayer(id)
-	//player.Avatar = char
+	id := 6086
 
-	//v := gs.NewVector(-5, -5)
-	//visionDistance := 11
-
-	//for i := 0; i < visionDistance; i++ {
-	//	for j := 0; j < visionDistance; j++ {
-	//		element, valid := wo.NextElement(player.SubWorldCoord, player.GridCoord, v)
-	//		if valid {
-	//			fmt.Printf("%v ", element.String())
-	//		}
-	//		v.X += 1
-	//	}
-	//	v.X = -5
-	//	fmt.Println()
-	//	v.Y += 1
-	//}
+	player := wo.LoadPlayer(id)
 
 	//	{
 	//    globalPlayerLocation: {
@@ -182,23 +166,33 @@ func (c *Client) beamState() {
 	//    },
 	//  };
 
-	gameState := map[string]string{}
-
-	globalPlayerLocation := map[string]string{}
-	globalPlayerLocation["x"] = "10"
-	globalPlayerLocation["y"] = "10"
-
-	globalPlayerLocationString, _ := json.Marshal(globalPlayerLocation)
-	gameState["globalPlayerLocation"] = string(globalPlayerLocationString)
-
-	gameStateAsString, _ := json.Marshal(gameState)
+	gameState := map[string]rc.Dbo{}
 
 	for {
+		v := gs.NewVector(-5, -5)
+		visionDistance := 11
 
+		for i := 0; i < visionDistance; i++ {
+			for j := 0; j < visionDistance; j++ {
+				element, valid := wo.NextElement(player.GridCoord, v)
+				nextCoord, _ := wo.SafeMove(player.GridCoord, v)
+
+				if valid {
+					if !wo.IsEmpty(nextCoord) {
+						gameState[nextCoord.Key()] = element
+					}
+				}
+				v.X += 1
+			}
+			v.X = -5
+			fmt.Println()
+			v.Y += 1
+		}
+
+		gameStateAsString, _ := json.Marshal(gameState)
 		c.send <- []byte(gameStateAsString)
 		time.Sleep(1000 * time.Millisecond)
 	}
-
 
 }
 

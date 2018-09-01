@@ -7,17 +7,13 @@ import (
 const COIN = "coin"
 
 type Coin struct {
-	Location
 	Amount int
 	id     int
+	Type   string
 }
 
 func (coin *Coin) String() string {
 	return "C"
-}
-
-func (coin *Coin) Type() string {
-	return COIN
 }
 
 func (coin *Coin) Id() int {
@@ -29,5 +25,5 @@ func (coin *Coin) Key() string {
 }
 
 func newCoinDbo(id int) rc.Dbo {
-	return &Coin{id: id}
+	return &Coin{id: id, Type: COIN}
 }

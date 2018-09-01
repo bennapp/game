@@ -1,17 +1,10 @@
 package el
 
-const EMPTY = "empty"
-
 type Empty struct {
-	Location
 }
 
 func (empty *Empty) String() string {
 	return " "
-}
-
-func (empty *Empty) Type() string {
-	return EMPTY
 }
 
 func (empty *Empty) Id() int {

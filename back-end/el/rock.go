@@ -7,15 +7,11 @@ import (
 const ROCK = "rock"
 
 type Rock struct {
-	Location
+	Type string
 }
 
 func (rock *Rock) String() string {
 	return "R"
-}
-
-func (rock *Rock) Type() string {
-	return ROCK
 }
 
 func (rock *Rock) Id() int {
@@ -31,5 +27,5 @@ func NewRock() *Rock {
 }
 
 func newRockDbo(id int) rc.Dbo {
-	return &Rock{}
+	return &Rock{Type: ROCK}
 }

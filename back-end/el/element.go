@@ -11,10 +11,6 @@ type Element struct {
 	DboKey string
 }
 
-func (element *Element) Type() string {
-	return ELEMENT
-}
-
 func (element *Element) Key() string {
 	return element.LocationKey()
 }

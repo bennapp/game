@@ -48,7 +48,7 @@ class MapStore {
   }
 
   buildObject(coordString, coordinateState, globalPlayerLocation) {
-    let type = coordinateState[coordString].type;
+    let type = coordinateState[coordString].Type;
 
     let coordArray = coordString.split(',').map(Number);
     let coord = { x: coordArray[0], y: coordArray[1] };
