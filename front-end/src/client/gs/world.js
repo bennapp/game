@@ -4,7 +4,7 @@ class World {
   constructor(game) {
     // This will be refactored later when we have game state passed by websockets
     this.lastMoveTime = 0;
-    this.repeatMoveDelay = 100;
+    this.repeatMoveDelay = 1000;
 
     this.globalPlayerLocation = {};
     this.mapStore = new MapStore(game);
@@ -41,7 +41,7 @@ class World {
 
   move(player, time, direction, conn) {
     if (time > (this.lastMoveTime + this.repeatMoveDelay)) {
-      var nextPosition = { x: 0, y: 0 };
+      var nextPosition = { X: 0, Y: 0 };
 
       switch (direction) {
         case 'up':
@@ -61,10 +61,21 @@ class World {
       let nextObject = this.objectFromPosition(nextPosition);
 
       if (this.isValidMove(nextObject)) {
+        let moveEvent = {
+          From: {},
+            To: {},
+        };
+
+        moveEvent.From.X = this.globalPlayerLocation.X;
+        moveEvent.From.Y = this.globalPlayerLocation.Y;
+
         this.globalPlayerLocation.X += nextPosition.X;
         this.globalPlayerLocation.Y += nextPosition.Y;
 
-        this.updateObjectRenderLocations();
+        moveEvent.To.X = this.globalPlayerLocation.X;
+        moveEvent.To.Y = this.globalPlayerLocation.Y;
+
+        // this.updateObjectRenderLocations();
 
         this.lastMoveTime = time;
 
@@ -73,7 +84,7 @@ class World {
           nextObject.destroy();
         }
 
-        conn.send(JSON.stringify(this.globalPlayerLocation));
+        conn.send(JSON.stringify(moveEvent));
       }
     }
   }
@@ -81,8 +92,11 @@ class World {
   updateObjectRenderLocations() {
     for (let coordString in this.mapStore.store) {
       let object = this.mapStore.store[coordString];
-      object.setNewLocation(this.globalPlayerLocation);
+      if (object) {
+          object.setNewLocation(this.globalPlayerLocation);
+      }
     }
+    debugger;
   }
 }
 
