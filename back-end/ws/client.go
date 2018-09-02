@@ -6,7 +6,6 @@ import (
 	"../wo"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
@@ -126,6 +125,9 @@ func (c *Client) writePump() {
 	}
 }
 
+type dboLookup map[string]rc.Dbo
+type gameStateMapping map[string]interface{}
+
 func (c *Client) beamState() {
 	wo.Init()
 
@@ -133,40 +135,13 @@ func (c *Client) beamState() {
 
 	player := wo.LoadPlayer(id)
 
-	//	{
-	//    globalPlayerLocation: {
-	//      x: '2',
-	//      y: '2',
-	//    },
-	//    coordinates: {
-	//      "0,1": { type: 'coin', id: '33' },
-	//      "3,4": { type: 'rock', id: '-1' },
-	//      "1,1": { type: 'rock', id: '-1' },
-	//    },
-	//    objects: {
-	//      // player: {
-	//      //   "1": {
-	//      //     hp: "10",
-	//      //     alive: "true",
-	//      //     coinCount: "22",
-	//      //   },
-	//      //   "2": {
-	//      //     hp: "7",
-	//      //     alive: "true"
-	//      //   }
-	//      // },
-	//      coin: {
-	//        "33": {
-	//          amount: "11",
-	//        },
-	//      },
-	//      rock: {
-	//        "-1": {}
-	//      }
-	//    },
-	//  };
+	gameState := gameStateMapping{}
+	coordinateMapping := dboLookup{}
 
-	gameState := map[string]rc.Dbo{}
+	gameState["globalPlayerLocation"] = player.GridCoord
+
+	gameStateAsString, _ := json.Marshal(gameState)
+	c.send <- []byte(gameStateAsString)
 
 	for {
 		v := gs.NewVector(-5, -5)
@@ -179,21 +154,21 @@ func (c *Client) beamState() {
 
 				if valid {
 					if !wo.IsEmpty(nextCoord) {
-						gameState[nextCoord.Key()] = element
+						coordinateMapping[nextCoord.Key()] = element
 					}
 				}
 				v.X += 1
 			}
 			v.X = -5
-			fmt.Println()
 			v.Y += 1
 		}
 
+		gameState["coordinates"] = coordinateMapping
 		gameStateAsString, _ := json.Marshal(gameState)
+
 		c.send <- []byte(gameStateAsString)
 		time.Sleep(1000 * time.Millisecond)
 	}
-
 }
 
 // serveWs handles websocket requests from the peer.

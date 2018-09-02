@@ -25,8 +25,8 @@ class Rock {
   spriteLocationFrom(globalPlayerLocation) {
     let distanceToTopLeft = Math.floor(NUM_CELLS / 2);
     let topLeftCoord = {
-      x: globalPlayerLocation.x - distanceToTopLeft,
-      y: globalPlayerLocation.y - distanceToTopLeft,
+      x: globalPlayerLocation.X - distanceToTopLeft,
+      y: globalPlayerLocation.Y - distanceToTopLeft,
     };
 
     let xDistanceFromTopLeftCoord = this.coord.x - topLeftCoord.x;

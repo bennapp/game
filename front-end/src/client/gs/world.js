@@ -12,16 +12,16 @@ class World {
 
   setState(jsonGameState) {
     if (jsonGameState.globalPlayerLocation){
-      this.globalPlayerLocation.x = Number(jsonGameState.globalPlayerLocation.x);
-      this.globalPlayerLocation.y = Number(jsonGameState.globalPlayerLocation.y);
+      this.globalPlayerLocation.X = Number(jsonGameState.globalPlayerLocation.X);
+      this.globalPlayerLocation.Y = Number(jsonGameState.globalPlayerLocation.Y);
     }
 
     this.mapStore.setState(jsonGameState, this.globalPlayerLocation);
   }
 
   objectFromPosition(position) {
-    let x = this.globalPlayerLocation.x + position.x;
-    let y = this.globalPlayerLocation.y + position.y;
+    let x = this.globalPlayerLocation.X + position.X;
+    let y = this.globalPlayerLocation.Y + position.Y;
     return this.mapStore.store[`${x},${y}`];
   }
 
@@ -45,24 +45,24 @@ class World {
 
       switch (direction) {
         case 'up':
-          nextPosition.y -= 1;
+          nextPosition.Y -= 1;
           break;
         case 'left':
-          nextPosition.x -= 1;
+          nextPosition.X -= 1;
           break;
         case 'down':
-          nextPosition.y += 1;
+          nextPosition.Y += 1;
           break;
         case 'right':
-          nextPosition.x += 1;
+          nextPosition.X += 1;
           break;
       }
 
       let nextObject = this.objectFromPosition(nextPosition);
 
       if (this.isValidMove(nextObject)) {
-        this.globalPlayerLocation.x += nextPosition.x;
-        this.globalPlayerLocation.y += nextPosition.y;
+        this.globalPlayerLocation.X += nextPosition.X;
+        this.globalPlayerLocation.Y += nextPosition.Y;
 
         this.updateObjectRenderLocations();
 
