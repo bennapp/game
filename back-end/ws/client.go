@@ -90,6 +90,8 @@ func (c *Client) readPump(player *el.Player) {
 
 		moveVector := gs.NewVector(0, 0)
 
+		// should be client sends vector not absolute position
+		// so that we cannot skip cells
 		moveVector.X = moveEvent.To.X - player.GridCoord.X
 		moveVector.Y = moveEvent.To.Y - player.GridCoord.Y
 
@@ -179,8 +181,9 @@ func (c *Client) beamState(player *el.Player) {
 	for {
 		gameState := gameStateMapping{}
 
-		v := gs.NewVector(-5, -5)
-		visionDistance := 11
+		visionDistance := 13
+		halfWidth := visionDistance / 2
+		v := gs.NewVector(-halfWidth, -halfWidth)
 
 		for i := 0; i < visionDistance; i++ {
 			for j := 0; j < visionDistance; j++ {
@@ -194,7 +197,7 @@ func (c *Client) beamState(player *el.Player) {
 				}
 				v.X += 1
 			}
-			v.X = -5
+			v.X = -halfWidth
 			v.Y += 1
 		}
 
@@ -206,7 +209,7 @@ func (c *Client) beamState(player *el.Player) {
 		}
 
 		c.send <- []byte(gameStateAsString)
-		time.Sleep(1000 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 }
 

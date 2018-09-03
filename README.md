@@ -15,9 +15,13 @@ This is a toy project to experiment with GoLang.
 
 `go run createPlayer.go` - get the Id of the player
 
-`go run terminalClient.go` - set the Id of player then run this, to test the backend via terminal
+`go run coin.go` - spawns coin (optional)
 
-`go run coin.go` - spawns coin
+to run the debugger backend / terminal client:
+`go run terminalClient.go` - set the Id of player then run this
+
+or run the websockets server to send data to the front-end
+`go run websocketServer.go`
 
 ## Reference
 [Directory Layout](https://github.com/golang-standards/project-layout/blob/master/README.md)
@@ -31,11 +35,10 @@ install yarn
 
 
 ## To run:
-`yarn run server`
-
+`yarn install`
 `yarn run assets`
 
-## front-end TODO:
+## TODO:
 - [x] create rocks on board
 - [x] collision detection from rocks
 - [x] Accept state from stubbed websockets
@@ -43,6 +46,11 @@ install yarn
 - [x] move camera and get new state
 - [x] add in coin
 - [x] send player move over stubbed websockets
-- [ ] receive state from websockets
-- [ ] emit event for movement over websockets
+- [x] receive state from websockets
+- [x] emit event for movement over websockets
+
+
+## Fixes:
+- [ ] Gracefully handle websockets disconnect
+- [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
 - [ ] fix bug where lots of players start showing up

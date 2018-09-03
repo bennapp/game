@@ -4,7 +4,6 @@
   "description": "",
   "private": "true",
   "scripts": {
-    "server": "node src/server/server.js",
     "assets": "yarn run webpack-serve"
   },
   "author": "Ben Nappier & Stanely Chang",

@@ -60,7 +60,9 @@ what happens to your stuff (resources building etc) when you die or log off
 # Inspirations
 - minecraft
 - starcraft
+- warcraft 2
 - osrs
+- factorio
 
 
 ## Server v0
@@ -77,6 +79,7 @@ what happens to your stuff (resources building etc) when you die or log off
 - [X] client v0
 
 ## Adapter v0
+- [X] websockets
 
 ## Server v1
 - Multi player
