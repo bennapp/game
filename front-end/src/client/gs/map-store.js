@@ -40,7 +40,7 @@ class MapStore {
       this.buildObjectFromCoord(coordString, coordinateState, globalPlayerLocation)
     }
 
-    this.swapStores()
+    this.swapStores();
   }
 
   buildObjectFromCoord(coordString, coordinateState, globalPlayerLocation) {
@@ -63,22 +63,15 @@ class MapStore {
   }
 
   swapStores() {
-    this.cleanUpStore(this.store);
-    this.store = this.newStore;
-    delete this.newStore
+    this.cleanUpStore();
+    this.store = this.newStore
   }
 
-  cleanUpStore(store) {
-    for (let x = 0; x < NUM_CELLS; x++) {
-      for (let y = 0; y < NUM_CELLS; y++) {
-        let coordinateString = `${x},${y}`;
-
-        let storedObject = store[coordinateString];
-        if (storedObject) {
-          storedObject.destroy();
-          delete store[coordinateString];
-        }
-      }
+  cleanUpStore() {
+    for (var coordString in this.store) {
+      let storedObject = this.store[coordString];
+      storedObject && storedObject.destroy && storedObject.destroy();
+      delete this.store[coordString];
     }
   }
 }

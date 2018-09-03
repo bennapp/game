@@ -7,7 +7,6 @@ import (
 	"../wo"
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
@@ -37,6 +36,10 @@ var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
+
+// TODO: need a 'safer' way to handle closed connections
+// this is an improvement but is not thread safe.
+var connected bool
 
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
@@ -75,6 +78,7 @@ func (c *Client) readPump(player *el.Player) {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("error: %v", err)
 			}
+			connected = false
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -84,36 +88,26 @@ func (c *Client) readPump(player *el.Player) {
 		moveEvent := &playerMoveEvent{}
 		json.Unmarshal(message, moveEvent)
 
-		if moveEvent.From == player.GridCoord {
-			moveVector := gs.NewVector(0, 0)
+		moveVector := gs.NewVector(0, 0)
 
-			moveVector.X = moveEvent.To.X - player.GridCoord.X
-			moveVector.Y = moveEvent.To.Y - player.GridCoord.Y
+		moveVector.X = moveEvent.To.X - player.GridCoord.X
+		moveVector.Y = moveEvent.To.Y - player.GridCoord.Y
 
-			wo.MovePlayer(player, moveVector)
+		wo.MovePlayer(player, moveVector)
 
-			// This is a hack to save player location
-			wo.PlayerLogout(player)
+		// This is a hack to save player location
+		wo.PlayerLogout(player)
 
-			gameState := gameStateMapping{}
+		// The is where we could correct the client
+		// we would need to detect if the client is saying it is moving from an invalid location
+		// then we would send
 
-			gameState["globalPlayerLocation"] = player.GridCoord
-
-			gameStateAsString, _ := json.Marshal(gameState)
-			c.send <- []byte(gameStateAsString)
-		} else {
-			// This is where we correct the client
-			fmt.Println(string(message))
-			fmt.Println(moveEvent.From)
-			fmt.Println(player.GridCoord)
-
-			gameState := gameStateMapping{}
-
-			gameState["globalPlayerLocation"] = player.GridCoord
-
-			gameStateAsString, _ := json.Marshal(gameState)
-			c.send <- []byte(gameStateAsString)
-		}
+		//gameState := gameStateMapping{}
+		//
+		//gameState["globalPlayerLocation"] = player.GridCoord
+		//
+		//gameStateAsString, _ := json.Marshal(gameState)
+		//c.send <- []byte(gameStateAsString)
 	}
 }
 
@@ -175,14 +169,18 @@ func (c *Client) beamState(player *el.Player) {
 
 	gameState["globalPlayerLocation"] = player.GridCoord
 
+	if !connected {
+		return
+	}
+
 	gameStateAsString, _ := json.Marshal(gameState)
 	c.send <- []byte(gameStateAsString)
 
 	for {
 		gameState := gameStateMapping{}
 
-		v := gs.NewVector(-3, -3)
-		visionDistance := 5
+		v := gs.NewVector(-5, -5)
+		visionDistance := 11
 
 		for i := 0; i < visionDistance; i++ {
 			for j := 0; j < visionDistance; j++ {
@@ -203,6 +201,10 @@ func (c *Client) beamState(player *el.Player) {
 		gameState["coordinates"] = coordinateMapping
 		gameStateAsString, _ := json.Marshal(gameState)
 
+		if !connected {
+			return
+		}
+
 		c.send <- []byte(gameStateAsString)
 		time.Sleep(1000 * time.Millisecond)
 	}
@@ -222,6 +224,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
+	connected = true
 
 	wo.Init()
 	id := 6086

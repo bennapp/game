@@ -4,7 +4,7 @@ class World {
   constructor(game) {
     // This will be refactored later when we have game state passed by websockets
     this.lastMoveTime = 0;
-    this.repeatMoveDelay = 1000;
+    this.repeatMoveDelay = 200;
 
     this.globalPlayerLocation = {};
     this.mapStore = new MapStore(game);
@@ -14,6 +14,8 @@ class World {
     if (jsonGameState.globalPlayerLocation){
       this.globalPlayerLocation.X = Number(jsonGameState.globalPlayerLocation.X);
       this.globalPlayerLocation.Y = Number(jsonGameState.globalPlayerLocation.Y);
+
+      console.log('correcting player location', this.globalPlayerLocation)
     }
 
     this.mapStore.setState(jsonGameState, this.globalPlayerLocation);
@@ -75,7 +77,7 @@ class World {
         moveEvent.To.X = this.globalPlayerLocation.X;
         moveEvent.To.Y = this.globalPlayerLocation.Y;
 
-        // this.updateObjectRenderLocations();
+        this.updateObjectRenderLocations();
 
         this.lastMoveTime = time;
 
@@ -83,6 +85,8 @@ class World {
         if (nextObject && nextObject.type == 'coin') {
           nextObject.destroy();
         }
+
+        console.log('moving player to', this.globalPlayerLocation);
 
         conn.send(JSON.stringify(moveEvent));
       }
@@ -93,10 +97,9 @@ class World {
     for (let coordString in this.mapStore.store) {
       let object = this.mapStore.store[coordString];
       if (object) {
-          object.setNewLocation(this.globalPlayerLocation);
+        object.setNewLocation(this.globalPlayerLocation);
       }
     }
-    debugger;
   }
 }
 
