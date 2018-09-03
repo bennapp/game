@@ -48,7 +48,7 @@ class MapStore {
   }
 
   buildObject(coordString, coordinateState, globalPlayerLocation) {
-    let type = coordinateState[coordString].type;
+    let type = coordinateState[coordString].Type;
 
     let coordArray = coordString.split(',').map(Number);
     let coord = { x: coordArray[0], y: coordArray[1] };
@@ -63,11 +63,9 @@ class MapStore {
   }
 
   swapStores() {
-    let oldStore = this.store;
-
+    this.cleanUpStore(this.store);
     this.store = this.newStore;
-
-    this.cleanUpStore(oldStore);
+    delete this.newStore
   }
 
   cleanUpStore(store) {
@@ -75,9 +73,10 @@ class MapStore {
       for (let y = 0; y < NUM_CELLS; y++) {
         let coordinateString = `${x},${y}`;
 
-        if (store[coordinateString]) {
-          store[coordinateString].destroy();
-          store[coordinateString] = undefined;
+        let storedObject = store[coordinateString];
+        if (storedObject) {
+          storedObject.destroy();
+          delete store[coordinateString];
         }
       }
     }

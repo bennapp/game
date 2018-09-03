@@ -12,7 +12,7 @@ const MAX_COIN_AMOUNT = 10
 // GLOBALS
 var elementFactory *el.ElementFactory
 
-func isEmpty(coord gs.Coord) bool {
+func IsEmpty(coord gs.Coord) bool {
 	location := el.NewLocation(coord)
 	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey())
 
@@ -82,7 +82,7 @@ func placeElementRandomLocationWithLock(dbo rc.Dbo) gs.Coord {
 	x, y := randomPair(gs.WORLD_SIZE)
 	coord := gs.NewCoord(x, y)
 
-	if isEmpty(coord) {
+	if IsEmpty(coord) {
 		storeElement(coord, dbo)
 	} else {
 		coord = placeElementRandomLocationWithLock(dbo)
@@ -96,7 +96,7 @@ func MovePlayer(player *el.Player, vector gs.Vector) {
 }
 
 func moveCharacter(coord gs.Coord, vector gs.Vector, element rc.Dbo) gs.Coord {
-	nextCoord, _ := safeMove(coord, vector)
+	nextCoord, _ := SafeMove(coord, vector)
 
 	nextElement, _ := NextElement(coord, vector)
 
@@ -151,11 +151,11 @@ func elementFromCoords(coord gs.Coord) rc.Dbo {
 }
 
 func NextElement(coord gs.Coord, vector gs.Vector) (rc.Dbo, bool) {
-	nextCoord, moved := safeMove(coord, vector)
+	nextCoord, moved := SafeMove(coord, vector)
 	return elementFromCoords(nextCoord), moved
 }
 
-func safeMove(gridCoord gs.Coord, vector gs.Vector) (gs.Coord, bool) {
+func SafeMove(gridCoord gs.Coord, vector gs.Vector) (gs.Coord, bool) {
 	gX := gridCoord.X + vector.X
 	gY := gridCoord.Y + vector.Y
 

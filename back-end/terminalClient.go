@@ -7,16 +7,15 @@ import (
 	"fmt"
 	"github.com/nsf/termbox-go"
 	"os"
-	"os/exec"
 	"time"
 )
 
 func clearScreen() {
-	cmd := exec.Command("cmd", "/c", "cls || clear")
-	cmd.Stdout = os.Stdout
-	cmd.Run()
+	//cmd := exec.Command("cmd", "/c", "cls || clear")
+	//cmd.Stdout = os.Stdout
+	//cmd.Run()
 
-	// print("\033[H\033[2J")
+	print("\033[H\033[2J")
 }
 
 func printWorld(player *el.Player) {

@@ -6,7 +6,6 @@ import (
 )
 
 type Dbo interface {
-	Type() string
 	Key() string
 	String() string
 }

@@ -15,6 +15,7 @@ type Player struct {
 	Hp        int
 	Avatar    string //TODO - change this to limit to 1 character; also this is not saved
 	Id        int
+	Type      string
 }
 
 func (player Player) String() string {
@@ -23,10 +24,6 @@ func (player Player) String() string {
 	}
 
 	return player.Avatar
-}
-
-func (player Player) Type() string {
-	return PLAYER
 }
 
 func (player *Player) Key() string {
@@ -71,7 +68,7 @@ func (player *Player) DecreaseHp(damage int) {
 }
 
 func newPlayerDbo(id int) rc.Dbo {
-	return &Player{Id: id}
+	return &Player{Id: id, Type: PLAYER}
 }
 
 func (player *Player) Mux() *sync.Mutex {

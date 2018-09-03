@@ -38,8 +38,6 @@ func RunServer() {
 	hub := newHub()
 	go hub.run()
 
-	go hub.beamState()
-
 	// Clean this up after webpack assets refactor
 	//fs := http.FileServer(http.Dir("../front-end/assets"))
 	//http.Handle("/assets/", http.StripPrefix("/assets", fs))

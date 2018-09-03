@@ -1,12 +1,17 @@
 package ws
 
 import (
+	"../el"
+	"../gs"
+	"../rc"
+	"../wo"
 	"bytes"
+	"encoding/json"
+	"fmt"
+	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
 const (
@@ -44,12 +49,17 @@ type Client struct {
 	send chan []byte
 }
 
+type playerMoveEvent struct {
+	From gs.Coord
+	To   gs.Coord
+}
+
 // readPump pumps messages from the websocket connection to the hub.
 //
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *Client) readPump() {
+func (c *Client) readPump(player *el.Player) {
 	defer func() {
 		c.hub.unregister <- c
 		c.conn.Close()
@@ -69,7 +79,41 @@ func (c *Client) readPump() {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
-		c.hub.broadcast <- message
+		//c.hub.broadcast <- message
+
+		moveEvent := &playerMoveEvent{}
+		json.Unmarshal(message, moveEvent)
+
+		if moveEvent.From == player.GridCoord {
+			moveVector := gs.NewVector(0, 0)
+
+			moveVector.X = moveEvent.To.X - player.GridCoord.X
+			moveVector.Y = moveEvent.To.Y - player.GridCoord.Y
+
+			wo.MovePlayer(player, moveVector)
+
+			// This is a hack to save player location
+			wo.PlayerLogout(player)
+
+			gameState := gameStateMapping{}
+
+			gameState["globalPlayerLocation"] = player.GridCoord
+
+			gameStateAsString, _ := json.Marshal(gameState)
+			c.send <- []byte(gameStateAsString)
+		} else {
+			// This is where we correct the client
+			fmt.Println(string(message))
+			fmt.Println(moveEvent.From)
+			fmt.Println(player.GridCoord)
+
+			gameState := gameStateMapping{}
+
+			gameState["globalPlayerLocation"] = player.GridCoord
+
+			gameStateAsString, _ := json.Marshal(gameState)
+			c.send <- []byte(gameStateAsString)
+		}
 	}
 }
 
@@ -122,6 +166,48 @@ func (c *Client) writePump() {
 	}
 }
 
+type dboLookup map[string]rc.Dbo
+type gameStateMapping map[string]interface{}
+
+func (c *Client) beamState(player *el.Player) {
+	gameState := gameStateMapping{}
+	coordinateMapping := dboLookup{}
+
+	gameState["globalPlayerLocation"] = player.GridCoord
+
+	gameStateAsString, _ := json.Marshal(gameState)
+	c.send <- []byte(gameStateAsString)
+
+	for {
+		gameState := gameStateMapping{}
+
+		v := gs.NewVector(-3, -3)
+		visionDistance := 5
+
+		for i := 0; i < visionDistance; i++ {
+			for j := 0; j < visionDistance; j++ {
+				element, valid := wo.NextElement(player.GridCoord, v)
+				nextCoord, _ := wo.SafeMove(player.GridCoord, v)
+
+				if valid {
+					if !wo.IsEmpty(nextCoord) {
+						coordinateMapping[nextCoord.Key()] = element
+					}
+				}
+				v.X += 1
+			}
+			v.X = -5
+			v.Y += 1
+		}
+
+		gameState["coordinates"] = coordinateMapping
+		gameStateAsString, _ := json.Marshal(gameState)
+
+		c.send <- []byte(gameStateAsString)
+		time.Sleep(1000 * time.Millisecond)
+	}
+}
+
 // serveWs handles websocket requests from the peer.
 func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool {
@@ -137,8 +223,13 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
 
+	wo.Init()
+	id := 6086
+	player := wo.LoadPlayer(id)
+
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
 	go client.writePump()
-	go client.readPump()
+	go client.readPump(player)
+	go client.beamState(player)
 }

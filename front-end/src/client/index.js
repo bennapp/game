@@ -42,12 +42,22 @@ function create() {
   var self = this;
   self.world = new World(self);
 
+  self.gameStateUpdate = (rawGameState) => {
+      let jsonGameState = JSON.parse(rawGameState);
+      this.world.setState(jsonGameState);
+  };
+
   if (window["WebSocket"]) {
     console.log('websockts!');
     conn = new WebSocket("ws://" + "localhost:8081" + "/ws");
 
     conn.onopen = function (event) {
       self.ship = new Player(self);
+
+      window.onbeforeunload = function() {
+        conn.onclose = function () {}; // disable onclose handler first
+        conn.close()
+      };
     };
 
     conn.onclose = function (event) {
@@ -55,6 +65,7 @@ function create() {
     };
     conn.onmessage = function (event) {
       console.log(JSON.parse(event.data));
+      self.gameStateUpdate(event.data);
     };
   } else {
     console.log("Your browser does not support WebSockets.");
@@ -108,90 +119,85 @@ function create() {
     // }, null, self);
   // });
 
-  self.gameStateUpdate = (rawGameState) => {
-    let jsonGameState = JSON.parse(rawGameState);
-    this.world.setState(jsonGameState);
-  };
-
   // this.socket.on('stateUpdate', self.gameStateUpdate);
 
-  let stubbedJsonGameState = {
-    globalPlayerLocation: {
-      x: '2',
-      y: '2',
-    },
-    coordinates: {
-      "0,1": { type: 'coin', id: '33' },
-      "3,4": { type: 'rock', id: '-1' },
-      "1,1": { type: 'rock', id: '-1' },
-    },
-    objects: {
-      // player: {
-      //   "1": {
-      //     hp: "10",
-      //     alive: "true",
-      //     coinCount: "22",
-      //   },
-      //   "2": {
-      //     hp: "7",
-      //     alive: "true"
-      //   }
-      // },
-      coin: {
-        "33": {
-          amount: "11",
-        },
-      },
-      rock: {
-        "-1": {}
-      }
-    },
-  };
-
-  this.world.setState(stubbedJsonGameState);
-
-  stubbedJsonGameState = {
-    coordinates: {
-      "0,1": { type: 'coin', id: '33' },
-      "4,4": { type: 'rock', id: '-1' },
-      "3,4": { type: 'rock', id: '-1' },
-    },
-    objects: {
-      coin: {
-        "33": {
-          amount: "11",
-        },
-      },
-      rock: {
-        "-1": {}
-      }
-    },
-  };
-
-  this.world.setState(stubbedJsonGameState);
-
-  stubbedJsonGameState = {
-    globalPlayerLocation: {
-      x: '3',
-      y: '3',
-    },
-    coordinates: {
-      "0,1": { type: 'coin', id: '33' },
-      "4,4": { type: 'rock', id: '-1' },
-      "3,4": { type: 'rock', id: '-1' },
-    },
-    objects: {
-      coin: {
-        "33": {
-          amount: "11",
-        },
-      },
-      rock: {
-        "-1": {}
-      }
-    },
-  };
-  this.world.setState(stubbedJsonGameState);
+  // let stubbedJsonGameState = {
+  //   globalPlayerLocation: {
+  //     X: '2',
+  //     Y: '2',
+  //   },
+  //   coordinates: {
+  //     "0,1": { Type: 'coin', Id: '33' },
+  //     "3,4": { Type: 'rock', Id: '-1' },
+  //     "1,1": { Type: 'rock', Id: '-1' },
+  //   },
+  //   objects: {
+  //     // player: {
+  //     //   "1": {
+  //     //     hp: "10",
+  //     //     alive: "true",
+  //     //     coinCount: "22",
+  //     //   },
+  //     //   "2": {
+  //     //     hp: "7",
+  //     //     alive: "true"
+  //     //   }
+  //     // },
+  //     coin: {
+  //       "33": {
+  //         amount: "11",
+  //       },
+  //     },
+  //     rock: {
+  //       "-1": {}
+  //     }
+  //   },
+  // };
+  //
+  // this.world.setState(stubbedJsonGameState);
+  //
+  // stubbedJsonGameState = {
+  //   coordinates: {
+  //     "0,1": { Type: 'coin', Id: '33' },
+  //     "4,4": { Type: 'rock', Id: '-1' },
+  //     "3,4": { Type: 'rock', Id: '-1' },
+  //   },
+  //   objects: {
+  //     coin: {
+  //       "33": {
+  //         amount: "11",
+  //       },
+  //     },
+  //     rock: {
+  //       "-1": {}
+  //     }
+  //   },
+  // };
+  //
+  // this.world.setState(stubbedJsonGameState);
+  //
+  // stubbedJsonGameState = {
+  //   globalPlayerLocation: {
+  //     X: '3',
+  //     Y: '3',
+  //   },
+  //   coordinates: {
+  //     "0,1": { Type: 'coin', Id: '33' },
+  //     "4,4": { Type: 'rock', Id: '-1' },
+  //     "3,4": { Type: 'rock', Id: '-1' },
+  //   },
+  //   objects: {
+  //     coin: {
+  //       "33": {
+  //         amount: "11",
+  //       },
+  //     },
+  //     rock: {
+  //       "-1": {}
+  //     }
+  //   },
+  // };
+  // this.world.setState(stubbedJsonGameState);
 }
 
 // function addPlayer(self) {
@@ -213,7 +219,7 @@ function addOtherPlayers(self, playerInfo) {
 
 function update(time, delta) {
   if (this.ship) {
-    let direction = null;
+    let direction;
     if (this.cursors.up.isDown || this.upKey.isDown) {
       direction = 'up';
     } else if (this.cursors.left.isDown || this.leftKey.isDown) {
@@ -226,6 +232,7 @@ function update(time, delta) {
 
     if (direction) {
       this.world.move(this.ship, time, direction, conn);
+      direction = null;
     }
   }
 }
