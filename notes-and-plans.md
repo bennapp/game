@@ -78,31 +78,6 @@ what happens to your stuff (resources building etc) when you die or log off: see
 - factorio
 
 
-## Server v0.0
-- [X] Object Design - Player
-- [X] cell w/ mutex not subworld
-- [X] coin, building wall (2x1)
-- [X] HP
-- [X] player limited view
-- [X] storing state in redis DB
-- [X] remove subworlds and grids
-- [X] convert data store to json
-
-## Client v0.0
-- [X] client v0
-
-## Adapter v0.0
-- [X] websockets
-
-## Game v0.1
-- Multi player
-- Dynamicically generated map
-- Respawn, and setting origin
-- Logging out
-- Attacking / defending
-- Building
-
-
 ### server notes
 - logging advantages / consistent action consumption advantages
 
@@ -122,3 +97,49 @@ should the player be on a vector and not grid?
 - Use redis cluster over redis server. How do we handle event consistency with redis cluster? And handle 'dropped events'?
     - How do we handle distributed locking?
 - Use kubernetes to deploy backend services. Where there is a service for different aspects of the game, spawnCoins.go, spawnSnakes.go, variousNpcs.go, websocketServer.go etc.
+
+----
+
+# V0.0
+
+## Server
+- [X] Object Design - Player
+- [X] cell w/ mutex not subworld
+- [X] coin, building wall (2x1)
+- [X] HP
+- [X] player limited view
+- [X] storing state in redis DB
+- [X] remove subworlds and grids
+- [X] convert data store to json
+
+## Client
+- [X] client v0
+
+## Adapter
+- [X] websockets
+
+----
+
+# V0.1
+
+## Prep Refactors and Fixes:
+- [ ] Gracefully handle websockets disconnect
+- [ ] Use redis `Inc` to handle ids
+- [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
+- [ ] fix bug where lots of players start showing up
+- [ ] break apart basic.go into various files / packages for spawn coin and player interactions / actor movement
+
+
+## Game Overview
+- Multi player
+- Dynamicically generated map
+- Respawn, and setting origin
+- Logging out
+- Attacking / defending
+- Building
+
+## Server
+
+## Client
+
+## Adapter
