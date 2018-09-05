@@ -1,7 +1,7 @@
 # Overview / Genre
-mmo
+mmo 'rts-like'
 
-grid / cell based (infinitely scales)
+grid / cell based ('infinitely' scales)
 
 interact and *build*
 
@@ -16,6 +16,7 @@ pve
 exploration
 
 generative world
+
 
 # Gameplay
 emphasis for the origin on the world, 0,0
@@ -42,27 +43,32 @@ some buildings must be safely disconnect or to be protected
 
 more costly in resources, can be better protected (walls)
 
+
 ## building buildings that create npcs
 - macro control / no micro control
 - players buildings can spawn npcs to go and collect resources for them
 - players buildings can spawn npcs to attack other players and npcs
 - defence has the advantage in terms of protecting your base
 
-## logging out and persisting players buildings and etc
 
+## logging out and persisting players buildings and etc
 - packing everything up into 'you box'
     - unpack, and pack timeouts
     - logging out puts everything into an undestroyable box, with you gamertag on it
     - handle lossed connection during packing out phase
 
+
 ## Adapter tech overview
 - Web sockets
+
 
 ### Game Client tech overview
 - open source rendering library possible web based / browser based (not)
 
+
 ## Questions:
 what happens to your stuff (resources building etc) when you die or log off: see logging out section
+
 
 # Inspirations
 - minecraft
@@ -91,11 +97,15 @@ what happens to your stuff (resources building etc) when you die or log off: see
 ## Game v0.1
 - Multi player
 - Dynamicically generated map
-- Respawn
+- Respawn, and setting origin
 - Logging out
+- Attacking / defending
+- Building
+
 
 ### server notes
 - logging advantages / consistent action consumption advantages
+
 
 ### not deadlocking process
 1. lock the minimal resources and most granual
@@ -103,14 +113,12 @@ what happens to your stuff (resources building etc) when you die or log off: see
 3. later on: timeout locking
 4. needs to have a failure state (client as well)
 
+
 #### Future Thoughts
 should the player be on a vector and not grid?
 
-#### Known Bugs
-- The coin ID incrementation is not globally unique. We should be using built in redis inc for this.  
 
 #### Scaling Plans
 - Use redis cluster over redis server. How do we handle event consistency with redis cluster? And handle 'dropped events'?
     - How do we handle distributed locking?
 - Use kubernetes to deploy backend services. Where there is a service for different aspects of the game, spawnCoins.go, spawnSnakes.go, variousNpcs.go, websocketServer.go etc.
-- 
