@@ -36,9 +36,10 @@ install yarn
 
 ## To run:
 `yarn install`
+
 `yarn run assets`
 
-## TODO:
+## VO: TODO:
 - [x] create rocks on board
 - [x] collision detection from rocks
 - [x] Accept state from stubbed websockets
@@ -49,8 +50,9 @@ install yarn
 - [x] receive state from websockets
 - [x] emit event for movement over websockets
 
-
-## Fixes:
+## v1 prep refactors and fixes:
 - [ ] Gracefully handle websockets disconnect
+- [ ] Use redis `Inc` to handle ids
 - [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
 - [ ] fix bug where lots of players start showing up
+
