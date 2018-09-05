@@ -113,7 +113,15 @@ should the player be on a vector and not grid?
 - [X] convert data store to json
 
 ## Client
-- [X] client v0
+- [X] create rocks on board
+- [X] collision detection from rocks
+- [X] Accept state from stubbed websockets
+- [X] Override state from stubbed websockets
+- [X] move camera and get new state
+- [X] add in coin
+- [X] send player move over stubbed websockets
+- [X] receive state from websockets
+- [X] emit event for movement over websockets
 
 ## Adapter
 - [X] websockets
