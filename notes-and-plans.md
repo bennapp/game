@@ -108,3 +108,9 @@ should the player be on a vector and not grid?
 
 #### Known Bugs
 - The coin ID incrementation is not globally unique. We should be using built in redis inc for this.  
+
+#### Scaling Plans
+- Use redis cluster over redis server. How do we handle event consistency with redis cluster? And handle 'dropped events'?
+    - How do we handle distributed locking?
+- Use kubernetes to deploy backend services. Where there is a service for different aspects of the game, spawnCoins.go, spawnSnakes.go, variousNpcs.go, websocketServer.go etc.
+- 
