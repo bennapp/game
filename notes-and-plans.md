@@ -42,11 +42,18 @@ some buildings must be safely disconnect or to be protected
 
 more costly in resources, can be better protected (walls)
 
-projectiles
+## building buildings that create npcs
+- macro control / no micro control
+- players buildings can spawn npcs to go and collect resources for them
+- players buildings can spawn npcs to attack other players and npcs
+- defence has the advantage in terms of protecting your base
 
-players buildings can spawn npcs to go and collect resources for them
+## logging out and persisting players buildings and etc
 
-players buildings can spawn npcs to attack other players and npcs
+- packing everything up into 'you box'
+    - unpack, and pack timeouts
+    - logging out puts everything into an undestroyable box, with you gamertag on it
+    - handle lossed connection during packing out phase
 
 ## Adapter tech overview
 - Web sockets
@@ -55,7 +62,7 @@ players buildings can spawn npcs to attack other players and npcs
 - open source rendering library possible web based / browser based (not)
 
 ## Questions:
-what happens to your stuff (resources building etc) when you die or log off
+what happens to your stuff (resources building etc) when you die or log off: see logging out section
 
 # Inspirations
 - minecraft
@@ -65,27 +72,27 @@ what happens to your stuff (resources building etc) when you die or log off
 - factorio
 
 
-## Server v0
-- [X]Object Design - Player
-- [X]cell w/ mutex not subworld
-- [X]coin, building wall (2x1)
-- [X]HP
-- [X]player limited view
-- [X]storing state in redis DB
+## Server v0.0
+- [X] Object Design - Player
+- [X] cell w/ mutex not subworld
+- [X] coin, building wall (2x1)
+- [X] HP
+- [X] player limited view
+- [X] storing state in redis DB
 - [X] remove subworlds and grids
 - [X] convert data store to json
 
-## Client v0
+## Client v0.0
 - [X] client v0
 
-## Adapter v0
+## Adapter v0.0
 - [X] websockets
 
-## Server v1
+## Game v0.1
 - Multi player
 - Dynamicically generated map
 - Respawn
-- Logging
+- Logging out
 
 ### server notes
 - logging advantages / consistent action consumption advantages
