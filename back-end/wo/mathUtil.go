@@ -2,18 +2,8 @@ package wo
 
 import "math/rand"
 
-import (
-	"../gs"
-)
-
 func randomPair(n int) (int, int) {
 	return rand.Intn(n), rand.Intn(n)
-}
-
-func RandomSubWorldCoord() gs.Coord {
-	x, y := randomPair(gs.WORLD_SIZE)
-
-	return gs.NewCoord(x, y)
 }
 
 func isOutOfBound(x int, y int, bound int) bool {
