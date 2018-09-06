@@ -7,6 +7,7 @@ import (
 
 type Dbo interface {
 	Key() string
+	String() string
 }
 
 func GenerateKey(id uuid.UUID) string {

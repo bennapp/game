@@ -1,9 +1,5 @@
 package el
 
-import (
-	"../rc"
-)
-
 type Empty struct {
 }
 
@@ -17,8 +13,4 @@ func (empty *Empty) Id() int {
 
 func (empty *Empty) Key() string {
 	return ""
-}
-
-func (empty *Empty) Load() rc.Dbo {
-	return &Empty{}
 }

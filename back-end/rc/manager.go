@@ -56,8 +56,12 @@ func (manager *RedisManager) Delete(o Dbo) {
 	}
 }
 
-func (manager *RedisManager) LoadFromKey(key string) string {
-	val, _ := manager.Client(key).Get(key).Result()
+func (manager *RedisManager) LoadFromKey(key string) (string, bool) {
+	val, err := manager.Client(key).Get(key).Result()
 
-	return val
+	if err != nil {
+		return val, true
+	} else {
+		return val, false
+	}
 }

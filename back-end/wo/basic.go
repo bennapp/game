@@ -6,6 +6,7 @@ import (
 	"../rc"
 	"github.com/google/uuid"
 	"math/rand"
+	"fmt"
 )
 
 const MAX_COIN_AMOUNT = 10
@@ -15,15 +16,19 @@ var elementFactory *el.ElementFactory
 
 func IsEmpty(coord gs.Coord) bool {
 	location := el.NewLocation(coord)
-	element := elementFactory.LoadFromKeyWithoutType(location.LocationKey())
+	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey())
 
-	return element.(*el.Element).IsEmpty()
+	if element == nil {
+		return true
+	} else {
+		return false
+	}
 }
 
 func storeElement(coord gs.Coord, dbo rc.Dbo) {
-	element := elementFactory.CreateNew(el.ELEMENT)
-	element.(*el.Element).DboKey = dbo.Key()
-	element.(*el.Element).GridCoord = coord
+	element := elementFactory.CreateNew(el.ELEMENT).(*el.Element)
+	element.DboKey = dbo.Key()
+	element.GridCoord = coord
 
 	elementFactory.Save(element)
 }
@@ -86,6 +91,7 @@ func placeElementRandomLocationWithLock(dbo rc.Dbo) gs.Coord {
 	if IsEmpty(coord) {
 		storeElement(coord, dbo)
 	} else {
+		fmt.Println("not empty")
 		coord = placeElementRandomLocationWithLock(dbo)
 	}
 
@@ -131,27 +137,26 @@ func moveCharacter(coord gs.Coord, vector gs.Vector, element rc.Dbo) gs.Coord {
 	return nextCoord
 }
 
-func elementFromKey(key string) rc.Dbo {
-	element := elementFactory.LoadFromKeyWithoutType(key)
-
-	return element
-}
-
-//TODO - create removeCoords in manager.go
 func removeCoords(coord gs.Coord) {
 	location := el.NewLocation(coord)
-	element := elementFactory.LoadFromKeyWithoutType(location.LocationKey()).(*el.Element)
+	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
 	elementFactory.Delete(element)
 }
 
 func elementFromCoords(coord gs.Coord) rc.Dbo {
 	location := el.NewLocation(coord)
-	element := elementFactory.LoadFromKeyWithoutType(location.LocationKey()).(*el.Element)
+	locationElement := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey())
 
-	if element.IsEmpty() {
+	if locationElement == nil {
+		return &el.Empty{}
+	}
+
+	element := elementFactory.LoadFromKey(el.ELEMENT, locationElement.(*el.Element).DboKey)
+
+	if element == nil {
 		return &el.Empty{}
 	} else {
-		return elementFromKey(element.DboKey)
+		return element
 	}
 }
 

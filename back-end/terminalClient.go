@@ -109,7 +109,7 @@ func startTerminalClient(id string) {
 func main() {
 	wo.Init()
 
-	id := "7fe7ddaf-bb5a-4b77-9cf2-3e7f11476e38"
+	id := "e1c0680d-178f-4f9a-b3c5-09a9e8463fb5"
 
 	startTerminalClient(id)
 }

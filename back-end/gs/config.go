@@ -1,3 +1,3 @@
 package gs
 
-const WORLD_SIZE = 100
+const WORLD_SIZE = 10

@@ -61,21 +61,15 @@ func (elementFactory *ElementFactory) LoadFromId(elType string, id uuid.UUID) rc
 func (elementFactory *ElementFactory) LoadFromKey(elType string, key string) rc.Dbo {
 	blankDbo := elementFactory.Create(elType, false)
 
-	val := []byte(elementFactory.dboManager.LoadFromKey(key))
+	values, empty := elementFactory.dboManager.LoadFromKey(key)
 
-	json.Unmarshal(val, &blankDbo)
+	if !empty {
+		json.Unmarshal([]byte(values), &blankDbo)
 
-	return blankDbo
-}
-
-func (elementFactory *ElementFactory) LoadFromKeyWithoutType(key string) rc.Dbo {
-	blankDbo := &Element{}
-
-	val := []byte(elementFactory.dboManager.LoadFromKey(key))
-
-	json.Unmarshal(val, &blankDbo)
-
-	return blankDbo
+		return blankDbo
+	} else {
+		return nil
+	}
 }
 
 func (elementFactory *ElementFactory) Delete(dbo rc.Dbo) {
