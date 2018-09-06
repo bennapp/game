@@ -4,18 +4,15 @@ import (
 	"../rc"
 	"encoding/json"
 	"fmt"
-	"strconv"
+	"github.com/google/uuid"
 	"strings"
 )
-
-const GLOBALID = "globalId"
 
 var INSTANCE *ElementFactory
 
 type ElementFactory struct {
 	dboManager *rc.RedisManager
 	factoryMap map[string]DboFactory
-	globalId   int
 }
 
 func Factory() *ElementFactory {
@@ -23,18 +20,10 @@ func Factory() *ElementFactory {
 		fmt.Println("factory.go: No ElementFactory Instance found. Creating.")
 
 		dboManager := rc.Manager()
-		globalId := 1
-
-		globalIdString := dboManager.LoadFromKey(GLOBALID)
-
-		if globalIdString != "" {
-			globalId, _ = strconv.Atoi(dboManager.LoadFromKey(GLOBALID))
-		}
 
 		INSTANCE = &ElementFactory{
 			dboManager: dboManager,
 			factoryMap: make(map[string]DboFactory),
-			globalId:   globalId,
 		}
 
 		INSTANCE.init()
@@ -61,19 +50,26 @@ func (elementFactory *ElementFactory) Create(t string, isNew bool) rc.Dbo {
 		panic(fmt.Sprintf("Invalid Factory name. Must be one of: %s", strings.Join(availableFactories, ", ")))
 	}
 
-	if isNew {
-		return factory(elementFactory.nextGlobalId())
-	} else {
-		return factory(-1)
-	}
+	return factory(isNew)
 }
 
-func (elementFactory *ElementFactory) LoadFromId(elType string, id int) rc.Dbo {
-	return elementFactory.LoadFromKey(elType, rc.GenerateKey(elType, id))
+// can this use LoadFromKeyWithoutType ?
+func (elementFactory *ElementFactory) LoadFromId(elType string, id uuid.UUID) rc.Dbo {
+	return elementFactory.LoadFromKey(elType, rc.GenerateKey(id))
 }
 
 func (elementFactory *ElementFactory) LoadFromKey(elType string, key string) rc.Dbo {
 	blankDbo := elementFactory.Create(elType, false)
+
+	val := []byte(elementFactory.dboManager.LoadFromKey(key))
+
+	json.Unmarshal(val, &blankDbo)
+
+	return blankDbo
+}
+
+func (elementFactory *ElementFactory) LoadFromKeyWithoutType(key string) rc.Dbo {
+	blankDbo := &Element{}
 
 	val := []byte(elementFactory.dboManager.LoadFromKey(key))
 
@@ -90,7 +86,7 @@ func (elementFactory *ElementFactory) Save(dbo rc.Dbo) {
 	elementFactory.dboManager.Save(dbo)
 }
 
-type DboFactory func(id int) rc.Dbo
+type DboFactory func(bool) rc.Dbo
 
 func (elementFactory *ElementFactory) Register(name string, factory DboFactory) {
 	if factory == nil {
@@ -108,7 +104,6 @@ func (elementFactory *ElementFactory) Register(name string, factory DboFactory) 
 
 func (elementFactory *ElementFactory) init() {
 	elementFactory.Register(COIN, newCoinDbo)
-	elementFactory.Register(ROCK, newRockDbo)
 	elementFactory.Register(PLAYER, newPlayerDbo)
 	elementFactory.Register(ELEMENT, newElementDbo)
 	fmt.Println("factory.go: Finished registering DboFactoring.")
@@ -116,18 +111,4 @@ func (elementFactory *ElementFactory) init() {
 
 func (elementFactory *ElementFactory) Reset() {
 	elementFactory.dboManager.Client("ALL").FlushAll()
-	elementFactory.globalId = 1
-}
-
-func (elementFactory *ElementFactory) nextGlobalId() int {
-	elementFactory.globalId++
-	return elementFactory.globalId
-}
-
-func (elementFactory *ElementFactory) Close() {
-	err := elementFactory.dboManager.Client(GLOBALID).Set(GLOBALID, elementFactory.globalId, 0).Err()
-
-	if err != nil {
-		panic(err)
-	}
 }

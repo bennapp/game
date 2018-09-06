@@ -14,6 +14,4 @@ func main() {
 	fmt.Printf("newWorld.go: start initializing world\n")
 	wo.InitializeWorld()
 	fmt.Printf("newWorld.go: finish initializing world\n")
-
-	wo.Close()
 }

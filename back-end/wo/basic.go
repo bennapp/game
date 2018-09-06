@@ -4,6 +4,7 @@ import (
 	"../el"
 	"../gs"
 	"../rc"
+	"github.com/google/uuid"
 	"math/rand"
 )
 
@@ -14,7 +15,7 @@ var elementFactory *el.ElementFactory
 
 func IsEmpty(coord gs.Coord) bool {
 	location := el.NewLocation(coord)
-	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey())
+	element := elementFactory.LoadFromKeyWithoutType(location.LocationKey())
 
 	return element.(*el.Element).IsEmpty()
 }
@@ -27,8 +28,8 @@ func storeElement(coord gs.Coord, dbo rc.Dbo) {
 	elementFactory.Save(element)
 }
 
-func LoadPlayer(id int) *el.Player {
-	return elementFactory.LoadFromId(el.PLAYER, id).(*el.Player)
+func LoadPlayer(id string) *el.Player {
+	return elementFactory.LoadFromId(el.PLAYER, uuid.MustParse(id)).(*el.Player)
 }
 
 // creates a player
@@ -72,9 +73,9 @@ func PlaceCoinRandomly(coin *el.Coin) {
 
 // creates a Rock
 func placeRockRandomly() {
-	rock := elementFactory.CreateNew(el.ROCK)
-	elementFactory.Save(rock)
-	placeElementRandomLocationWithLock(rock)
+	//rock := elementFactory.CreateNew(el.ROCK)
+	//elementFactory.Save(rock)
+	//placeElementRandomLocationWithLock(rock)
 }
 
 func placeElementRandomLocationWithLock(dbo rc.Dbo) gs.Coord {
@@ -107,9 +108,16 @@ func moveCharacter(coord gs.Coord, vector gs.Vector, element rc.Dbo) gs.Coord {
 	//case *el.Snake:
 	//	snake := element.(*el.Snake)
 	//	override = snake.Interact(NextElement)
+	//	if override {
+	//		elementFactory.Save(snake)
+	//	}
 	case *el.Player:
 		player := element.(*el.Player)
 		override = player.Interact(nextElement)
+
+		if override {
+			elementFactory.Save(player)
+		}
 	default:
 		panic("I don't know how to move this type")
 	}
@@ -124,8 +132,7 @@ func moveCharacter(coord gs.Coord, vector gs.Vector, element rc.Dbo) gs.Coord {
 }
 
 func elementFromKey(key string) rc.Dbo {
-	t, _ := rc.SplitKey(key)
-	element := elementFactory.LoadFromKey(t, key)
+	element := elementFactory.LoadFromKeyWithoutType(key)
 
 	return element
 }
@@ -133,19 +140,17 @@ func elementFromKey(key string) rc.Dbo {
 //TODO - create removeCoords in manager.go
 func removeCoords(coord gs.Coord) {
 	location := el.NewLocation(coord)
-	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
+	element := elementFactory.LoadFromKeyWithoutType(location.LocationKey()).(*el.Element)
 	elementFactory.Delete(element)
 }
 
 func elementFromCoords(coord gs.Coord) rc.Dbo {
 	location := el.NewLocation(coord)
-	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
+	element := elementFactory.LoadFromKeyWithoutType(location.LocationKey()).(*el.Element)
 
 	if element.IsEmpty() {
-		//fmt.Printf("basic.go: Element is empty.\n")
 		return &el.Empty{}
 	} else {
-		//fmt.Printf("basic.go: Load From Key: %s\n", element.DboKey)
 		return elementFromKey(element.DboKey)
 	}
 }
@@ -189,12 +194,4 @@ func Init() {
 
 func Reset() {
 	elementFactory.Reset()
-}
-
-func Close() {
-	elementFactory.Close()
-}
-
-func PlayerLogout(player *el.Player) {
-	elementFactory.Save(player)
 }

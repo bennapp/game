@@ -35,7 +35,6 @@ func (manager *RedisManager) FlushAll() {
 }
 
 func (manager *RedisManager) Client(v interface{}) *redis.Client {
-	//TODO : return different redis client for different types
 	return manager.client
 }
 
@@ -55,10 +54,6 @@ func (manager *RedisManager) Delete(o Dbo) {
 	if err != nil {
 		panic(err)
 	}
-}
-
-func (manager *RedisManager) LoadFromId(t string, id int) string {
-	return manager.LoadFromKey(GenerateKey(t, id))
 }
 
 func (manager *RedisManager) LoadFromKey(key string) string {

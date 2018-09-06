@@ -92,9 +92,6 @@ func (c *Client) readPump(player *el.Player) {
 
 		wo.MovePlayer(player, moveVector)
 
-		// This is a hack to save player location
-		wo.PlayerLogout(player)
-
 		// The is where we could correct the client
 		// we would need to detect if the client is saying it is moving from an invalid location
 		// then we would send
@@ -242,7 +239,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	client.hub.register <- client
 
 	wo.Init()
-	id := 6086
+	id := "some-uuid"
 	player := wo.LoadPlayer(id)
 
 	// Allow collection of memory referenced by the caller by doing all work in

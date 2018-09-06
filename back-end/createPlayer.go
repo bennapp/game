@@ -13,5 +13,4 @@ func main() {
 		player.LocationKey(),
 		player.Key(),
 	)
-	wo.Close()
 }

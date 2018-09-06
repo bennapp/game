@@ -20,8 +20,7 @@ func (element *Element) String() string {
 }
 
 func (element *Element) IsEmpty() bool {
-	//fmt.Printf("element.go: DboKey: %s\n", element.DboKey)
-	return element.DboKey == ""
+	return element.Key() == ""
 }
 
 func newElementDbo(id int) rc.Dbo {

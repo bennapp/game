@@ -61,14 +61,13 @@ func render(player *el.Player) {
 	}
 }
 
-func startTerminalClient(id int, char string) {
+func startTerminalClient(id string) {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
 	}
 
 	player := wo.LoadPlayer(id)
-	player.Avatar = char
 
 	go render(player)
 
@@ -76,8 +75,6 @@ func startTerminalClient(id int, char string) {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyCtrlQ {
-				wo.PlayerLogout(player)
-				wo.Close()
 				termbox.Close()
 				clearScreen()
 				os.Exit(3)
@@ -112,8 +109,7 @@ func startTerminalClient(id int, char string) {
 func main() {
 	wo.Init()
 
-	id := 6086
-	char := "M"
+	id := "7fe7ddaf-bb5a-4b77-9cf2-3e7f11476e38"
 
-	startTerminalClient(id, char)
+	startTerminalClient(id)
 }
