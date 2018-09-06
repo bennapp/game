@@ -176,7 +176,7 @@ should the player be on a vector and not grid?
 # V0.1
 
 ## Prep Refactors and Fixes:
-- [ ] Gracefully handle websockets disconnect
+- [X] Gracefully handle websockets disconnect
 - [ ] Use redis `Inc` to handle ids
 - [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
 - [ ] fix bug where lots of players start showing up

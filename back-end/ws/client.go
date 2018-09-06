@@ -37,10 +37,6 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-// TODO: need a 'safer' way to handle closed connections
-// this is an improvement but is not thread safe.
-var connected bool
-
 // Client is a middleman between the websocket connection and the hub.
 type Client struct {
 	hub *Hub
@@ -50,6 +46,8 @@ type Client struct {
 
 	// Buffered channel of outbound messages.
 	send chan []byte
+
+	closed chan bool
 }
 
 type playerMoveEvent struct {
@@ -64,6 +62,7 @@ type playerMoveEvent struct {
 // reads from this goroutine.
 func (c *Client) readPump(player *el.Player) {
 	defer func() {
+		c.closed <- true
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()
@@ -75,10 +74,6 @@ func (c *Client) readPump(player *el.Player) {
 		_, message, err := c.conn.ReadMessage()
 
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("error: %v", err)
-			}
-			connected = false
 			break
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
@@ -121,6 +116,7 @@ func (c *Client) readPump(player *el.Player) {
 func (c *Client) writePump() {
 	ticker := time.NewTicker(pingPeriod)
 	defer func() {
+		c.closed <- true
 		ticker.Stop()
 		c.conn.Close()
 	}()
@@ -169,46 +165,63 @@ func (c *Client) beamState(player *el.Player) {
 	gameState := gameStateMapping{}
 	coordinateMapping := dboLookup{}
 
-	gameState["globalPlayerLocation"] = player.GridCoord
+	visionDistance := 13
+	halfWidth := visionDistance / 2
+	v := gs.NewVector(-halfWidth, -halfWidth)
 
-	if !connected {
+	for i := 0; i < visionDistance; i++ {
+		for j := 0; j < visionDistance; j++ {
+			element, valid := wo.NextElement(player.GridCoord, v)
+			nextCoord, _ := wo.SafeMove(player.GridCoord, v)
+
+			if valid {
+				if !wo.IsEmpty(nextCoord) {
+					coordinateMapping[nextCoord.Key()] = element
+				}
+			}
+			v.X += 1
+		}
+		v.X = -halfWidth
+		v.Y += 1
+	}
+
+	gameState["coordinates"] = coordinateMapping
+	gameStateAsString, _ := json.Marshal(gameState)
+
+	c.send <- []byte(gameStateAsString)
+}
+
+func (c *Client) beamInitialState(player *el.Player) bool {
+	select {
+	case <-c.closed:
+		return true
+	default:
+		gameState := gameStateMapping{}
+
+		gameState["globalPlayerLocation"] = player.GridCoord
+
+		gameStateAsString, _ := json.Marshal(gameState)
+		c.send <- []byte(gameStateAsString)
+	}
+
+	return false
+}
+
+func (c *Client) beamStateUntilClosed(player *el.Player) {
+	closed := c.beamInitialState(player)
+
+	if closed {
 		return
 	}
 
-	gameStateAsString, _ := json.Marshal(gameState)
-	c.send <- []byte(gameStateAsString)
-
 	for {
-		gameState := gameStateMapping{}
-
-		visionDistance := 13
-		halfWidth := visionDistance / 2
-		v := gs.NewVector(-halfWidth, -halfWidth)
-
-		for i := 0; i < visionDistance; i++ {
-			for j := 0; j < visionDistance; j++ {
-				element, valid := wo.NextElement(player.GridCoord, v)
-				nextCoord, _ := wo.SafeMove(player.GridCoord, v)
-
-				if valid {
-					if !wo.IsEmpty(nextCoord) {
-						coordinateMapping[nextCoord.Key()] = element
-					}
-				}
-				v.X += 1
-			}
-			v.X = -halfWidth
-			v.Y += 1
-		}
-
-		gameState["coordinates"] = coordinateMapping
-		gameStateAsString, _ := json.Marshal(gameState)
-
-		if !connected {
+		select {
+		case <-c.closed:
 			return
+		default:
+			c.beamState(player)
 		}
 
-		c.send <- []byte(gameStateAsString)
 		time.Sleep(100 * time.Millisecond)
 	}
 }
@@ -227,7 +240,6 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	}
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
-	connected = true
 
 	wo.Init()
 	id := 6086
@@ -237,5 +249,5 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	// new goroutines.
 	go client.writePump()
 	go client.readPump(player)
-	go client.beamState(player)
+	go client.beamStateUntilClosed(player)
 }
