@@ -3,15 +3,17 @@ package rc
 import (
 	"fmt"
 	"strings"
+	"github.com/google/uuid"
 )
 
 type Dbo interface {
 	Key() string
 	String() string
+	Load() Dbo
 }
 
-func GenerateKey(t string, id int) string {
-	return fmt.Sprintf("%s:%v", t, id)
+func GenerateKey(id uuid.UUID) string {
+	return fmt.Sprintf("%v", id)
 }
 
 func SplitKey(key string) (string, string) {

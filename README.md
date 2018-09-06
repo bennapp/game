@@ -9,6 +9,8 @@ This is a toy project to experiment with GoLang.
 
 `go get github.com/go-redis/redis`
 
+`go get github.com/google/uuid`
+
 
 ## Run
 `go run newWorld.go` - flushes the db and regenerate the map
@@ -177,7 +179,8 @@ should the player be on a vector and not grid?
 
 ## Prep Refactors and Fixes:
 - [X] Gracefully handle websockets disconnect
-- [ ] Use redis `Inc` to handle ids
+- [ ] refactor ids to use uuids
+- [ ] remove rock from dbo and introduce 'paint'
 - [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
 - [ ] fix bug where lots of players start showing up
 - [ ] break apart basic.go into various files / packages for spawn coin and player interactions / actor movement
@@ -190,6 +193,8 @@ should the player be on a vector and not grid?
 - Logging out
 - Attacking / defending
 - Building
+- Event queue architecture
+- Add back in snake
 
 ## Server
 

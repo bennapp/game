@@ -3,6 +3,7 @@ package el
 import (
 	"../rc"
 	"sync"
+	"github.com/google/uuid"
 )
 
 const PLAYER = "player"
@@ -13,21 +14,17 @@ type Player struct {
 	CoinCount int
 	Alive     bool
 	Hp        int
-	Avatar    string //TODO - change this to limit to 1 character; also this is not saved
-	Id        int
+	Avatar    string
+	Id        uuid.UUID
 	Type      string
 }
 
 func (player Player) String() string {
-	if player.Avatar == "" {
-		player.Avatar = "P"
-	}
-
-	return player.Avatar
+	return "P"
 }
 
 func (player *Player) Key() string {
-	return rc.GenerateKey(PLAYER, player.Id)
+	return rc.GenerateKey(player.Id)
 }
 
 func (player *Player) Interact(element rc.Dbo) bool {
@@ -67,7 +64,11 @@ func (player *Player) DecreaseHp(damage int) {
 	}
 }
 
-func newPlayerDbo(id int) rc.Dbo {
+func (player *Player) Load() rc.Dbo {
+	return &Player{Type: PLAYER}
+}
+
+func newPlayerDbo(id uuid.UUID) rc.Dbo {
 	return &Player{Id: id, Type: PLAYER}
 }
 

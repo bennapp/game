@@ -1,5 +1,9 @@
 package el
 
+import (
+	"../rc"
+)
+
 type Empty struct {
 }
 
@@ -15,9 +19,6 @@ func (empty *Empty) Key() string {
 	return ""
 }
 
-func (empty *Empty) Serialize() string {
-	return ""
-}
-
-func (empty *Empty) Deserialize(key string, values string) {
+func (empty *Empty) Load() rc.Dbo {
+	return &Empty{}
 }

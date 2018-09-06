@@ -1,9 +1,5 @@
 package el
 
-import (
-	"../rc"
-)
-
 const ELEMENT = "element"
 
 type Element struct {
@@ -22,8 +18,4 @@ func (element *Element) String() string {
 func (element *Element) IsEmpty() bool {
 	//fmt.Printf("element.go: DboKey: %s\n", element.DboKey)
 	return element.DboKey == ""
-}
-
-func newElementDbo(id int) rc.Dbo {
-	return &Element{}
 }

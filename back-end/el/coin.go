@@ -2,13 +2,14 @@ package el
 
 import (
 	"../rc"
+	"github.com/google/uuid"
 )
 
 const COIN = "coin"
 
 type Coin struct {
 	Amount int
-	id     int
+	Id     uuid.UUID
 	Type   string
 }
 
@@ -16,14 +17,14 @@ func (coin *Coin) String() string {
 	return "C"
 }
 
-func (coin *Coin) Id() int {
-	return coin.id
-}
-
 func (coin *Coin) Key() string {
-	return rc.GenerateKey(COIN, coin.id)
+	return rc.GenerateKey(coin.Id)
 }
 
-func newCoinDbo(id int) rc.Dbo {
-	return &Coin{id: id, Type: COIN}
+func newCoinDbo(id uuid.UUID) rc.Dbo {
+	return &Coin{Id: id, Type: COIN}
+}
+
+func (coin *Coin) Load() rc.Dbo {
+	return &Coin{Type: COIN}
 }
