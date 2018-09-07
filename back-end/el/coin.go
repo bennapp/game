@@ -22,5 +22,5 @@ func (coin *Coin) Id() string {
 
 func newCoin() *Coin {
 	uuid, _ := uuid.NewUUID()
-	return &Coin{Type: COIN, Object: Object{ Id: uuid }}
+	return &Coin{Type: COIN, Object: Object{Id: uuid}}
 }

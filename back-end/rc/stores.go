@@ -14,16 +14,16 @@ type RedisStore interface {
 	Value() string
 }
 
-type TypeStore struct {
+type TypeDeserializer struct {
 	Type string
 }
 
-func newTypeStore(serializedData []byte) *TypeStore {
-	typeStore := new(TypeStore)
+func newTypeDeserializer(serializedData []byte) *TypeDeserializer {
+	typeDeserializer := new(TypeDeserializer)
 
-	json.Unmarshal(serializedData, typeStore)
+	json.Unmarshal(serializedData, typeDeserializer)
 
-	return typeStore
+	return typeDeserializer
 }
 
 type ObjectLocationStore struct {

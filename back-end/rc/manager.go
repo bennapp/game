@@ -64,7 +64,7 @@ func (manager *RedisManager) LoadObjectFromCoord(coord gs.Coord) Dbo {
 	objectStore := newObjectStoreRetriever(objectId)
 	objectStore.SerializedObject = []byte(manager.get(objectStore))
 
-	objectType := newTypeStore(objectStore.SerializedObject).Type
+	objectType := newTypeDeserializer(objectStore.SerializedObject).Type
 
 	dbo := el.Factory.Load(objectType)
 
