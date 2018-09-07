@@ -66,7 +66,7 @@ func (manager *RedisManager) LoadObjectFromCoord(coord gs.Coord) Dbo {
 
 	objectType := newTypeDeserializer(objectStore.SerializedObject).Type
 
-	dbo := el.Factory.Load(objectType)
+	dbo := el.Factory().Load(objectType)
 
 	json.Unmarshal(objectStore.SerializedObject, &dbo)
 

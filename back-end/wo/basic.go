@@ -7,8 +7,6 @@ import (
 	"math/rand"
 )
 
-const MAX_COIN_AMOUNT = 10
-
 // GLOBALS
 var elementFactory *el.ElementFactory
 
@@ -52,7 +50,6 @@ func InitializePlayer() *el.Player {
 
 func initializeCoin() *el.Coin {
 	coin := elementFactory.CreateNew(el.COIN)
-	coin.(*el.Coin).Amount = rand.Intn(MAX_COIN_AMOUNT)
 
 	return coin.(*el.Coin)
 }

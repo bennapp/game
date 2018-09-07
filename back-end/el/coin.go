@@ -1,10 +1,13 @@
 package el
 
 import (
+	"../rc"
 	"github.com/google/uuid"
+	"math/rand"
 )
 
 const COIN = "coin"
+const MAX_COIN_AMOUNT = 10
 
 type Coin struct {
 	Amount int
@@ -22,5 +25,10 @@ func (coin *Coin) Id() string {
 
 func newCoin() *Coin {
 	uuid, _ := uuid.NewUUID()
-	return &Coin{Type: COIN, Object: Object{Id: uuid}}
+	amount := rand.Intn(MAX_COIN_AMOUNT)
+	return &Coin{Type: COIN, Object: Object{Id: uuid}, Amount: amount}
+}
+
+func loadCoin() rc.Dbo {
+	return &Coin{Type: COIN}
 }
