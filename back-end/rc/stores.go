@@ -14,6 +14,18 @@ type RedisStore interface {
 	Value() string
 }
 
+type TypeStore struct {
+	Type string
+}
+
+func newTypeStore(serializedData []byte) *TypeStore {
+	typeStore := new(TypeStore)
+
+	json.Unmarshal(serializedData, typeStore)
+
+	return typeStore
+}
+
 type ObjectLocationStore struct {
 	Layer    string
 	Coord    gs.Coord
@@ -21,11 +33,11 @@ type ObjectLocationStore struct {
 }
 
 func newObjectLocationStoreRetriever(coord gs.Coord) *ObjectLocationStore {
-	return &ObjectLocationStore{ Layer: OBJECT_LOCATION_LAYER, Coord: coord }
+	return &ObjectLocationStore{Layer: OBJECT_LOCATION_LAYER, Coord: coord}
 }
 
 func newObjectLocationStore(coord gs.Coord, object Dbo) *ObjectLocationStore {
-	return &ObjectLocationStore{ Layer: OBJECT_LOCATION_LAYER, Coord: coord, ObjectId: object.Id() }
+	return &ObjectLocationStore{Layer: OBJECT_LOCATION_LAYER, Coord: coord, ObjectId: object.Id()}
 }
 
 func (olb *ObjectLocationStore) Key() string {
@@ -37,18 +49,18 @@ func (olb *ObjectLocationStore) Value() string {
 }
 
 type ObjectStore struct {
-	ObjectId string
+	ObjectId         string
 	SerializedObject []byte
 }
 
 func newObjectStoreRetriever(objectId string) *ObjectStore {
-	return &ObjectStore{ ObjectId: objectId }
+	return &ObjectStore{ObjectId: objectId}
 }
 
 func newObjectStore(object Dbo) *ObjectStore {
 	serializedObject, _ := json.Marshal(object)
 
-	return &ObjectStore{ ObjectId: object.Id(), SerializedObject: serializedObject }
+	return &ObjectStore{ObjectId: object.Id(), SerializedObject: serializedObject}
 }
 
 func (olb *ObjectStore) Key() string {
@@ -60,12 +72,11 @@ func (olb *ObjectStore) Value() string {
 }
 
 type PaintLocationStore struct {
-	Layer    string
-	Coord    gs.Coord
-	Paint 	 gs.Paint
+	Layer string
+	Coord gs.Coord
+	Paint gs.Paint
 }
 
 func newPaintLocationStore(coord gs.Coord, paint gs.Paint) *PaintLocationStore {
-	return &PaintLocationStore{ Layer: PAINT_LOCATION_LAYER, Coord: coord, Paint: paint }
+	return &PaintLocationStore{Layer: PAINT_LOCATION_LAYER, Coord: coord, Paint: paint}
 }
-
