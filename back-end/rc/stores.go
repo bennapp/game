@@ -37,15 +37,15 @@ func newObjectLocationStoreRetriever(coord gs.Coord) *ObjectLocationStore {
 }
 
 func newObjectLocationStore(coord gs.Coord, object Dbo) *ObjectLocationStore {
-	return &ObjectLocationStore{Layer: OBJECT_LOCATION_LAYER, Coord: coord, ObjectId: object.Id()}
+	return &ObjectLocationStore{Layer: OBJECT_LOCATION_LAYER, Coord: coord, ObjectId: object.DboId()}
 }
 
 func (olb *ObjectLocationStore) Key() string {
-	return fmt.Sprintf("%v,%v", olb.Coord.X, olb.Coord.Y)
+	return fmt.Sprintf("%v:%v,%v", olb.Layer, olb.Coord.X, olb.Coord.Y)
 }
 
 func (olb *ObjectLocationStore) Value() string {
-	return fmt.Sprintf("%v:%v", olb.Layer, olb.ObjectId)
+	return olb.ObjectId
 }
 
 type ObjectStore struct {
@@ -60,7 +60,7 @@ func newObjectStoreRetriever(objectId string) *ObjectStore {
 func newObjectStore(object Dbo) *ObjectStore {
 	serializedObject, _ := json.Marshal(object)
 
-	return &ObjectStore{ObjectId: object.Id(), SerializedObject: serializedObject}
+	return &ObjectStore{ObjectId: object.DboId(), SerializedObject: serializedObject}
 }
 
 func (olb *ObjectStore) Key() string {

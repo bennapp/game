@@ -1,7 +1,9 @@
 package el
 
 import (
+	"../gs"
 	"../rc"
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -9,7 +11,6 @@ import (
 var EL_FACTORY *ElementFactory
 
 type ElementFactory struct {
-	dboManager *rc.RedisManager
 	factoryMap map[string]DboFactory
 }
 
@@ -17,10 +18,7 @@ func Factory() *ElementFactory {
 	if EL_FACTORY == nil {
 		fmt.Println("factory.go: No ElementFactory Instance found. Creating.")
 
-		dboManager := rc.Manager()
-
 		EL_FACTORY = &ElementFactory{
-			dboManager: dboManager,
 			factoryMap: make(map[string]DboFactory),
 		}
 
@@ -59,6 +57,20 @@ func (elementFactory *ElementFactory) Register(name string, factory DboFactory) 
 	}
 
 	elementFactory.factoryMap[name] = factory
+}
+
+func (elementFactory *ElementFactory) LoadObjectFromCoord(coord gs.Coord) rc.Dbo {
+	objectType, objectStore := rc.Manager().LoadObjectTypeFromCoord(coord)
+
+	if objectType == "" {
+		return nil
+	}
+
+	dbo := elementFactory.Load(objectType)
+
+	json.Unmarshal(objectStore.SerializedObject, &dbo)
+
+	return dbo
 }
 
 func (elementFactory *ElementFactory) init() {

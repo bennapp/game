@@ -1,9 +1,8 @@
 package rc
 
 import (
-	"../el"
 	"../gs"
-	"encoding/json"
+	"fmt"
 	"github.com/go-redis/redis"
 )
 
@@ -31,6 +30,15 @@ func initializeRedisClient() {
 	}
 }
 
+func (manager *RedisManager) PrintAllKeyValuesForDebugging() {
+	results, _ := manager.client.Keys("*").Result()
+
+	for _, str := range results {
+		value, _ := manager.client.Get(str).Result()
+		fmt.Printf("key: %v, value: %v\n", str, value)
+	}
+}
+
 func (manager *RedisManager) FlushAll() {
 	manager.client.FlushAll()
 }
@@ -55,22 +63,21 @@ func (manager *RedisManager) DeleteObject(object Dbo) {
 	manager.delete(objectStore)
 }
 
-func (manager *RedisManager) LoadObjectFromCoord(coord gs.Coord) Dbo {
+func (manager *RedisManager) LoadObjectTypeFromCoord(coord gs.Coord) (string, *ObjectStore) {
 	objectLocationStore := newObjectLocationStoreRetriever(coord)
 
 	objectId := manager.get(objectLocationStore)
-	// handle nil or empty
+
+	if objectId == "" {
+		return "", nil
+	}
 
 	objectStore := newObjectStoreRetriever(objectId)
 	objectStore.SerializedObject = []byte(manager.get(objectStore))
 
 	objectType := newTypeDeserializer(objectStore.SerializedObject).Type
 
-	dbo := el.Factory().Load(objectType)
-
-	json.Unmarshal(objectStore.SerializedObject, &dbo)
-
-	return dbo
+	return objectType, objectStore
 }
 
 func (manager *RedisManager) set(store RedisStore) {
