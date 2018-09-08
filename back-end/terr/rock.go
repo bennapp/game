@@ -1,5 +1,7 @@
 package terr
 
+import "../typ"
+
 const ROCK = "rock"
 
 type Rock struct {
@@ -11,6 +13,6 @@ func NewRock() *Rock {
 	return &Rock{Terrain: newTerrain(ROCK, permeable)}
 }
 
-func loadRock() TerrainElement {
+func LoadRock() typ.Typical {
 	return &Rock{Terrain: loadTerrain(ROCK)}
 }

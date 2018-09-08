@@ -1,7 +1,11 @@
 package terr
 
+import (
+	"../typ"
+)
+
 type Terrain struct {
-	Type      string
+	typ.Type
 	Permeable bool
 	Friction  int
 }
@@ -16,9 +20,9 @@ func (terrain *Terrain) Terrainable() bool {
 }
 
 func newTerrain(terrainType string, permeable bool) Terrain {
-	return Terrain{Type: terrainType, Permeable: permeable}
+	return Terrain{Type: typ.NewType(terrainType), Permeable: permeable}
 }
 
 func loadTerrain(terrainType string) Terrain {
-	return Terrain{Type: terrainType}
+	return Terrain{Type: typ.NewType(terrainType)}
 }

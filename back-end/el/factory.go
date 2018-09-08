@@ -4,12 +4,16 @@ import (
 	"../gs"
 	"../obj"
 	"../rc"
+	"../terr"
+	"../typ"
 	"encoding/json"
 	"fmt"
 	"strings"
 )
 
 var EL_FACTORY *ElementFactory
+
+type objFactory func() typ.Typical
 
 type ElementFactory struct {
 	factoryMap map[string]objFactory
@@ -28,7 +32,7 @@ func Factory() *ElementFactory {
 	return EL_FACTORY
 }
 
-func (elementFactory *ElementFactory) Load(objectType string) obj.Objectable {
+func (elementFactory *ElementFactory) Load(objectType string) typ.Typical {
 	factory, ok := elementFactory.factoryMap[objectType]
 
 	if !ok {
@@ -44,8 +48,6 @@ func (elementFactory *ElementFactory) Load(objectType string) obj.Objectable {
 	return factory()
 }
 
-type objFactory func() obj.Objectable
-
 func (elementFactory *ElementFactory) Register(name string, factory objFactory) {
 	if factory == nil {
 		panic("Cannot have nil dbo!")
@@ -60,23 +62,22 @@ func (elementFactory *ElementFactory) Register(name string, factory objFactory) 
 	elementFactory.factoryMap[name] = factory
 }
 
-func (elementFactory *ElementFactory) LoadObjectFromCoord(coord gs.Coord) obj.Objectable {
+func (elementFactory *ElementFactory) LoadObjectFromCoord(coord gs.Coord) typ.Typical {
 	objectType, objectStore := rc.Manager().LoadObjectTypeFromCoord(coord)
 
 	if objectType == "" {
 		return nil
 	}
 
-	dbo := elementFactory.Load(objectType)
+	object := elementFactory.Load(objectType)
+	json.Unmarshal(objectStore.SerializedObject, &object)
 
-	json.Unmarshal(objectStore.SerializedObject, &dbo)
-
-	return dbo
+	return object
 }
 
 func (elementFactory *ElementFactory) init() {
 	elementFactory.Register(obj.COIN, obj.LoadCoin)
-	//elementFactory.Register(ROCK, newRockDbo)
+	elementFactory.Register(terr.ROCK, terr.LoadRock)
 	//elementFactory.Register(PLAYER, newPlayerDbo)
 	//elementFactory.Register(ELEMENT, newElementDbo)
 	fmt.Println("factory.go: Finished registering DboFactoring.")

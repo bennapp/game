@@ -42,12 +42,12 @@ func newObjectLocationStore(coord gs.Coord, object obj.Objectable) *ObjectLocati
 	return &ObjectLocationStore{Layer: OBJECT_LOCATION_LAYER, Coord: coord, ObjectId: object.ObjectId()}
 }
 
-func (olb *ObjectLocationStore) Key() string {
-	return fmt.Sprintf("%v:%v,%v", olb.Layer, olb.Coord.X, olb.Coord.Y)
+func (store *ObjectLocationStore) Key() string {
+	return fmt.Sprintf("%v:%v,%v", store.Layer, store.Coord.X, store.Coord.Y)
 }
 
-func (olb *ObjectLocationStore) Value() string {
-	return olb.ObjectId
+func (store *ObjectLocationStore) Value() string {
+	return store.ObjectId
 }
 
 type ObjectStore struct {
@@ -65,20 +65,29 @@ func newObjectStore(object obj.Objectable) *ObjectStore {
 	return &ObjectStore{ObjectId: object.ObjectId(), SerializedObject: serializedObject}
 }
 
-func (olb *ObjectStore) Key() string {
-	return olb.ObjectId
+func (store *ObjectStore) Key() string {
+	return store.ObjectId
 }
 
-func (olb *ObjectStore) Value() string {
-	return string(olb.SerializedObject)
+func (store *ObjectStore) Value() string {
+	return string(store.SerializedObject)
 }
 
 type PaintLocationStore struct {
-	Layer string
-	Coord gs.Coord
-	Paint pnt.Paint
+	Layer           string
+	Coord           gs.Coord
+	SerializedPaint []byte
 }
 
 func newPaintLocationStore(coord gs.Coord, paint pnt.Paint) *PaintLocationStore {
-	return &PaintLocationStore{Layer: PAINT_LOCATION_LAYER, Coord: coord, Paint: paint}
+	serializedPaint, _ := json.Marshal(paint)
+	return &PaintLocationStore{Layer: PAINT_LOCATION_LAYER, Coord: coord, SerializedPaint: serializedPaint}
+}
+
+func (store *PaintLocationStore) Key() string {
+	return fmt.Sprintf("%v:%v,%v", store.Layer, store.Coord.X, store.Coord.Y)
+}
+
+func (store *PaintLocationStore) Value() string {
+	return string(store.SerializedPaint)
 }

@@ -21,8 +21,8 @@ func printAllObjects() {
 		for j := 0; j < gs.WORLD_SIZE; j++ {
 			coord := gs.NewCoord(i, j)
 
-			dbo := el.Factory().LoadObjectFromCoord(coord)
-			fmt.Printf("%+v\n", dbo)
+			object := el.Factory().LoadObjectFromCoord(coord)
+			fmt.Printf("%+v\n", object)
 		}
 	}
 }

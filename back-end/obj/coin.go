@@ -1,6 +1,7 @@
 package obj
 
 import (
+	"../typ"
 	"math/rand"
 )
 
@@ -21,6 +22,6 @@ func NewCoin() *Coin {
 	return &Coin{Object: newObject(COIN), Amount: amount}
 }
 
-func LoadCoin() Objectable {
+func LoadCoin() typ.Typical {
 	return &Coin{Object: loadObject(COIN)}
 }

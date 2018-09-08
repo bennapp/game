@@ -1,10 +1,13 @@
 package obj
 
-import "github.com/google/uuid"
+import (
+	"../typ"
+	"github.com/google/uuid"
+)
 
 type Object struct {
-	Id   uuid.UUID
-	Type string
+	typ.Type
+	Id uuid.UUID
 }
 
 type Objectable interface {
@@ -17,9 +20,9 @@ func (object *Object) ObjectId() string {
 
 func newObject(objectType string) Object {
 	uuid, _ := uuid.NewUUID()
-	return Object{Type: objectType, Id: uuid}
+	return Object{Type: typ.NewType(objectType), Id: uuid}
 }
 
 func loadObject(objectType string) Object {
-	return Object{Type: objectType}
+	return Object{Type: typ.NewType(objectType)}
 }
