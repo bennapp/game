@@ -12,7 +12,7 @@ func DebugRedisStore() {
 	rc.Manager().PrintAllKeyValuesForDebugging()
 
 	fmt.Println()
-	fmt.Println("Printing all loaded objects")
+	fmt.Println("Printing all loaded objects and paint")
 	printAllObjects()
 }
 
@@ -23,6 +23,9 @@ func printAllObjects() {
 
 			object := el.Factory().LoadObjectFromCoord(coord)
 			fmt.Printf("%+v\n", object)
+
+			paint := el.Factory().LoadPaintFromCoord(coord)
+			fmt.Printf("%+v\n", paint)
 		}
 	}
 }

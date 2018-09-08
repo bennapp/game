@@ -3,6 +3,7 @@ package rc
 import (
 	"../gs"
 	"../obj"
+	"../pnt"
 	"fmt"
 	"github.com/go-redis/redis"
 )
@@ -49,6 +50,11 @@ func (manager *RedisManager) SaveObjectLocation(coord gs.Coord, object obj.Objec
 	manager.set(objectLocationStore)
 }
 
+func (manager *RedisManager) SavePaintLocation(coord gs.Coord, paint *pnt.Paint) {
+	paintLocationStore := newPaintLocationStore(coord, paint)
+	manager.set(paintLocationStore)
+}
+
 func (manager *RedisManager) DeleteObjectLocation(coord gs.Coord, object obj.Objectable) {
 	objectLocationStore := newObjectLocationStore(coord, object)
 	manager.delete(objectLocationStore)
@@ -79,6 +85,19 @@ func (manager *RedisManager) LoadObjectTypeFromCoord(coord gs.Coord) (string, *O
 	objectType := newTypeDeserializer(objectStore.SerializedObject).Type
 
 	return objectType, objectStore
+}
+
+func (manager *RedisManager) LoadPaintStoreFromCoord(coord gs.Coord) *PaintLocationStore {
+	paintStore := newPaintStoreRetriever(coord)
+	serializedString := manager.get(paintStore)
+
+	if serializedString == "" {
+		return nil
+	}
+
+	paintStore.SerializedPaint = []byte(serializedString)
+
+	return paintStore
 }
 
 func (manager *RedisManager) set(store RedisStore) {

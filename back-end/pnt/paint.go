@@ -2,13 +2,25 @@ package pnt
 
 import (
 	"../terr"
+	"../typ"
 )
 
+const PAINT = "paint"
+
 type Paint struct {
+	typ.Type
 	terr.Terrain
-	CellState
+	Zone
 }
 
-// pvp, pve, safe zones, danger zones etc.
-type CellState struct {
+// pvp, pve, safe zones, etc.
+type Zone struct {
+}
+
+func NewPaint(terrain terr.Terrain, zone Zone) *Paint {
+	return &Paint{Type: typ.NewType(PAINT), Terrain: terrain, Zone: zone}
+}
+
+func LoadPaint() typ.Typical {
+	return &Paint{}
 }

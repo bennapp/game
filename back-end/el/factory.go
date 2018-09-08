@@ -4,7 +4,7 @@ import (
 	"../gs"
 	"../obj"
 	"../rc"
-	"../terr"
+	"../pnt"
 	"../typ"
 	"encoding/json"
 	"fmt"
@@ -32,8 +32,8 @@ func Factory() *ElementFactory {
 	return EL_FACTORY
 }
 
-func (elementFactory *ElementFactory) Load(objectType string) typ.Typical {
-	factory, ok := elementFactory.factoryMap[objectType]
+func (elementFactory *ElementFactory) Load(typeString string) typ.Typical {
+	factory, ok := elementFactory.factoryMap[typeString]
 
 	if !ok {
 		// Factory has not been registered.
@@ -75,9 +75,23 @@ func (elementFactory *ElementFactory) LoadObjectFromCoord(coord gs.Coord) typ.Ty
 	return object
 }
 
+func (elementFactory *ElementFactory) LoadPaintFromCoord(coord gs.Coord) typ.Typical {
+	paintStore := rc.Manager().LoadPaintStoreFromCoord(coord)
+
+	if paintStore == nil {
+		return nil
+	}
+
+	paint := elementFactory.Load(pnt.PAINT)
+	json.Unmarshal(paintStore.SerializedPaint, &paint)
+
+	return paint
+}
+
 func (elementFactory *ElementFactory) init() {
 	elementFactory.Register(obj.COIN, obj.LoadCoin)
-	elementFactory.Register(terr.ROCK, terr.LoadRock)
+	elementFactory.Register(pnt.PAINT, pnt.LoadPaint)
+	//elementFactory.Register(terr.ROCK, terr.LoadRock)
 	//elementFactory.Register(PLAYER, newPlayerDbo)
 	//elementFactory.Register(ELEMENT, newElementDbo)
 	fmt.Println("factory.go: Finished registering DboFactoring.")

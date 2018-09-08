@@ -5,7 +5,10 @@ import (
 	"../gs"
 	"../obj"
 	"../rc"
-	"math/rand"
+	"../pnt"
+	"../terr"
+			"math/rand"
+	"fmt"
 )
 
 func IsEmpty(coord gs.Coord) bool {
@@ -140,11 +143,6 @@ func placeRandomLocation(dbo obj.Objectable) gs.Coord {
 func InitializeWorld() {
 	for i := 0; i < gs.WORLD_SIZE; i++ {
 		for j := 0; j < gs.WORLD_SIZE; j++ {
-			//rockChance := rand.Intn(5)
-			//if rockChance == 0 {
-			//	placeRockRandomly()
-			//}
-
 			coinChance := rand.Intn(10)
 			if coinChance == 0 {
 				coin := obj.NewCoin()
@@ -154,6 +152,11 @@ func InitializeWorld() {
 			}
 		}
 	}
+
+	paint := pnt.NewPaint(terr.NewRock(), pnt.Zone{})
+	coord := gs.NewCoord(0, 0)
+	fmt.Println(paint)
+	rc.Manager().SavePaintLocation(coord, paint)
 }
 
 func ResetWorld() {

@@ -1,28 +1,15 @@
 package terr
 
-import (
-	"../typ"
-)
-
 type Terrain struct {
-	typ.Type
+	TerrainType string
 	Permeable bool
-	Friction  int
+	Friction  int // how slow something should move through this
 }
 
 type TerrainElement interface {
 	Terrainable() bool
 }
 
-// Stub to force all terrains to be a TerrainElement interface
-func (terrain *Terrain) Terrainable() bool {
-	return true
-}
-
-func newTerrain(terrainType string, permeable bool) Terrain {
-	return Terrain{Type: typ.NewType(terrainType), Permeable: permeable}
-}
-
-func loadTerrain(terrainType string) Terrain {
-	return Terrain{Type: typ.NewType(terrainType)}
+func newTerrain(permeable bool, terrainType string) Terrain {
+	return Terrain{Permeable: permeable, TerrainType: terrainType}
 }
