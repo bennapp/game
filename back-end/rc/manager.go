@@ -2,6 +2,7 @@ package rc
 
 import (
 	"../gs"
+	"../obj"
 	"fmt"
 	"github.com/go-redis/redis"
 )
@@ -43,22 +44,22 @@ func (manager *RedisManager) FlushAll() {
 	manager.client.FlushAll()
 }
 
-func (manager *RedisManager) SaveObjectLocation(coord gs.Coord, object Dbo) {
+func (manager *RedisManager) SaveObjectLocation(coord gs.Coord, object obj.Objectable) {
 	objectLocationStore := newObjectLocationStore(coord, object)
 	manager.set(objectLocationStore)
 }
 
-func (manager *RedisManager) DeleteObjectLocation(coord gs.Coord, object Dbo) {
+func (manager *RedisManager) DeleteObjectLocation(coord gs.Coord, object obj.Objectable) {
 	objectLocationStore := newObjectLocationStore(coord, object)
 	manager.delete(objectLocationStore)
 }
 
-func (manager *RedisManager) SaveObject(object Dbo) {
+func (manager *RedisManager) SaveObject(object obj.Objectable) {
 	objectStore := newObjectStore(object)
 	manager.set(objectStore)
 }
 
-func (manager *RedisManager) DeleteObject(object Dbo) {
+func (manager *RedisManager) DeleteObject(object obj.Objectable) {
 	objectStore := newObjectStore(object)
 	manager.delete(objectStore)
 }

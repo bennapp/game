@@ -12,11 +12,11 @@ func DebugRedisStore() {
 	rc.Manager().PrintAllKeyValuesForDebugging()
 
 	fmt.Println()
-	fmt.Println("Printing all loaded dbos")
-	printAllDbos()
+	fmt.Println("Printing all loaded objects")
+	printAllObjects()
 }
 
-func printAllDbos() {
+func printAllObjects() {
 	for i := 0; i < gs.WORLD_SIZE; i++ {
 		for j := 0; j < gs.WORLD_SIZE; j++ {
 			coord := gs.NewCoord(i, j)

@@ -1,7 +1,6 @@
-package el
+package obj
 
 import (
-	"../rc"
 	"math/rand"
 )
 
@@ -22,6 +21,6 @@ func NewCoin() *Coin {
 	return &Coin{Object: newObject(COIN), Amount: amount}
 }
 
-func loadCoin() rc.Dbo {
+func LoadCoin() Objectable {
 	return &Coin{Object: loadObject(COIN)}
 }

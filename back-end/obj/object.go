@@ -1,4 +1,4 @@
-package el
+package obj
 
 import "github.com/google/uuid"
 
@@ -7,7 +7,11 @@ type Object struct {
 	Type string
 }
 
-func (object *Object) DboId() string {
+type Objectable interface {
+	ObjectId() string
+}
+
+func (object *Object) ObjectId() string {
 	return object.Id.String()
 }
 

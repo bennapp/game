@@ -158,7 +158,7 @@ func (c *Client) writePump() {
 	}
 }
 
-type dboLookup map[string]rc.Dbo
+type dboLookup map[string]rc.Objectable
 type gameStateMapping map[string]interface{}
 
 func (c *Client) beamState(player *el.Player) {

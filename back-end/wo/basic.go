@@ -3,6 +3,7 @@ package wo
 import (
 	"../el"
 	"../gs"
+	"../obj"
 	"../rc"
 	"math/rand"
 )
@@ -11,7 +12,7 @@ func IsEmpty(coord gs.Coord) bool {
 	return el.Factory().LoadObjectFromCoord(coord) == nil
 }
 
-//func storeElement(coord gs.Coord, dbo rc.Dbo) {
+//func storeElement(coord gs.Coord, dbo rc.Objectable) {
 //	element := elementFactory.CreateNew(el.ELEMENT)
 //	element.(*el.Element).DboKey = dbo.Key()
 //	element.(*el.Element).GridCoord = coord
@@ -49,7 +50,7 @@ func IsEmpty(coord gs.Coord) bool {
 //	placeRandomLocation(rock)
 //}
 
-func placeRandomLocation(dbo rc.Dbo) gs.Coord {
+func placeRandomLocation(dbo obj.Objectable) gs.Coord {
 	coord := gs.NewRandomCoord()
 
 	if IsEmpty(coord) {
@@ -65,7 +66,7 @@ func placeRandomLocation(dbo rc.Dbo) gs.Coord {
 //	player.GridCoord = moveCharacter(player.GridCoord, vector, player)
 //}
 //
-//func moveCharacter(coord gs.Coord, vector gs.Vector, element rc.Dbo) gs.Coord {
+//func moveCharacter(coord gs.Coord, vector gs.Vector, element rc.Objectable) gs.Coord {
 //	nextCoord, _ := SafeMove(coord, vector)
 //
 //	nextElement, _ := NextElement(coord, vector)
@@ -93,7 +94,7 @@ func placeRandomLocation(dbo rc.Dbo) gs.Coord {
 //	return nextCoord
 //}
 //
-//func elementFromKey(key string) rc.Dbo {
+//func elementFromKey(key string) rc.Objectable {
 //	t, _ := rc.SplitKey(key)
 //	element := elementFactory.LoadFromKey(t, key)
 //
@@ -107,7 +108,7 @@ func placeRandomLocation(dbo rc.Dbo) gs.Coord {
 //	elementFactory.Delete(element)
 //}
 //
-//func elementFromCoords(coord gs.Coord) rc.Dbo {
+//func elementFromCoords(coord gs.Coord) rc.Objectable {
 //	location := el.NewLocation(coord)
 //	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)
 //
@@ -120,7 +121,7 @@ func placeRandomLocation(dbo rc.Dbo) gs.Coord {
 //	}
 //}
 //
-//func NextElement(coord gs.Coord, vector gs.Vector) (rc.Dbo, bool) {
+//func NextElement(coord gs.Coord, vector gs.Vector) (rc.Objectable, bool) {
 //	nextCoord, moved := SafeMove(coord, vector)
 //	return elementFromCoords(nextCoord), moved
 //}
@@ -146,7 +147,7 @@ func InitializeWorld() {
 
 			coinChance := rand.Intn(10)
 			if coinChance == 0 {
-				coin := el.NewCoin()
+				coin := obj.NewCoin()
 				rc.Manager().SaveObject(coin)
 
 				placeRandomLocation(coin)

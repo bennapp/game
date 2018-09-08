@@ -2,6 +2,8 @@ package rc
 
 import (
 	"../gs"
+	"../obj"
+	"../pnt"
 	"encoding/json"
 	"fmt"
 )
@@ -36,8 +38,8 @@ func newObjectLocationStoreRetriever(coord gs.Coord) *ObjectLocationStore {
 	return &ObjectLocationStore{Layer: OBJECT_LOCATION_LAYER, Coord: coord}
 }
 
-func newObjectLocationStore(coord gs.Coord, object Dbo) *ObjectLocationStore {
-	return &ObjectLocationStore{Layer: OBJECT_LOCATION_LAYER, Coord: coord, ObjectId: object.DboId()}
+func newObjectLocationStore(coord gs.Coord, object obj.Objectable) *ObjectLocationStore {
+	return &ObjectLocationStore{Layer: OBJECT_LOCATION_LAYER, Coord: coord, ObjectId: object.ObjectId()}
 }
 
 func (olb *ObjectLocationStore) Key() string {
@@ -57,10 +59,10 @@ func newObjectStoreRetriever(objectId string) *ObjectStore {
 	return &ObjectStore{ObjectId: objectId}
 }
 
-func newObjectStore(object Dbo) *ObjectStore {
+func newObjectStore(object obj.Objectable) *ObjectStore {
 	serializedObject, _ := json.Marshal(object)
 
-	return &ObjectStore{ObjectId: object.DboId(), SerializedObject: serializedObject}
+	return &ObjectStore{ObjectId: object.ObjectId(), SerializedObject: serializedObject}
 }
 
 func (olb *ObjectStore) Key() string {
@@ -74,9 +76,9 @@ func (olb *ObjectStore) Value() string {
 type PaintLocationStore struct {
 	Layer string
 	Coord gs.Coord
-	Paint gs.Paint
+	Paint pnt.Paint
 }
 
-func newPaintLocationStore(coord gs.Coord, paint gs.Paint) *PaintLocationStore {
+func newPaintLocationStore(coord gs.Coord, paint pnt.Paint) *PaintLocationStore {
 	return &PaintLocationStore{Layer: PAINT_LOCATION_LAYER, Coord: coord, Paint: paint}
 }

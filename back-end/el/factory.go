@@ -2,6 +2,7 @@ package el
 
 import (
 	"../gs"
+	"../obj"
 	"../rc"
 	"encoding/json"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 var EL_FACTORY *ElementFactory
 
 type ElementFactory struct {
-	factoryMap map[string]DboFactory
+	factoryMap map[string]objFactory
 }
 
 func Factory() *ElementFactory {
@@ -19,7 +20,7 @@ func Factory() *ElementFactory {
 		fmt.Println("factory.go: No ElementFactory Instance found. Creating.")
 
 		EL_FACTORY = &ElementFactory{
-			factoryMap: make(map[string]DboFactory),
+			factoryMap: make(map[string]objFactory),
 		}
 
 		EL_FACTORY.init()
@@ -27,7 +28,7 @@ func Factory() *ElementFactory {
 	return EL_FACTORY
 }
 
-func (elementFactory *ElementFactory) Load(objectType string) rc.Dbo {
+func (elementFactory *ElementFactory) Load(objectType string) obj.Objectable {
 	factory, ok := elementFactory.factoryMap[objectType]
 
 	if !ok {
@@ -43,9 +44,9 @@ func (elementFactory *ElementFactory) Load(objectType string) rc.Dbo {
 	return factory()
 }
 
-type DboFactory func() rc.Dbo
+type objFactory func() obj.Objectable
 
-func (elementFactory *ElementFactory) Register(name string, factory DboFactory) {
+func (elementFactory *ElementFactory) Register(name string, factory objFactory) {
 	if factory == nil {
 		panic("Cannot have nil dbo!")
 	}
@@ -53,13 +54,13 @@ func (elementFactory *ElementFactory) Register(name string, factory DboFactory) 
 	_, registered := elementFactory.factoryMap[name]
 
 	if registered {
-		fmt.Printf("Dbo: %s already registered. Ignoring.\n", name)
+		fmt.Printf("Objectable: %s already registered. Ignoring.\n", name)
 	}
 
 	elementFactory.factoryMap[name] = factory
 }
 
-func (elementFactory *ElementFactory) LoadObjectFromCoord(coord gs.Coord) rc.Dbo {
+func (elementFactory *ElementFactory) LoadObjectFromCoord(coord gs.Coord) obj.Objectable {
 	objectType, objectStore := rc.Manager().LoadObjectTypeFromCoord(coord)
 
 	if objectType == "" {
@@ -74,7 +75,7 @@ func (elementFactory *ElementFactory) LoadObjectFromCoord(coord gs.Coord) rc.Dbo
 }
 
 func (elementFactory *ElementFactory) init() {
-	elementFactory.Register(COIN, loadCoin)
+	elementFactory.Register(obj.COIN, obj.LoadCoin)
 	//elementFactory.Register(ROCK, newRockDbo)
 	//elementFactory.Register(PLAYER, newPlayerDbo)
 	//elementFactory.Register(ELEMENT, newElementDbo)
