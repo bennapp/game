@@ -4,6 +4,7 @@ import (
 	"../gs"
 	"../obj"
 	"../pnt"
+	"../store"
 	"fmt"
 	"github.com/go-redis/redis"
 )
@@ -46,49 +47,53 @@ func (manager *RedisManager) FlushAll() {
 }
 
 func (manager *RedisManager) SaveObjectLocation(coord gs.Coord, object obj.Objectable) {
-	objectLocationStore := newObjectLocationStore(coord, object)
+	objectLocationStore := store.NewObjectLocationStore(coord, object)
 	manager.set(objectLocationStore)
 }
 
 func (manager *RedisManager) SavePaintLocation(coord gs.Coord, paint *pnt.Paint) {
-	paintLocationStore := newPaintLocationStore(coord, paint)
+	paintLocationStore := store.NewPaintLocationStore(coord, paint)
 	manager.set(paintLocationStore)
 }
 
 func (manager *RedisManager) DeleteObjectLocation(coord gs.Coord, object obj.Objectable) {
-	objectLocationStore := newObjectLocationStore(coord, object)
+	objectLocationStore := store.NewObjectLocationStore(coord, object)
 	manager.delete(objectLocationStore)
 }
 
 func (manager *RedisManager) SaveObject(object obj.Objectable) {
-	objectStore := newObjectStore(object)
+	objectStore := store.NewObjectStore(object)
 	manager.set(objectStore)
 }
 
 func (manager *RedisManager) DeleteObject(object obj.Objectable) {
-	objectStore := newObjectStore(object)
+	objectStore := store.NewObjectStore(object)
 	manager.delete(objectStore)
 }
 
-func (manager *RedisManager) LoadObjectTypeFromCoord(coord gs.Coord) (string, *ObjectStore) {
-	objectLocationStore := newObjectLocationStoreRetriever(coord)
+func (manager *RedisManager) LoadObjectStore(objectId string) *store.ObjectStore {
+	objectStore := store.NewObjectStoreRetriever(objectId)
+	objectData := manager.get(objectStore)
+	objectStore.Retrieve(objectData)
 
+	return objectStore
+}
+
+func (manager *RedisManager) LoadObjectStoreFromCoord(coord gs.Coord) *store.ObjectStore {
+	objectLocationStore := store.NewObjectLocationStoreRetriever(coord)
 	objectId := manager.get(objectLocationStore)
 
 	if objectId == "" {
-		return "", nil
+		return nil
 	}
 
-	objectStore := newObjectStoreRetriever(objectId)
-	objectStore.SerializedObject = []byte(manager.get(objectStore))
+	objectStore := manager.LoadObjectStore(objectId)
 
-	objectType := newTypeDeserializer(objectStore.SerializedObject).Type
-
-	return objectType, objectStore
+	return objectStore
 }
 
-func (manager *RedisManager) LoadPaintStoreFromCoord(coord gs.Coord) *PaintLocationStore {
-	paintStore := newPaintStoreRetriever(coord)
+func (manager *RedisManager) LoadPaintStoreFromCoord(coord gs.Coord) *store.PaintLocationStore {
+	paintStore := store.NewPaintStoreRetriever(coord)
 	serializedString := manager.get(paintStore)
 
 	if serializedString == "" {
@@ -100,15 +105,15 @@ func (manager *RedisManager) LoadPaintStoreFromCoord(coord gs.Coord) *PaintLocat
 	return paintStore
 }
 
-func (manager *RedisManager) set(store RedisStore) {
+func (manager *RedisManager) set(store store.RedisStore) {
 	manager.client.Set(store.Key(), store.Value(), 0).Err()
 }
 
-func (manager *RedisManager) delete(store RedisStore) {
+func (manager *RedisManager) delete(store store.RedisStore) {
 	manager.client.Set(store.Key(), nil, 0).Err()
 }
 
-func (manager *RedisManager) get(store RedisStore) string {
+func (manager *RedisManager) get(store store.RedisStore) string {
 	val, _ := manager.client.Get(store.Key()).Result()
 	return val
 }

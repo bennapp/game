@@ -4,28 +4,28 @@ import (
 	"../el"
 	"../gs"
 	"../rc"
-	"fmt"
+	"testing"
 )
 
-func DebugRedisStore() {
-	fmt.Println("Printing all key values")
+func TestRedisStore(t *testing.T) {
+	t.Log("Printing all key values")
 	rc.Manager().PrintAllKeyValuesForDebugging()
 
-	fmt.Println()
-	fmt.Println("Printing all loaded objects and paint")
-	printAllObjects()
+	t.Log()
+	t.Log("Printing all loaded objects and paint")
+	printAllObjects(t)
 }
 
-func printAllObjects() {
+func printAllObjects(t *testing.T) {
 	for i := 0; i < gs.WORLD_SIZE; i++ {
 		for j := 0; j < gs.WORLD_SIZE; j++ {
 			coord := gs.NewCoord(i, j)
 
 			object := el.Factory().LoadObjectFromCoord(coord)
-			fmt.Printf("%+v\n", object)
+			t.Logf("object: %v\n", object)
 
 			paint := el.Factory().LoadPaintFromCoord(coord)
-			fmt.Printf("%+v\n", paint)
+			t.Logf("paint: %v\n", paint)
 		}
 	}
 }

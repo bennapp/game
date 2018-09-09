@@ -1,4 +1,4 @@
-package rc
+package store
 
 import (
 	"../gs"
@@ -16,16 +16,9 @@ type RedisStore interface {
 	Value() string
 }
 
-type TypeDeserializer struct {
-	Type string
-}
-
-func newTypeDeserializer(serializedData []byte) *TypeDeserializer {
-	typeDeserializer := new(TypeDeserializer)
-
-	json.Unmarshal(serializedData, typeDeserializer)
-
-	return typeDeserializer
+type Storable interface {
+	GetType() string
+	GetSerializedData() []byte
 }
 
 type ObjectLocationStore struct {
@@ -33,11 +26,11 @@ type ObjectLocationStore struct {
 	ObjectId string
 }
 
-func newObjectLocationStoreRetriever(coord gs.Coord) *ObjectLocationStore {
+func NewObjectLocationStoreRetriever(coord gs.Coord) *ObjectLocationStore {
 	return &ObjectLocationStore{Coord: coord}
 }
 
-func newObjectLocationStore(coord gs.Coord, object obj.Objectable) *ObjectLocationStore {
+func NewObjectLocationStore(coord gs.Coord, object obj.Objectable) *ObjectLocationStore {
 	return &ObjectLocationStore{Coord: coord, ObjectId: object.ObjectId()}
 }
 
@@ -52,13 +45,14 @@ func (store *ObjectLocationStore) Value() string {
 type ObjectStore struct {
 	ObjectId         string
 	SerializedObject []byte
+	Type             string
 }
 
-func newObjectStoreRetriever(objectId string) *ObjectStore {
+func NewObjectStoreRetriever(objectId string) *ObjectStore {
 	return &ObjectStore{ObjectId: objectId}
 }
 
-func newObjectStore(object obj.Objectable) *ObjectStore {
+func NewObjectStore(object obj.Objectable) *ObjectStore {
 	serializedObject, _ := json.Marshal(object)
 
 	return &ObjectStore{ObjectId: object.ObjectId(), SerializedObject: serializedObject}
@@ -72,17 +66,30 @@ func (store *ObjectStore) Value() string {
 	return string(store.SerializedObject)
 }
 
+func (store *ObjectStore) GetType() string {
+	return store.Type
+}
+
+func (store *ObjectStore) GetSerializedData() []byte {
+	return store.SerializedObject
+}
+
+func (store *ObjectStore) Retrieve(objectData string) {
+	store.SerializedObject = []byte(objectData)
+	store.Type = newTypeDeserializer(store.SerializedObject).Type
+}
+
 type PaintLocationStore struct {
 	Coord           gs.Coord
 	SerializedPaint []byte
 }
 
-func newPaintLocationStore(coord gs.Coord, paint *pnt.Paint) *PaintLocationStore {
+func NewPaintLocationStore(coord gs.Coord, paint *pnt.Paint) *PaintLocationStore {
 	serializedPaint, _ := json.Marshal(paint)
 	return &PaintLocationStore{Coord: coord, SerializedPaint: serializedPaint}
 }
 
-func newPaintStoreRetriever(coord gs.Coord) *PaintLocationStore {
+func NewPaintStoreRetriever(coord gs.Coord) *PaintLocationStore {
 	return &PaintLocationStore{Coord: coord}
 }
 
@@ -92,4 +99,24 @@ func (store *PaintLocationStore) Key() string {
 
 func (store *PaintLocationStore) Value() string {
 	return string(store.SerializedPaint)
+}
+
+func (store *PaintLocationStore) GetType() string {
+	return pnt.PAINT
+}
+
+func (store *PaintLocationStore) GetSerializedData() []byte {
+	return store.SerializedPaint
+}
+
+type TypeDeserializer struct {
+	Type string
+}
+
+func newTypeDeserializer(serializedData []byte) *TypeDeserializer {
+	typeDeserializer := new(TypeDeserializer)
+
+	json.Unmarshal(serializedData, typeDeserializer)
+
+	return typeDeserializer
 }

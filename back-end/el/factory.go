@@ -1,10 +1,9 @@
 package el
 
 import (
-	"../gs"
 	"../obj"
-	"../rc"
 	"../pnt"
+	"../store"
 	"../typ"
 	"encoding/json"
 	"fmt"
@@ -32,7 +31,22 @@ func Factory() *ElementFactory {
 	return EL_FACTORY
 }
 
-func (elementFactory *ElementFactory) Load(typeString string) typ.Typical {
+func (elementFactory *ElementFactory) DeserializeObject(objectStore *store.ObjectStore) obj.Objectable {
+	return elementFactory.deserialize(objectStore).(obj.Objectable)
+}
+
+func (elementFactory *ElementFactory) DeserializePaint(paintStore *store.PaintLocationStore) *pnt.Paint {
+	return elementFactory.deserialize(paintStore).(*pnt.Paint)
+}
+
+func (elementFactory *ElementFactory) deserialize(store store.Storable) typ.Typical {
+	typical := elementFactory.load(store.GetType())
+	json.Unmarshal(store.GetSerializedData(), &typical)
+
+	return typical
+}
+
+func (elementFactory *ElementFactory) load(typeString string) typ.Typical {
 	factory, ok := elementFactory.factoryMap[typeString]
 
 	if !ok {
@@ -48,7 +62,7 @@ func (elementFactory *ElementFactory) Load(typeString string) typ.Typical {
 	return factory()
 }
 
-func (elementFactory *ElementFactory) Register(name string, factory objFactory) {
+func (elementFactory *ElementFactory) register(name string, factory objFactory) {
 	if factory == nil {
 		panic("Cannot have nil dbo!")
 	}
@@ -62,35 +76,9 @@ func (elementFactory *ElementFactory) Register(name string, factory objFactory) 
 	elementFactory.factoryMap[name] = factory
 }
 
-func (elementFactory *ElementFactory) LoadObjectFromCoord(coord gs.Coord) typ.Typical {
-	objectType, objectStore := rc.Manager().LoadObjectTypeFromCoord(coord)
-
-	if objectType == "" {
-		return nil
-	}
-
-	object := elementFactory.Load(objectType)
-	json.Unmarshal(objectStore.SerializedObject, &object)
-
-	return object
-}
-
-func (elementFactory *ElementFactory) LoadPaintFromCoord(coord gs.Coord) typ.Typical {
-	paintStore := rc.Manager().LoadPaintStoreFromCoord(coord)
-
-	if paintStore == nil {
-		return nil
-	}
-
-	paint := elementFactory.Load(pnt.PAINT)
-	json.Unmarshal(paintStore.SerializedPaint, &paint)
-
-	return paint
-}
-
 func (elementFactory *ElementFactory) init() {
-	elementFactory.Register(obj.COIN, obj.LoadCoin)
-	elementFactory.Register(pnt.PAINT, pnt.LoadPaint)
+	elementFactory.register(obj.COIN, obj.LoadCoin)
+	elementFactory.register(pnt.PAINT, pnt.LoadPaint)
 	//elementFactory.Register(terr.ROCK, terr.LoadRock)
 	//elementFactory.Register(PLAYER, newPlayerDbo)
 	//elementFactory.Register(ELEMENT, newElementDbo)

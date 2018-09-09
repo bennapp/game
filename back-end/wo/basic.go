@@ -1,18 +1,19 @@
 package wo
 
 import (
-	"../el"
+	"../dbs"
 	"../gs"
 	"../obj"
-	"../rc"
 	"../pnt"
+	"../rc"
 	"../terr"
-			"math/rand"
 	"fmt"
+	"math/rand"
 )
 
 func IsEmpty(coord gs.Coord) bool {
-	return el.Factory().LoadObjectFromCoord(coord) == nil
+	cell := dbs.LoadCell(coord)
+	return cell.IsEmpty()
 }
 
 //func storeElement(coord gs.Coord, dbo rc.Objectable) {
@@ -104,7 +105,6 @@ func placeRandomLocation(dbo obj.Objectable) gs.Coord {
 //	return element
 //}
 //
-////TODO - create removeCoords in manager.go
 //func removeCoords(coord gs.Coord) {
 //	location := el.NewLocation(coord)
 //	element := elementFactory.LoadFromKey(el.ELEMENT, location.LocationKey()).(*el.Element)

@@ -22,5 +22,5 @@ func NewPaint(terrain terr.Terrain, zone Zone) *Paint {
 }
 
 func LoadPaint() typ.Typical {
-	return &Paint{}
+	return &Paint{Type: typ.NewType(PAINT)}
 }
