@@ -194,6 +194,7 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 - [X] introduce struct like 'cell' which contains objects and paint
 - [X] Add loader and saver services
 - [ ] Add items layer if we want items to land on the ground
+- [ ] Add event system: coordinate based event channels in the websockets / hub / client
 - [ ] Re-work movement, introduce 'speed limit'.
 - [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
 - [ ] fix bug where lots of players start showing up
