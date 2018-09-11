@@ -40,5 +40,17 @@ func TestLoaderAndSaveCell(t *testing.T) {
 		t.Error("cell with an object in it should not be movable through")
 	}
 
-	// TODO: Add tests around deleter
+	dbs.DeleteObjectLocation(coord, coin)
+	cellWithoutCoin := dbs.LoadCell(coord)
+
+	if cellWithoutCoin.Object != nil {
+		t.Error("cell should have an empty object now that the coin has been removed")
+	}
+
+	dbs.DeleteObject(coin)
+	emptyObject := dbs.LoadObject(coin.ObjectId())
+
+	if emptyObject != nil {
+		t.Error("Coin should be nil now that it is deleted")
+	}
 }

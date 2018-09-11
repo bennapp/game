@@ -74,6 +74,11 @@ func (manager *RedisManager) DeleteObject(object obj.Objectable) {
 func (manager *RedisManager) LoadObjectStore(objectId string) *store.ObjectStore {
 	objectStore := store.NewObjectStoreRetriever(objectId)
 	objectData := manager.get(objectStore)
+
+	if objectData == "" {
+		return nil
+	}
+
 	objectStore.Retrieve(objectData)
 
 	return objectStore
@@ -88,6 +93,10 @@ func (manager *RedisManager) LoadObjectStoreFromCoord(coord gs.Coord) *store.Obj
 	}
 
 	objectStore := manager.LoadObjectStore(objectId)
+
+	if objectStore == nil {
+		return nil
+	}
 
 	return objectStore
 }
