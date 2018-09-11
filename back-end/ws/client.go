@@ -242,8 +242,7 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	client.hub.register <- client
 
 	wo.Init()
-	id := 6086
-	player := wo.LoadPlayer(id)
+	player := wo.InitializePlayer()
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.
