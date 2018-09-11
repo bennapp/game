@@ -1,6 +1,7 @@
 package el
 
 import (
+	"../items"
 	"../obj"
 	"../pnt"
 	"../store"
@@ -37,6 +38,10 @@ func (elementFactory *ElementFactory) DeserializeObject(objectStore *store.Objec
 
 func (elementFactory *ElementFactory) DeserializePaint(paintStore *store.PaintLocationStore) *pnt.Paint {
 	return elementFactory.deserialize(paintStore).(*pnt.Paint)
+}
+
+func (elementFactory *ElementFactory) DeserializeItems(itemsStore *store.ItemsLocationStore) *items.Items {
+	return elementFactory.deserialize(itemsStore).(*items.Items)
 }
 
 func (elementFactory *ElementFactory) deserialize(store store.Storable) typ.Typical {
@@ -79,6 +84,7 @@ func (elementFactory *ElementFactory) register(name string, factory objFactory) 
 func (elementFactory *ElementFactory) init() {
 	elementFactory.register(obj.COIN, obj.LoadCoin)
 	elementFactory.register(pnt.PAINT, pnt.LoadPaint)
+	elementFactory.register(items.ITEMS, items.LoadItems)
 	//elementFactory.Register(terr.ROCK, terr.LoadRock)
 	//elementFactory.Register(PLAYER, newPlayerDbo)
 	//elementFactory.Register(ELEMENT, newElementDbo)

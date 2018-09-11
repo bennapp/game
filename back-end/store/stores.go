@@ -2,6 +2,7 @@ package store
 
 import (
 	"../gs"
+	"../items"
 	"../obj"
 	"../pnt"
 	"encoding/json"
@@ -10,6 +11,7 @@ import (
 
 const OBJECT_LOCATION_LAYER = "o"
 const PAINT_LOCATION_LAYER = "p"
+const ITEMS_LOCATION_LAYER = "i"
 
 type RedisStore interface {
 	Key() string
@@ -107,6 +109,36 @@ func (store *PaintLocationStore) GetType() string {
 
 func (store *PaintLocationStore) GetSerializedData() []byte {
 	return store.SerializedPaint
+}
+
+type ItemsLocationStore struct {
+	Coord           gs.Coord
+	SerializedItems []byte
+}
+
+func NewItemsLocationStore(coord gs.Coord, items *items.Items) *ItemsLocationStore {
+	serializedItems, _ := json.Marshal(items)
+	return &ItemsLocationStore{Coord: coord, SerializedItems: serializedItems}
+}
+
+func NewItemsStoreRetriever(coord gs.Coord) *ItemsLocationStore {
+	return &ItemsLocationStore{Coord: coord}
+}
+
+func (store *ItemsLocationStore) Key() string {
+	return fmt.Sprintf("%v:%v,%v", ITEMS_LOCATION_LAYER, store.Coord.X, store.Coord.Y)
+}
+
+func (store *ItemsLocationStore) Value() string {
+	return string(store.SerializedItems)
+}
+
+func (store *ItemsLocationStore) GetType() string {
+	return items.ITEMS
+}
+
+func (store *ItemsLocationStore) GetSerializedData() []byte {
+	return store.SerializedItems
 }
 
 type TypeDeserializer struct {

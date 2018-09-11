@@ -4,6 +4,7 @@ import (
 	"../cell"
 	"../el"
 	"../gs"
+	"../items"
 	"../obj"
 	"../pnt"
 	"../rc"
@@ -36,5 +37,12 @@ func LoadCell(coord gs.Coord) *cell.Cell {
 		paint = el.Factory().DeserializePaint(paintStore)
 	}
 
-	return cell.NewCell(paint, object)
+	itemsStore := rc.Manager().LoadItemsStoreFromCoord(coord)
+
+	var items *items.Items
+	if itemsStore != nil {
+		items = el.Factory().DeserializeItems(itemsStore)
+	}
+
+	return cell.NewCell(paint, items, object)
 }

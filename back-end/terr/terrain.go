@@ -2,12 +2,8 @@ package terr
 
 type Terrain struct {
 	TerrainType string
-	Permeable bool
-	Friction  int // how slow something should move through this
-}
-
-type TerrainElement interface {
-	Terrainable() bool
+	Permeable   bool
+	Friction    int // how slow something should move through this
 }
 
 func newTerrain(permeable bool, terrainType string) Terrain {

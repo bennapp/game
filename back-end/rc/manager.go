@@ -2,6 +2,7 @@ package rc
 
 import (
 	"../gs"
+	"../items"
 	"../obj"
 	"../pnt"
 	"../store"
@@ -54,6 +55,11 @@ func (manager *RedisManager) SaveObjectLocation(coord gs.Coord, object obj.Objec
 func (manager *RedisManager) SavePaintLocation(coord gs.Coord, paint *pnt.Paint) {
 	paintLocationStore := store.NewPaintLocationStore(coord, paint)
 	manager.set(paintLocationStore)
+}
+
+func (manager *RedisManager) SaveItemsLocation(coord gs.Coord, items *items.Items) {
+	itemsLocationStore := store.NewItemsLocationStore(coord, items)
+	manager.set(itemsLocationStore)
 }
 
 func (manager *RedisManager) DeleteObjectLocation(coord gs.Coord, object obj.Objectable) {
@@ -112,6 +118,19 @@ func (manager *RedisManager) LoadPaintStoreFromCoord(coord gs.Coord) *store.Pain
 	paintStore.SerializedPaint = []byte(serializedString)
 
 	return paintStore
+}
+
+func (manager *RedisManager) LoadItemsStoreFromCoord(coord gs.Coord) *store.ItemsLocationStore {
+	itemsStore := store.NewItemsStoreRetriever(coord)
+	serializedString := manager.get(itemsStore)
+
+	if serializedString == "" {
+		return nil
+	}
+
+	itemsStore.SerializedItems = []byte(serializedString)
+
+	return itemsStore
 }
 
 func (manager *RedisManager) set(store store.RedisStore) {

@@ -3,6 +3,7 @@ package tests
 import (
 	"../dbs"
 	"../gs"
+	"../items"
 	"../obj"
 	"../pnt"
 	"../terr"
@@ -53,4 +54,17 @@ func TestLoaderAndSaveCell(t *testing.T) {
 	if emptyObject != nil {
 		t.Error("Coin should be nil now that it is deleted")
 	}
+}
+
+func TestSavingAndLoadingItems(t *testing.T) {
+	coord := gs.NewRandomCoord()
+
+	coinStack := items.NewItemStack(5, items.COIN)
+	woodStack := items.NewItemStack(2, items.WOOD)
+	itemStacks := []items.ItemStack{coinStack, woodStack}
+	someItems := items.NewItems(itemStacks)
+
+	dbs.SaveItemsLocation(coord, someItems)
+
+	t.Log(dbs.LoadCell(coord).Items)
 }

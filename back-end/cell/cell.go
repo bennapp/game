@@ -1,6 +1,7 @@
 package cell
 
 import (
+	"../items"
 	"../obj"
 	"../pnt"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 
 type Cell struct {
 	Paint  *pnt.Paint
+	Items  *items.Items
 	Object obj.Objectable
 }
 
@@ -15,8 +17,8 @@ func (cell *Cell) String() string {
 	return fmt.Sprintf("paint: %v, obj: %v", cell.Paint, cell.Object)
 }
 
-func NewCell(paint *pnt.Paint, object obj.Objectable) *Cell {
-	return &Cell{Paint: paint, Object: object}
+func NewCell(paint *pnt.Paint, items *items.Items, object obj.Objectable) *Cell {
+	return &Cell{Paint: paint, Items: items, Object: object}
 }
 
 func (cell *Cell) isEmptyObject() bool {
