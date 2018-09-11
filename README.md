@@ -194,7 +194,8 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 - [X] introduce struct like 'cell' which contains objects and paint
 - [X] Add loader and saver services
 - [X] Add items layer for items on the ground
-- [ ] Implement player as object remove coin as object
+- [X] Implement player as object remove coin as object
+- [ ] move things from el into obj. remove old els. rename el package to factory or something
 - [ ] Can we remove setting type in the loaders? investigate this, run tests etc.
 - [ ] Add event system: coordinate based event channels in the websockets / hub / client
 - [ ] Re-work movement, introduce 'speed limit'.
