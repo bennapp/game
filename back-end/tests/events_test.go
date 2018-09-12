@@ -1,31 +1,38 @@
 package tests
 
 import (
+	"../dbs"
+	"../evt"
+	"../evts"
 	"../gs"
-	"../rc"
-	"github.com/go-redis/redis"
+	"../obj"
 	"testing"
 )
 
 func TestEvents(t *testing.T) {
-	eventChannel := make(chan string)
+	player := obj.NewPlayer()
+	dbs.SaveObject(player)
+	dbs.SaveObjectLocation(player.Location, player)
+	eventChannel := evts.EventListener(player)
 
-	ch := rc.Manager().SubscribeToCoordEvents(coord)
-
-	go propagateCoordEvent(ch, eventChannel)
-
-	rc.Manager().WriteToCoordEvents(coord, "hello")
-}
-
-func propagateCoordEvent(ch <-chan *redis.Message, eventChannel chan string) {
-	for {
-		select {
-		case message, ok := <-ch:
-			if !ok {
-				return
+	go func() {
+		for {
+			select {
+			case event := <-eventChannel:
+				t.Log(event)
+			default:
+				// no op
 			}
-			eventChannel <- message.String()
-		default:
 		}
-	}
+	}()
+
+	coord := player.Location
+
+	event := evt.NewEvent(player, player, coord, coord, "wave hi")
+	evts.EmitEvent(event)
+
+	newCoord := coord.AddVector(gs.Vector{X: 4, Y: 4})
+	otherCoord := coord.AddVector(gs.Vector{X: 2, Y: 2})
+	eventBye := evt.NewEvent(player, player, newCoord, otherCoord, "wave bye")
+	evts.EmitEvent(eventBye)
 }

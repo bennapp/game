@@ -1,15 +1,15 @@
-package emt
+package evts
 
 import (
+	"../dbs"
 	"../evt"
 	"../gs"
-	"../dbs"
 	"../obj"
 	"../rc"
-	)
+)
 
 func EmitEvent(event *evt.Event) {
-	var objectLocationCordMappings map[gs.Coord]bool
+	objectLocationCordMappings := make(map[gs.Coord]bool)
 
 	halfVisionDistance := gs.LOADED_VISION_DISTANCE / 2
 	v := gs.NewVector(-halfVisionDistance, -halfVisionDistance)

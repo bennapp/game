@@ -1,11 +1,13 @@
 package rc
 
 import (
+	"../evt"
 	"../gs"
 	"../items"
 	"../obj"
 	"../pnt"
 	"../store"
+	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
 )
@@ -133,23 +135,34 @@ func (manager *RedisManager) LoadItemsStoreFromCoord(coord gs.Coord) *store.Item
 	return itemsStore
 }
 
-func (manager *RedisManager) SubscribeToObjectChannel(object obj.Objectable) <-chan *redis.Message {
+func (manager *RedisManager) SubscribeToObjectChannel(object obj.Objectable) chan string {
 	pubsub := manager.client.Subscribe(object.ObjectId())
 
-	// Wait for confirmation that subscription is created before publishing anything.
 	_, err := pubsub.Receive()
 	if err != nil {
 		panic(err)
 	}
 
-	// Go channel which receives messages.
-	ch := pubsub.Channel()
+	redisChannel := pubsub.Channel()
+
+	ch := make(chan string)
+	go func() {
+		for {
+			select {
+			case message := <-redisChannel:
+				ch <- message.Payload
+			default:
+				// no op
+			}
+		}
+	}()
 
 	return ch
 }
 
-func (manager *RedisManager) WriteToCoordEvents(coord gs.Coord, message string) {
-	manager.client.Publish(fmt.Sprintf("%v,%v", coord.X, coord.Y), message)
+func (manager *RedisManager) WriteToObjectEventChannel(object obj.Objectable, event *evt.Event) {
+	serializedEvent, _ := json.Marshal(event)
+	manager.client.Publish(object.ObjectId(), serializedEvent)
 }
 
 func (manager *RedisManager) set(store store.RedisStore) {

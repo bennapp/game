@@ -1,6 +1,7 @@
 package el
 
 import (
+	"../evt"
 	"../items"
 	"../obj"
 	"../pnt"
@@ -44,6 +45,42 @@ func (elementFactory *ElementFactory) DeserializeItems(itemsStore *store.ItemsLo
 	return elementFactory.deserialize(itemsStore).(*items.Items)
 }
 
+type actorDeserializer struct {
+	Emitter store.TypeDeserializer
+}
+
+type actorDeserializerByte struct {
+	Emitter string
+}
+
+func (elementFactory *ElementFactory) DeserializeEvent(serializedEvent string) *evt.Event {
+	typical := elementFactory.load(evt.EVENT)
+	json.Unmarshal([]byte(serializedEvent), &typical)
+	event := typical.(*evt.Event)
+
+	// TODO FIXME!!!!!!!
+
+	fmt.Println(serializedEvent)
+	emitterDeserializer := &actorDeserializer{}
+	json.Unmarshal([]byte(serializedEvent), &emitterDeserializer)
+	emitterType := emitterDeserializer.Emitter.Type
+	fmt.Println(emitterType)
+
+	actorDeserializerByte := &actorDeserializerByte{}
+	json.Unmarshal([]byte(serializedEvent), &actorDeserializerByte)
+
+	fmt.Println(actorDeserializerByte.Emitter)
+
+	object := elementFactory.load(emitterType).(obj.Objectable)
+	json.Unmarshal([]byte(actorDeserializerByte.Emitter), object)
+
+	fmt.Println(object)
+
+	event.Emitter = object
+
+	return event
+}
+
 func (elementFactory *ElementFactory) deserialize(store store.Storable) typ.Typical {
 	typical := elementFactory.load(store.GetType())
 	json.Unmarshal(store.GetSerializedData(), &typical)
@@ -85,8 +122,6 @@ func (elementFactory *ElementFactory) init() {
 	elementFactory.register(obj.PLAYER, obj.LoadPlayer)
 	elementFactory.register(pnt.PAINT, pnt.LoadPaint)
 	elementFactory.register(items.ITEMS, items.LoadItems)
-	//elementFactory.Register(terr.ROCK, terr.LoadRock)
-	//elementFactory.Register(PLAYER, newPlayerDbo)
-	//elementFactory.Register(ELEMENT, newElementDbo)
+	elementFactory.register(evt.EVENT, evt.LoadEvent)
 	fmt.Println("factory.go: Finished registering DboFactoring.")
 }

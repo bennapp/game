@@ -22,13 +22,18 @@ func LoadObject(objectId string) obj.Objectable {
 	return object.(obj.Objectable)
 }
 
-func LoadCell(coord gs.Coord) *cell.Cell {
+func LoadObjectByCoord(coord gs.Coord) obj.Objectable {
 	objectStore := rc.Manager().LoadObjectStoreFromCoord(coord)
 
 	var object obj.Objectable
 	if objectStore != nil {
 		object = el.Factory().DeserializeObject(objectStore)
 	}
+	return object
+}
+
+func LoadCell(coord gs.Coord) *cell.Cell {
+	object := LoadObjectByCoord(coord)
 
 	paintStore := rc.Manager().LoadPaintStoreFromCoord(coord)
 
