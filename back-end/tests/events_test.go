@@ -3,19 +3,29 @@ package tests
 import (
 	"../gs"
 	"../rc"
-	"testing"
 	"github.com/go-redis/redis"
+	"testing"
 )
 
 func TestEvents(t *testing.T) {
-	coord := gs.NewCoord(5, 5)
+	eventChannel := make(chan string)
+
 	ch := rc.Manager().SubscribeToCoordEvents(coord)
 
-	go listenToCoordEvent(ch)
+	go propagateCoordEvent(ch, eventChannel)
 
 	rc.Manager().WriteToCoordEvents(coord, "hello")
 }
 
-func listenToCoordEvent(ch <-chan *redis.Message) {
-
+func propagateCoordEvent(ch <-chan *redis.Message, eventChannel chan string) {
+	for {
+		select {
+		case message, ok := <-ch:
+			if !ok {
+				return
+			}
+			eventChannel <- message.String()
+		default:
+		}
+	}
 }

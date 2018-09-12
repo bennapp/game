@@ -133,8 +133,8 @@ func (manager *RedisManager) LoadItemsStoreFromCoord(coord gs.Coord) *store.Item
 	return itemsStore
 }
 
-func (manager *RedisManager) SubscribeToCoordEvents(coord gs.Coord) <-chan *redis.Message {
-	pubsub := manager.client.Subscribe(fmt.Sprintf("%v,%v", coord.X, coord.Y))
+func (manager *RedisManager) SubscribeToObjectChannel(object obj.Objectable) <-chan *redis.Message {
+	pubsub := manager.client.Subscribe(object.ObjectId())
 
 	// Wait for confirmation that subscription is created before publishing anything.
 	_, err := pubsub.Receive()
