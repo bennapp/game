@@ -58,7 +58,7 @@ func (elementFactory *ElementFactory) load(typeString string) typ.Typical {
 		// Factory has not been registered.
 		// Make a list of all available factories and panic
 		availableFactories := make([]string, len(elementFactory.factoryMap))
-		for k, _ := range elementFactory.factoryMap {
+		for k := range elementFactory.factoryMap {
 			availableFactories = append(availableFactories, k)
 		}
 		panic(fmt.Sprintf("Invalid Factory name. Must be one of: %s", strings.Join(availableFactories, ", ")))
@@ -82,7 +82,7 @@ func (elementFactory *ElementFactory) register(name string, factory objFactory) 
 }
 
 func (elementFactory *ElementFactory) init() {
-	elementFactory.register(obj.COIN, obj.LoadCoin)
+	elementFactory.register(obj.PLAYER, obj.LoadPlayer)
 	elementFactory.register(pnt.PAINT, pnt.LoadPaint)
 	elementFactory.register(items.ITEMS, items.LoadItems)
 	//elementFactory.Register(terr.ROCK, terr.LoadRock)

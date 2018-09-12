@@ -194,10 +194,11 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 - [X] introduce struct like 'cell' which contains objects and paint
 - [X] Add loader and saver services
 - [X] Add items layer for items on the ground
+- [X] Implement player as object remove coin as object
 
 - [ ] Add event system: player object id based event channels in redis pub/sub when event happens, propagates to all player channels around the event
 
-- [ ] Implement player as object remove coin as object
+- [ ] move things from el into obj. remove old els. rename el package to factory or something
 - [ ] Can we remove setting type in the loaders? investigate this, run tests etc.
 - [ ] Re-work movement, introduce 'speed limit'.
 - [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins

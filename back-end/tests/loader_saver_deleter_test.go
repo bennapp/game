@@ -13,15 +13,15 @@ import (
 func TestLoaderAndSaveCell(t *testing.T) {
 	coord := gs.NewRandomCoord()
 
-	coin := obj.NewCoin()
+	player := obj.NewPlayer()
 	paint := pnt.NewPaint(terr.NewRock(), pnt.Zone{})
 
-	dbs.SaveObject(coin)
-	dbs.SaveObjectLocation(coord, coin)
+	dbs.SaveObject(player)
+	dbs.SaveObjectLocation(coord, player)
 	dbs.SavePaintLocation(coord, paint)
 
 	newCell := dbs.LoadCell(coord)
-	newCoin := dbs.LoadObject(coin.ObjectId())
+	newCoin := dbs.LoadObject(player.ObjectId())
 
 	t.Log("loaded cell from db:")
 	t.Log(newCell)
@@ -41,15 +41,15 @@ func TestLoaderAndSaveCell(t *testing.T) {
 		t.Error("cell with an object in it should not be movable through")
 	}
 
-	dbs.DeleteObjectLocation(coord, coin)
+	dbs.DeleteObjectLocation(coord, player)
 	cellWithoutCoin := dbs.LoadCell(coord)
 
 	if cellWithoutCoin.Object != nil {
-		t.Error("cell should have an empty object now that the coin has been removed")
+		t.Error("cell should have an empty object now that the player has been removed")
 	}
 
-	dbs.DeleteObject(coin)
-	emptyObject := dbs.LoadObject(coin.ObjectId())
+	dbs.DeleteObject(player)
+	emptyObject := dbs.LoadObject(player.ObjectId())
 
 	if emptyObject != nil {
 		t.Error("Coin should be nil now that it is deleted")
