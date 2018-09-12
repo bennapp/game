@@ -3,6 +3,7 @@ package rc
 import (
 	"encoding/json"
 	"github.com/go-redis/redis"
+	"os"
 )
 
 var INSTANCE *RedisManager
@@ -19,13 +20,22 @@ func Manager() *RedisManager {
 	return INSTANCE
 }
 
+func GetEnv(key, fallback string) string {
+    value := os.Getenv(key)
+    if len(value) == 0 {
+        return fallback
+    }
+    return value
+}
+
 func initializeRedisClient() {
+	opt, err := redis.ParseURL(GetEnv("REDIS_URL", "redis://localhost:6379/0"))
+	if err != nil {
+		panic(err)
+	}
+
 	INSTANCE = &RedisManager{
-		client: redis.NewClient(&redis.Options{
-			Addr:     "localhost:6379",
-			Password: "", // no password set
-			DB:       0,  // use default DB
-		}),
+		client: redis.NewClient(opt),
 	}
 }
 
