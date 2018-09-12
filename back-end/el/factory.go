@@ -1,6 +1,7 @@
 package el
 
 import (
+	"../evt"
 	"../items"
 	"../obj"
 	"../pnt"
@@ -44,6 +45,14 @@ func (elementFactory *ElementFactory) DeserializeItems(itemsStore *store.ItemsLo
 	return elementFactory.deserialize(itemsStore).(*items.Items)
 }
 
+func (elementFactory *ElementFactory) DeserializeEvent(serializedEvent string) *evt.Event {
+	typical := elementFactory.load(evt.EVENT)
+	json.Unmarshal([]byte(serializedEvent), &typical)
+	event := typical.(*evt.Event)
+
+	return event
+}
+
 func (elementFactory *ElementFactory) deserialize(store store.Storable) typ.Typical {
 	typical := elementFactory.load(store.GetType())
 	json.Unmarshal(store.GetSerializedData(), &typical)
@@ -85,8 +94,6 @@ func (elementFactory *ElementFactory) init() {
 	elementFactory.register(obj.PLAYER, obj.LoadPlayer)
 	elementFactory.register(pnt.PAINT, pnt.LoadPaint)
 	elementFactory.register(items.ITEMS, items.LoadItems)
-	//elementFactory.Register(terr.ROCK, terr.LoadRock)
-	//elementFactory.Register(PLAYER, newPlayerDbo)
-	//elementFactory.Register(ELEMENT, newElementDbo)
+	elementFactory.register(evt.EVENT, evt.LoadEvent)
 	fmt.Println("factory.go: Finished registering DboFactoring.")
 }

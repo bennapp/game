@@ -1,6 +1,7 @@
 package obj
 
 import (
+	"../gs"
 	"../typ"
 )
 
@@ -8,6 +9,7 @@ const PLAYER = "player"
 
 type Player struct {
 	Object
+	Location  gs.Coord
 	CoinCount int
 	Alive     bool
 	Hp        int
@@ -30,8 +32,13 @@ func (player *Player) DecreaseHp(damage int) {
 	}
 }
 
+func NewPlayerAt(location gs.Coord) *Player {
+	return &Player{Object: newObject(PLAYER), Location: location}
+}
+
 func NewPlayer() *Player {
-	return &Player{Object: newObject(PLAYER)}
+	coord := gs.NewRandomCoord()
+	return &Player{Object: newObject(PLAYER), Location: coord}
 }
 
 func LoadPlayer() typ.Typical {
