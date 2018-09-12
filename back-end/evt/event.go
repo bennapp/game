@@ -2,7 +2,6 @@ package evt
 
 import (
 	"../gs"
-	"../obj"
 	"../typ"
 	"time"
 )
@@ -12,8 +11,8 @@ const EVENT = "event"
 type Event struct {
 	typ.Type
 
-	Emitter  obj.Objectable
-	Receiver obj.Objectable
+	EmitterId  string
+	ReceiverId string
 
 	FromCoord gs.Coord
 	ToCoord   gs.Coord
@@ -22,15 +21,15 @@ type Event struct {
 	Timestamp time.Time
 }
 
-func NewEvent(emitter obj.Objectable, receiver obj.Objectable, from gs.Coord, to gs.Coord, eventType string) *Event {
+func NewEvent(emitterId string, receiverId string, from gs.Coord, to gs.Coord, eventType string) *Event {
 	return &Event{
-		Emitter:   emitter,
-		Receiver:  receiver,
-		FromCoord: from,
-		ToCoord:   to,
-		EventType: eventType,
-		Timestamp: time.Now(),
-		Type:      typ.NewType(EVENT),
+		EmitterId:  emitterId,
+		ReceiverId: receiverId,
+		FromCoord:  from,
+		ToCoord:    to,
+		EventType:  eventType,
+		Timestamp:  time.Now(),
+		Type:       typ.NewType(EVENT),
 	}
 }
 

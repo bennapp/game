@@ -45,38 +45,10 @@ func (elementFactory *ElementFactory) DeserializeItems(itemsStore *store.ItemsLo
 	return elementFactory.deserialize(itemsStore).(*items.Items)
 }
 
-type actorDeserializer struct {
-	Emitter store.TypeDeserializer
-}
-
-type actorDeserializerByte struct {
-	Emitter string
-}
-
 func (elementFactory *ElementFactory) DeserializeEvent(serializedEvent string) *evt.Event {
 	typical := elementFactory.load(evt.EVENT)
 	json.Unmarshal([]byte(serializedEvent), &typical)
 	event := typical.(*evt.Event)
-
-	// TODO FIXME!!!!!!!
-
-	fmt.Println(serializedEvent)
-	emitterDeserializer := &actorDeserializer{}
-	json.Unmarshal([]byte(serializedEvent), &emitterDeserializer)
-	emitterType := emitterDeserializer.Emitter.Type
-	fmt.Println(emitterType)
-
-	actorDeserializerByte := &actorDeserializerByte{}
-	json.Unmarshal([]byte(serializedEvent), &actorDeserializerByte)
-
-	fmt.Println(actorDeserializerByte.Emitter)
-
-	object := elementFactory.load(emitterType).(obj.Objectable)
-	json.Unmarshal([]byte(actorDeserializerByte.Emitter), object)
-
-	fmt.Println(object)
-
-	event.Emitter = object
 
 	return event
 }
