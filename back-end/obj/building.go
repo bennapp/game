@@ -1,4 +1,4 @@
-package el
+package obj
 
 //type Building struct {
 //	Location

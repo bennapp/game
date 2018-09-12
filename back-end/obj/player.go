@@ -42,5 +42,5 @@ func NewPlayer() *Player {
 }
 
 func LoadPlayer() typ.Typical {
-	return &Player{Object: loadObject(PLAYER)}
+	return &Player{}
 }

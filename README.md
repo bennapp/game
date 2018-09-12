@@ -197,9 +197,8 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 - [X] Implement player as object remove coin as object
 - [X] Add event system: player object id based event channels in redis pub/sub when event happens, propagates to all player channels around the event
 - [X] Fix event system bug where emitter and receiver are not being de-serialized correctly. Fixed, now we use objectId instead
-
-- [ ] move things from el into obj. remove old els. rename el package to factory or something
-- [ ] Can we remove setting type in the loaders? investigate this, run tests etc.
+- [X] move things from el into obj. remove old els. rename el package to factory or something
+- [X] Can we remove setting type in the loaders? investigate this, run tests etc.
 
 - [ ] Re-work movement system, introduce 'speed limit'. Add snake back in
 - [ ] break apart basic.go into various files / packages for spawn coin and player interactions / actor movement

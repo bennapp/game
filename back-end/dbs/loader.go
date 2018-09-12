@@ -2,12 +2,12 @@ package dbs
 
 import (
 	"../cell"
-	"../el"
 	"../gs"
 	"../items"
 	"../obj"
 	"../pnt"
 	"../rc"
+	"../typf"
 )
 
 func LoadObject(objectId string) obj.Objectable {
@@ -17,7 +17,7 @@ func LoadObject(objectId string) obj.Objectable {
 		return nil
 	}
 
-	object := el.Factory().DeserializeObject(objectStore)
+	object := typf.Factory().DeserializeObject(objectStore)
 
 	return object.(obj.Objectable)
 }
@@ -27,7 +27,7 @@ func LoadObjectByCoord(coord gs.Coord) obj.Objectable {
 
 	var object obj.Objectable
 	if objectStore != nil {
-		object = el.Factory().DeserializeObject(objectStore)
+		object = typf.Factory().DeserializeObject(objectStore)
 	}
 	return object
 }
@@ -39,14 +39,14 @@ func LoadCell(coord gs.Coord) *cell.Cell {
 
 	var paint *pnt.Paint
 	if paintStore != nil {
-		paint = el.Factory().DeserializePaint(paintStore)
+		paint = typf.Factory().DeserializePaint(paintStore)
 	}
 
 	itemsStore := rc.Manager().LoadItemsStoreFromCoord(coord)
 
 	var items *items.Items
 	if itemsStore != nil {
-		items = el.Factory().DeserializeItems(itemsStore)
+		items = typf.Factory().DeserializeItems(itemsStore)
 	}
 
 	return cell.NewCell(paint, items, object)

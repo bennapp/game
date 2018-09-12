@@ -33,7 +33,7 @@ func NewItems(itemStacks []ItemStack) *Items {
 }
 
 func LoadItems() typ.Typical {
-	return &Items{Type: typ.NewType(ITEMS)}
+	return &Items{}
 }
 
 func NewItemStack(amount int, itemType string) ItemStack {

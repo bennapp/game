@@ -22,7 +22,3 @@ func newObject(objectType string) Object {
 	uuid, _ := uuid.NewUUID()
 	return Object{Type: typ.NewType(objectType), Id: uuid}
 }
-
-func loadObject(objectType string) Object {
-	return Object{Type: typ.NewType(objectType)}
-}

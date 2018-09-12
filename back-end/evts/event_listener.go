@@ -1,10 +1,10 @@
 package evts
 
 import (
-	"../el"
 	"../evt"
 	"../obj"
 	"../rc"
+	"../typf"
 )
 
 func EventListener(object obj.Objectable) chan *evt.Event {
@@ -15,7 +15,7 @@ func EventListener(object obj.Objectable) chan *evt.Event {
 		for {
 			select {
 			case serializedEvent := <-serializedEventChanel:
-				eventChannel <- el.Factory().DeserializeEvent(serializedEvent)
+				eventChannel <- typf.Factory().DeserializeEvent(serializedEvent)
 			default:
 				// no op
 			}

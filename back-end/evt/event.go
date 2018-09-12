@@ -34,5 +34,5 @@ func NewEvent(emitterId string, receiverId string, from gs.Coord, to gs.Coord, e
 }
 
 func LoadEvent() typ.Typical {
-	return &Event{Type: typ.NewType(EVENT)}
+	return &Event{}
 }
