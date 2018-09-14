@@ -28,6 +28,11 @@ func (item *Item) GetItemType() string {
 	return item.ItemType
 }
 
+func NewItemsWith(stack ItemStack) *Items {
+	itemStacks := []ItemStack{stack}
+	return NewItems(itemStacks)
+}
+
 func NewItems(itemStacks []ItemStack) *Items {
 	return &Items{Type: typ.NewType(ITEMS), ItemStacks: itemStacks}
 }

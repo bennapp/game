@@ -1,20 +1,11 @@
 package wo
 
 import (
-	"../dbs"
 	"../gs"
-	"../obj"
-	"../pnt"
-	"../rc"
+	"../items"
 	"../terr"
-	"fmt"
 	"math/rand"
 )
-
-func IsEmpty(coord gs.Coord) bool {
-	cell := dbs.LoadCell(coord)
-	return cell.IsEmpty()
-}
 
 //func storeElement(coord gs.Coord, dbo rc.Objectable) {
 //	element := elementFactory.CreateNew(el.ELEMENT)
@@ -53,18 +44,6 @@ func IsEmpty(coord gs.Coord) bool {
 //	elementFactory.Save(rock)
 //	placeRandomLocation(rock)
 //}
-
-func placeRandomLocation(dbo obj.Objectable) gs.Coord {
-	coord := gs.NewRandomCoord()
-
-	if IsEmpty(coord) {
-		rc.Manager().SaveObjectLocation(coord, dbo)
-	} else {
-		placeRandomLocation(dbo)
-	}
-
-	return coord
-}
 
 //func MovePlayer(player *el.Player, vector gs.Vector) {
 //	player.GridCoord = moveCharacter(player.GridCoord, vector, player)
@@ -143,22 +122,16 @@ func placeRandomLocation(dbo obj.Objectable) gs.Coord {
 func InitializeWorld() {
 	for i := 0; i < gs.WORLD_SIZE; i++ {
 		for j := 0; j < gs.WORLD_SIZE; j++ {
+			coord := gs.NewCoord(i, j)
 			coinChance := rand.Intn(10)
-			if coinChance == 0 {
-				coin := obj.NewCoin()
-				rc.Manager().SaveObject(coin)
+			rockChance := rand.Intn(8)
 
-				placeRandomLocation(coin)
+			if coinChance == 0 {
+				coins := items.NewCoinStack()
+				AddItemsToStack(coord, coins)
+			} else if rockChance == 0 {
+				SetTerrain(coord, terr.NewRock())
 			}
 		}
 	}
-
-	paint := pnt.NewPaint(terr.NewRock(), pnt.Zone{})
-	coord := gs.NewCoord(0, 0)
-	fmt.Println(paint)
-	rc.Manager().SavePaintLocation(coord, paint)
-}
-
-func ResetWorld() {
-	rc.Manager().FlushAll()
 }

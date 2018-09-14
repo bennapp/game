@@ -1,6 +1,6 @@
 # Engine Zero Zero
 
-MMORTS Game Engine written in Go and Phaser.js
+Game Engine written in Go and Phaser.js to support MMORTS-like games
 
 # back-end
 
@@ -73,7 +73,7 @@ exploration
 generative world
 
 
-# Gameplay ideas to support
+# Game play ideas to support
 emphasis for the origin on the world, 0,0
 
 a player has their origin
@@ -200,9 +200,8 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 - [X] move things from el into obj. remove old els. rename el package to factory or something
 - [X] Can we remove setting type in the loaders? investigate this, run tests etc.
 
-- [ ] Re-work movement system, introduce 'speed limit'. Add snake back in
 - [ ] break apart basic.go into various files / packages for spawn coin and player interactions / actor movement
-
+- [ ] Re-work movement system, introduce velocity. Add snake back in
 - [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
 
 

@@ -33,8 +33,6 @@ func (cell *Cell) isPaintMovableThrough() bool {
 	return cell.isEmptyPaint() || cell.Paint.Terrain.Permeable
 }
 
-// Right now this implies that you cannot move through a cell if an object is there. Which would mean we cannot move through
-// coins, which is not 'correct' for our the engine right now. They way we could change / fix this is introduce an items location layer hmm...
 func (cell *Cell) IsMovableThrough() bool {
 	return cell.isEmptyObject() && cell.isPaintMovableThrough()
 }

@@ -1,13 +1,14 @@
 package main
 
 import (
+	"./rc"
 	"./wo"
 	"fmt"
 )
 
 func main() {
 	fmt.Printf("newWorld.go: resetting world\n")
-	wo.ResetWorld()
+	rc.Manager().FlushAll()
 
 	fmt.Printf("newWorld.go: creating new world\n")
 	wo.InitializeWorld()

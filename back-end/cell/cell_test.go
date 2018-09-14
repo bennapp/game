@@ -13,7 +13,7 @@ func TestCells(t *testing.T) {
 	cell := cell.NewCell(
 		pnt.NewPaint(terr.NewRock(), pnt.Zone{}),
 		items.NewItems(make([]items.ItemStack, 0)),
-		obj.NewCoin(),
+		obj.NewPlayer(),
 	)
 	t.Log(cell)
 }
