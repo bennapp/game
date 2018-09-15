@@ -1,9 +1,11 @@
 package ws
 
 import (
-	"../el"
+	"../cell"
+	"../dbs"
 	"../gs"
-	"../rc"
+	"../mov"
+	"../obj"
 	"../wo"
 	"bytes"
 	"encoding/json"
@@ -60,7 +62,7 @@ type playerMoveEvent struct {
 // The application runs readPump in a per-connection goroutine. The application
 // ensures that there is at most one reader on a connection by executing all
 // reads from this goroutine.
-func (c *Client) readPump(player *el.Player) {
+func (c *Client) readPump(player *obj.Player) {
 	defer func() {
 		c.closed <- true
 		c.hub.unregister <- c
@@ -87,13 +89,10 @@ func (c *Client) readPump(player *el.Player) {
 
 		// should be client sends vector not absolute position
 		// so that we cannot skip cells
-		moveVector.X = moveEvent.To.X - player.GridCoord.X
-		moveVector.Y = moveEvent.To.Y - player.GridCoord.Y
+		moveVector.X = moveEvent.To.X - player.GetLocation().X
+		moveVector.Y = moveEvent.To.Y - player.GetLocation().Y
 
-		wo.MovePlayer(player, moveVector)
-
-		// This is a hack to save player location
-		wo.PlayerLogout(player)
+		mov.MoveObject(player, moveVector)
 
 		// The is where we could correct the client
 		// we would need to detect if the client is saying it is moving from an invalid location
@@ -127,7 +126,6 @@ func (c *Client) writePump() {
 
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
-				// The hub closed the channel.
 				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
@@ -158,10 +156,10 @@ func (c *Client) writePump() {
 	}
 }
 
-type dboLookup map[string]rc.Objectable
+type dboLookup map[string]*cell.Cell
 type gameStateMapping map[string]interface{}
 
-func (c *Client) beamState(player *el.Player) {
+func (c *Client) beamState(player *obj.Player) {
 	gameState := gameStateMapping{}
 	coordinateMapping := dboLookup{}
 
@@ -171,13 +169,12 @@ func (c *Client) beamState(player *el.Player) {
 
 	for i := 0; i < visionDistance; i++ {
 		for j := 0; j < visionDistance; j++ {
-			element, valid := wo.NextElement(player.GridCoord, v)
-			nextCoord, _ := wo.SafeMove(player.GridCoord, v)
 
-			if valid {
-				if !wo.IsEmpty(nextCoord) {
-					coordinateMapping[nextCoord.Key()] = element
-				}
+			coord := player.GetLocation().AddVector(v)
+			cell := dbs.LoadCell(coord)
+
+			if !cell.IsEmpty() {
+				coordinateMapping[coord.Key()] = cell
 			}
 			v.X += 1
 		}
@@ -191,14 +188,14 @@ func (c *Client) beamState(player *el.Player) {
 	c.send <- []byte(gameStateAsString)
 }
 
-func (c *Client) beamInitialState(player *el.Player) bool {
+func (c *Client) beamInitialState(player *obj.Player) bool {
 	select {
 	case <-c.closed:
 		return true
 	default:
 		gameState := gameStateMapping{}
 
-		gameState["globalPlayerLocation"] = player.GridCoord
+		gameState["globalPlayerLocation"] = player.GetLocation()
 
 		gameStateAsString, _ := json.Marshal(gameState)
 		c.send <- []byte(gameStateAsString)
@@ -207,7 +204,7 @@ func (c *Client) beamInitialState(player *el.Player) bool {
 	return false
 }
 
-func (c *Client) beamStateUntilClosed(player *el.Player) {
+func (c *Client) beamStateUntilClosed(player *obj.Player) {
 	closed := c.beamInitialState(player)
 
 	if closed {
@@ -241,9 +238,8 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	client := &Client{hub: hub, conn: conn, send: make(chan []byte, 256)}
 	client.hub.register <- client
 
-	wo.Init()
-	id := 6086
-	player := wo.LoadPlayer(id)
+	player := wo.CreatePlayer()
+	defer wo.DeletePlayer(player)
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.

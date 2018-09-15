@@ -14,7 +14,7 @@ func TestEvents(t *testing.T) {
 	playerId := player.ObjectId()
 
 	dbs.SaveObject(player)
-	dbs.SaveObjectLocation(player.Location, player)
+	dbs.SaveObjectLocation(player.GetLocation(), player)
 	eventChannel := evts.EventListener(player)
 
 	go func() {
@@ -28,7 +28,7 @@ func TestEvents(t *testing.T) {
 		}
 	}()
 
-	coord := player.Location
+	coord := player.GetLocation()
 
 	event := evt.NewEvent(playerId, playerId, coord, coord, "wave hi")
 	evts.EmitEvent(event)

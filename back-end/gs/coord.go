@@ -2,6 +2,7 @@ package gs
 
 import (
 	"../util"
+	"fmt"
 )
 
 type Coord struct {
@@ -16,6 +17,10 @@ func NewCoord(x int, y int) Coord {
 func NewRandomCoord() Coord {
 	x, y := util.RandomPair(WORLD_SIZE)
 	return Coord{X: x, Y: y}
+}
+
+func (coord Coord) Key() string {
+	return fmt.Sprintf("%v,%v", coord.X, coord.Y)
 }
 
 func (coord Coord) AddVector(vector Vector) Coord {

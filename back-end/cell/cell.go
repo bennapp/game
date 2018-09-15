@@ -21,7 +21,7 @@ func NewCell(paint *pnt.Paint, items *items.Items, object obj.Objectable) *Cell 
 	return &Cell{Paint: paint, Items: items, Object: object}
 }
 
-func (cell *Cell) isEmpty() bool {
+func (cell *Cell) IsEmpty() bool {
 	return cell.isEmptyObject() && cell.isEmptyPaint() && cell.isEmptyItems()
 }
 
@@ -46,7 +46,7 @@ func (cell *Cell) IsMovableThrough() bool {
 }
 
 func (cell *Cell) DebugString() string {
-	if cell.isEmpty() {
+	if cell.IsEmpty() {
 		return " "
 	}
 

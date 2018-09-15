@@ -11,7 +11,7 @@ func SetTerrain(coord gs.Coord, terrain terr.Terrain) {
 	paint := dbs.LoadPaintByCoord(coord)
 
 	if paint == nil {
-		pnt.NewPaintByTerrain(terrain)
+		paint = pnt.NewPaintByTerrain(terrain)
 	} else {
 		paint.Terrain = terrain
 	}
