@@ -1,11 +1,11 @@
 package typ
 
-type Type struct {
-	Type string
-}
-
 type Typical interface {
 	GetType() string
+}
+
+type Type struct {
+	Type string
 }
 
 func (typical *Type) GetType() string {

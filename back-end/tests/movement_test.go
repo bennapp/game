@@ -3,9 +3,9 @@ package tests
 import (
 	"../dbs"
 	"../gs"
+	"../mov"
 	"../obj"
 	"../rc"
-	"../wo"
 	"testing"
 )
 
@@ -20,7 +20,7 @@ func TestMovement(t *testing.T) {
 	previousLocation := player.GetLocation()
 	t.Log(previousLocation)
 
-	wo.MoveObject(player, gs.NewVector(0, 1))
+	mov.MoveObject(player, gs.NewVector(0, 1))
 
 	location := player.GetLocation()
 	if location.X != 5 {
