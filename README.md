@@ -13,14 +13,12 @@ Game Engine written in Go and Phaser.js to support MMORTS-like games
 ## Run
 `go run new_world.go` - flushes the db and regenerate the map
 
-`go run create_player.go` - get the Id of the player
-
 `go run coin.go` - spawns coin (optional)
 
 to run the debugger backend / terminal client:
 `go run terminal_client.go` - set the Id of player then run this
 
-or run the websockets server to send data to the front-end
+or run the websockets server to communicate with the front-end
 `go run websocket_server.go`
 
 ## Tests

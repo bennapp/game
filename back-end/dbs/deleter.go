@@ -13,3 +13,8 @@ func DeleteObjectLocation(coord gs.Coord, object obj.Objectable) {
 func DeleteObject(object obj.Objectable) {
 	rc.Manager().DeleteObject(object)
 }
+
+func DeleteObjectAtLocation(coord gs.Coord, object obj.Objectable) {
+	rc.Manager().DeleteObject(object)
+	DeleteObjectLocation(coord, object)
+}

@@ -12,6 +12,11 @@ func SaveObject(object obj.Objectable) {
 	rc.Manager().SaveObject(object)
 }
 
+func SaveObjectAndLocation(coord gs.Coord, object obj.Objectable) {
+	rc.Manager().SaveObject(object)
+	SaveObjectLocation(coord, object)
+}
+
 func SaveObjectLocation(coord gs.Coord, object obj.Objectable) {
 	rc.Manager().SaveObjectLocation(coord, object)
 }

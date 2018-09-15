@@ -9,7 +9,7 @@ const PLAYER = "player"
 
 type Player struct {
 	Object
-	Location  gs.Coord
+	Mover
 	CoinCount int
 	Alive     bool
 	Hp        int
@@ -33,12 +33,13 @@ func (player *Player) DecreaseHp(damage int) {
 }
 
 func NewPlayerAt(location gs.Coord) *Player {
-	return &Player{Object: newObject(PLAYER), Location: location}
+	player := NewPlayer()
+	player.SetLocation(location)
+	return player
 }
 
 func NewPlayer() *Player {
-	coord := gs.NewRandomCoord()
-	return &Player{Object: newObject(PLAYER), Location: coord}
+	return &Player{Object: newObject(PLAYER), Hp: 10, Alive: true}
 }
 
 func LoadPlayer() typ.Typical {

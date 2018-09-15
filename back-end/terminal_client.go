@@ -1,56 +1,58 @@
 package main
 
 import (
-	"./el"
+	"./dbs"
 	"./gs"
+	"./obj"
 	"./wo"
 	"fmt"
 	"github.com/nsf/termbox-go"
 	"os"
+	"os/exec"
 	"time"
 )
 
 func clearScreen() {
-	//cmd := exec.Command("cmd", "/c", "cls || clear")
-	//cmd.Stdout = os.Stdout
-	//cmd.Run()
+	cmd := exec.Command("cmd", "/c", "cls || clear")
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 
-	print("\033[H\033[2J")
+	//print("\033[H\033[2J")
 }
 
-func printWorld(player *el.Player) {
-	v := gs.NewVector(-5, -5)
-	visionDistance := 11
+func printWorld(player *obj.Player) {
+	visionDistance := gs.LOADED_VISION_DISTANCE
+	halfVisionDistance := visionDistance / 2
+	v := gs.NewVector(-halfVisionDistance, -halfVisionDistance)
 
 	for i := 0; i < visionDistance; i++ {
 		for j := 0; j < visionDistance; j++ {
-			element, valid := wo.NextElement(player.GridCoord, v)
-			if valid {
-				fmt.Printf("%v ", element.String())
-			}
+			coord := player.GetLocation().AddVector(v)
+			cell := dbs.LoadCell(coord)
+			fmt.Print(cell.DebugString())
 			v.X += 1
 		}
-		v.X = -5
+		v.X = -halfVisionDistance
 		fmt.Println()
 		v.Y += 1
 	}
 }
 
-func printStat(player *el.Player) {
+func printStat(player *obj.Player) {
 	fmt.Printf("Coin: %d", player.CoinCount)
 	fmt.Println()
 	fmt.Printf("HP: %d", player.Hp)
 	fmt.Println()
 }
 
-func checkAlive(player *el.Player) {
+func checkAlive(player *obj.Player) {
 	if !player.Alive {
 		fmt.Println("You Died")
 		os.Exit(0)
 	}
 }
 
-func render(player *el.Player) {
+func render(player *obj.Player) {
 	for {
 		clearScreen()
 		printWorld(player)
@@ -61,43 +63,42 @@ func render(player *el.Player) {
 	}
 }
 
-func startTerminalClient(id int, char string) {
+func startTerminalClient() {
 	err := termbox.Init()
 	if err != nil {
 		panic(err)
 	}
 
-	player := wo.LoadPlayer(id)
-	player.Avatar = char
-
+	player := wo.CreatePlayer()
 	go render(player)
 
 	for {
 		switch ev := termbox.PollEvent(); ev.Type {
 		case termbox.EventKey:
 			if ev.Key == termbox.KeyCtrlQ {
-				wo.PlayerLogout(player)
-				wo.Close()
+				wo.DeletePlayer(player)
 				termbox.Close()
 				clearScreen()
 				os.Exit(3)
 			}
 
-			moveVector := gs.NewVector(0, 0)
-			if ev.Ch == 119 { // w
-				moveVector.Y = -1
-				wo.MovePlayer(player, moveVector)
-			} else if ev.Ch == 97 { // a
-				moveVector.X = -1
-				wo.MovePlayer(player, moveVector)
-			} else if ev.Ch == 115 { // s
-				moveVector.Y = 1
-				wo.MovePlayer(player, moveVector)
-			} else if ev.Ch == 100 { // d
-				moveVector.X = 1
-				wo.MovePlayer(player, moveVector)
-				//} else if ev.Ch == 0 { // space
+			if ev.Ch == 0 { // space
 				//	player.BuildWall(gs)
+			} else {
+				moveVector := gs.NewVector(0, 0)
+				if ev.Ch == 119 { // w
+					moveVector.Y = -1
+					wo.MoveObject(player, moveVector)
+				} else if ev.Ch == 97 { // a
+					moveVector.X = -1
+					wo.MoveObject(player, moveVector)
+				} else if ev.Ch == 115 { // s
+					moveVector.Y = 1
+					wo.MoveObject(player, moveVector)
+				} else if ev.Ch == 100 { // d
+					moveVector.X = 1
+					wo.MoveObject(player, moveVector)
+				}
 			}
 
 			checkAlive(player)
@@ -110,10 +111,5 @@ func startTerminalClient(id int, char string) {
 }
 
 func main() {
-	wo.Init()
-
-	id := 6086
-	char := "M"
-
-	startTerminalClient(id, char)
+	startTerminalClient()
 }

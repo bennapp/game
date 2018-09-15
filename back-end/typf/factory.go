@@ -34,15 +34,33 @@ func Factory() *TypeFactory {
 }
 
 func (elementFactory *TypeFactory) DeserializeObject(objectStore *store.ObjectStore) obj.Objectable {
-	return elementFactory.deserialize(objectStore).(obj.Objectable)
+	typical := elementFactory.deserialize(objectStore)
+
+	if typical == nil {
+		return nil
+	}
+
+	return typical.(obj.Objectable)
 }
 
 func (elementFactory *TypeFactory) DeserializePaint(paintStore *store.PaintLocationStore) *pnt.Paint {
-	return elementFactory.deserialize(paintStore).(*pnt.Paint)
+	typical := elementFactory.deserialize(paintStore)
+
+	if typical == nil {
+		return nil
+	}
+
+	return typical.(*pnt.Paint)
 }
 
 func (elementFactory *TypeFactory) DeserializeItems(itemsStore *store.ItemsLocationStore) *items.Items {
-	return elementFactory.deserialize(itemsStore).(*items.Items)
+	typical := elementFactory.deserialize(itemsStore)
+
+	if typical == nil {
+		return nil
+	}
+
+	return typical.(*items.Items)
 }
 
 func (elementFactory *TypeFactory) DeserializeEvent(serializedEvent string) *evt.Event {
