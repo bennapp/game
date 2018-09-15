@@ -3,7 +3,7 @@ package main
 import (
 	"./dbs"
 	"./gs"
-	"./mov"
+	"./movs"
 	"./obj"
 	"./wo"
 	"fmt"
@@ -89,16 +89,16 @@ func startTerminalClient() {
 				moveVector := gs.NewVector(0, 0)
 				if ev.Ch == 119 { // w
 					moveVector.Y = -1
-					mov.MoveObject(player, moveVector)
+					movs.RegulateMove(player, moveVector)
 				} else if ev.Ch == 97 { // a
 					moveVector.X = -1
-					mov.MoveObject(player, moveVector)
+					movs.RegulateMove(player, moveVector)
 				} else if ev.Ch == 115 { // s
 					moveVector.Y = 1
-					mov.MoveObject(player, moveVector)
+					movs.RegulateMove(player, moveVector)
 				} else if ev.Ch == 100 { // d
 					moveVector.X = 1
-					mov.MoveObject(player, moveVector)
+					movs.RegulateMove(player, moveVector)
 				}
 			}
 

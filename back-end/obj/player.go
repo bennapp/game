@@ -2,6 +2,7 @@ package obj
 
 import (
 	"../gs"
+	"../mov"
 	"../typ"
 )
 
@@ -9,7 +10,7 @@ const PLAYER = "player"
 
 type Player struct {
 	Object
-	Mover
+	mov.Mover
 	CoinCount int
 	Alive     bool
 	Hp        int
@@ -44,4 +45,12 @@ func NewPlayer() *Player {
 
 func LoadPlayer() typ.Typical {
 	return &Player{}
+}
+
+func (player *Player) GetVelocity() float64 {
+	// TODO: make a velocity constants package / singleton / global mapping
+	// return velocity.GetConstants()[PLAYER]
+
+	// in cells per second
+	return 5.0
 }

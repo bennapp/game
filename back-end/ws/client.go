@@ -4,7 +4,7 @@ import (
 	"../cell"
 	"../dbs"
 	"../gs"
-	"../mov"
+	"../movs"
 	"../obj"
 	"../wo"
 	"bytes"
@@ -92,7 +92,7 @@ func (c *Client) readPump(player *obj.Player) {
 		moveVector.X = moveEvent.To.X - player.GetLocation().X
 		moveVector.Y = moveEvent.To.Y - player.GetLocation().Y
 
-		mov.MoveObject(player, moveVector)
+		movs.RegulateMove(player, moveVector)
 
 		// The is where we could correct the client
 		// we would need to detect if the client is saying it is moving from an invalid location

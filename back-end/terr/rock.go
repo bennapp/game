@@ -4,5 +4,5 @@ const ROCK = "rock"
 
 func NewRock() Terrain {
 	permeable := false
-	return newTerrain(permeable, ROCK)
+	return newTerrain(permeable, ROCK, 0.0)
 }

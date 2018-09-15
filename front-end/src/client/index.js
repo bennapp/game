@@ -64,6 +64,7 @@ function create() {
       console.log("Connection closed.");
     };
     conn.onmessage = function (event) {
+      console.log(JSON.parse(event.data));
       self.gameStateUpdate(event.data);
     };
   } else {

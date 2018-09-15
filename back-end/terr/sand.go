@@ -1,5 +1,8 @@
 package terr
 
-type Sand struct {
-	Terrain
+const SAND = "sand"
+
+func NewSand() Terrain {
+	permeable := true
+	return newTerrain(permeable, SAND, 0.75)
 }

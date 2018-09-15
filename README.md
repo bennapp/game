@@ -200,6 +200,11 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 - [X] break apart basic.go into various files / packages for spawn coin and player interactions / actor movement
 
 - [ ] Re-work movement system, introduce velocity.
+    - [X] Backend velocity regulator
+    - [ ] Velocity config
+    - [ ] Parse velocity config to backend velocity package
+    - [ ] Parse velocity config on front end
+    - [ ] Use velocities on front end
 - [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
 
 
@@ -207,7 +212,8 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 - Respawn, and setting origin
 - Dynamicically generated map
 - Attacking / defending
-- Building
+- Picking up items / resources
+- Building / spending resources
 - Multi player
 - Logging out, boxing up all your buildings
 
