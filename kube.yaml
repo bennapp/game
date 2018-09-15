@@ -1,0 +1,75 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: redis
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        service: redis
+    spec:
+      hostNetwork: true
+      containers:
+      - image: redis:3.2.3
+        name: redis
+        ports:
+        - containerPort: 6379
+          hostPort: 6379
+          protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: redis
+  name: redis
+spec:
+  type: NodePort
+  ports:
+  - name: redis
+    port: 6379
+    protocol: TCP
+    targetPort: 6379
+  selector:
+    service: redis
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: zerozero
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        service: zerozero
+    spec:
+      hostNetwork: true
+      containers:
+      - image: game:latest
+        imagePullPolicy: IfNotPresent
+        name: zerozero
+        ports:
+        - containerPort: 8081
+          hostPort: 8081
+          protocol: TCP
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: zerozero
+  name: zerozero
+spec:
+  type: NodePort
+  ports:
+  - name: zerozero
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    service: zerozero
