@@ -200,7 +200,6 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 - [X] move things from el into obj. remove old els. rename el package to factory or something
 - [X] Can we remove setting type in the loaders? investigate this, run tests etc.
 - [X] break apart basic.go into various files / packages for spawn coin and player interactions / actor movement
-
 - [X] Re-work movement system, introduce velocity.
     - [X] Backend velocity regulator
     - [X] Velocity config

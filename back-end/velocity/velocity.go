@@ -1,7 +1,7 @@
 package velocity
 
 import (
-	"../os_utils"
+	"../os_util"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -27,7 +27,7 @@ func Constants(movableType string) float64 {
 func initializeVelocityMappings() {
 	VELOCITY_MAPPING = make(map[string]float64)
 
-	jsonFile, err := os.Open(os_utils.RelativeProjectPath("game-config/velocities.json"))
+	jsonFile, err := os.Open(os_util.RelativeProjectPath("game-config/velocities.json"))
 	if err != nil {
 		panic(err)
 	}

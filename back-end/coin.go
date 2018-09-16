@@ -1,8 +1,8 @@
 package main
 
 import (
+	"./items"
 	"./wo"
-	"fmt"
 	"time"
 )
 
@@ -10,7 +10,6 @@ func spawnCoinsInWorld() {
 	sleepTime := 10000 * time.Millisecond
 
 	for {
-		fmt.Printf("basic.go: spawning random coin.\n")
 		spawnCoin()
 		time.Sleep(sleepTime)
 		sleepTime += sleepTime
@@ -18,13 +17,11 @@ func spawnCoinsInWorld() {
 }
 
 func spawnCoin() {
-	coin := wo.BuildAndStoreCoin()
-	wo.PlaceCoinRandomly(coin)
+	coord := wo.RandomEmptyCoord()
+	coins := items.NewCoinStack()
+	wo.AddItemsToStack(coord, coins)
 }
 
 func main() {
-	fmt.Printf("coin.go: running World Elements\n")
-
-	wo.Init()
 	spawnCoinsInWorld()
 }

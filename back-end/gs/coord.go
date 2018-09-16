@@ -1,7 +1,7 @@
 package gs
 
 import (
-	"../util"
+	"../math_util"
 	"fmt"
 )
 
@@ -15,7 +15,7 @@ func NewCoord(x int, y int) Coord {
 }
 
 func NewRandomCoord() Coord {
-	x, y := util.RandomPair(WORLD_SIZE)
+	x, y := math_util.RandomPair(WORLD_SIZE)
 	return Coord{X: x, Y: y}
 }
 

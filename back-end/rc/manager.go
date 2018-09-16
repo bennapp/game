@@ -5,7 +5,7 @@ import (
 	"../gs"
 	"../items"
 	"../obj"
-	"../os_utils"
+	"../os_util"
 	"../pnt"
 	"../store"
 	"encoding/json"
@@ -28,7 +28,7 @@ func Manager() *RedisManager {
 }
 
 func initializeRedisClient() {
-	opt, err := redis.ParseURL(os_utils.GetEnv("REDIS_URL", "redis://localhost:6379/0"))
+	opt, err := redis.ParseURL(os_util.GetEnv("REDIS_URL", "redis://localhost:6379/0"))
 	if err != nil {
 		panic(err)
 	}

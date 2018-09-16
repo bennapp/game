@@ -1,4 +1,4 @@
-package os_utils
+package os_util
 
 import (
 	"os"
