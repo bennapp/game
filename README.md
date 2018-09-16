@@ -201,13 +201,13 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 - [X] Can we remove setting type in the loaders? investigate this, run tests etc.
 - [X] break apart basic.go into various files / packages for spawn coin and player interactions / actor movement
 
-- [ ] Re-work movement system, introduce velocity.
+- [X] Re-work movement system, introduce velocity.
     - [X] Backend velocity regulator
     - [X] Velocity config
     - [X] Parse velocity config to backend velocity package
-    - [ ] Parse velocity config on front end
-    - [ ] Use velocities on front end
-- [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
+    - [X] Parse velocity config on front end
+    - [X] Use velocities on front end
+- [X] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
 
 
 ## Game Overview

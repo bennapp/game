@@ -48,15 +48,21 @@ class MapStore {
   }
 
   buildObject(coordString, coordinateState, globalPlayerLocation) {
-    let type = coordinateState[coordString].Type;
+    let cell = coordinateState[coordString];
 
     let coordArray = coordString.split(',').map(Number);
     let coord = { x: coordArray[0], y: coordArray[1] };
     let object;
-    if (type === 'rock') {
-      object = new Rock(this.game, { coord: coord, globalPlayerLocation: globalPlayerLocation });
-    } else if (type === 'coin') {
-      object = new Coin(this.game, { coord: coord, globalPlayerLocation: globalPlayerLocation });
+
+    // FIXME: this assumes all items are coins
+    if (cell.Items) {
+        object = new Coin(this.game, { coord: coord, globalPlayerLocation: globalPlayerLocation });
+    }
+
+    if (cell.Paint) {
+      if (cell.Paint.TerrainType == "rock") {
+        object = new Rock(this.game, { coord: coord, globalPlayerLocation: globalPlayerLocation });
+      }
     }
 
     return object

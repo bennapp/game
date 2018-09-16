@@ -80,15 +80,11 @@ func (c *Client) readPump(player *obj.Player) {
 		}
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
-		//c.hub.broadcast <- message
-
 		moveEvent := &playerMoveEvent{}
 		json.Unmarshal(message, moveEvent)
 
 		moveVector := gs.NewVector(0, 0)
 
-		// should be client sends vector not absolute position
-		// so that we cannot skip cells
 		moveVector.X = moveEvent.To.X - player.GetLocation().X
 		moveVector.Y = moveEvent.To.Y - player.GetLocation().Y
 
@@ -96,7 +92,7 @@ func (c *Client) readPump(player *obj.Player) {
 
 		// The is where we could correct the client
 		// we would need to detect if the client is saying it is moving from an invalid location
-		// then we would send
+		// then we would send correction like below
 
 		//gameState := gameStateMapping{}
 		//
