@@ -1,11 +1,11 @@
 package main
 
 import (
-	"./dbs"
-	"./gs"
-	"./movs"
-	"./obj"
-	"./wo"
+	"../dbs"
+	"../gs"
+	"../movs"
+	"../obj"
+	"../wo"
 	"fmt"
 	"github.com/nsf/termbox-go"
 	"os"

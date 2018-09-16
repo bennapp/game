@@ -1,8 +1,8 @@
-package main
+package new_world
 
 import (
-	"./rc"
-	"./wo"
+	"../rc"
+	"../wo"
 	"fmt"
 )
 

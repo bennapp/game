@@ -13,15 +13,15 @@ Game Engine written in Go and Phaser.js to support MMORTS-like games
 
 
 ## Run
-`go run new_world.go` - flushes the db and regenerate the map
+`go run new_world/new_world.go` - flushes the db and regenerate the map
 
-`go run coin.go` - spawns coin (optional)
+`go run spawn_coins/spawn_coins.go` - spawns coin (optional)
 
 to run the debugger backend / terminal client:
-`go run terminal_client.go` - set the Id of player then run this
+`go run terminal_client/terminal_client.go` - set the Id of player then run this
 
 or run the websockets server to communicate with the front-end
-`go run websocket_server.go`
+`go run websocket_server/websocket_server.go`
 
 ## Tests
 Tests in back-end are intended to be run individually for the time being. For now, we are only using tests to debug and print
@@ -34,6 +34,9 @@ Eg.
 
 or
 `go test tests/loader_and_saver_test.go -v`
+
+or for the entire test suite:
+`go test ./...`
 
 
 # front-end

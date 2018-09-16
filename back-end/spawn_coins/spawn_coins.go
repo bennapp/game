@@ -1,8 +1,8 @@
-package main
+package spawn_coins
 
 import (
-	"./items"
-	"./wo"
+	"../items"
+	"../wo"
 	"time"
 )
 
