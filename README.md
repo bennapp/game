@@ -213,14 +213,14 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 
 
 ## Game Overview
-- Add in other terrain, grass, sand, mud
-- Dynamicically generated map
-- Respawn, and setting origin
-- Attacking / defending
-- Picking up items / resources
-- Building / spending resources
-- Multi player
-- Logging out, boxing up all your buildings
+- [ ] Add in terrain, grass, sand, mud
+- [ ] Dynamically generated map
+- [ ] Re-spawn, and setting origin
+- [ ] Attacking / defending
+- [ ] Picking up items / resources
+- [ ] Building / spending resources
+- [ ] Multi player
+- [ ] Logging out, boxing up all your buildings
 
 ## Server
 
