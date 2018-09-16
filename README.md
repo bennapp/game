@@ -1,34 +1,47 @@
-# Project Zero Zero
+# Engine Zero Zero
 
-This is a toy project to experiment with GoLang.
+Game Engine written in Go and Phaser.js to support MMORTS-like games
 
-# Backend
+# back-end
 
 ## Prerequisite:
 `go get -u github.com/nsf/termbox-go`
 
 `go get github.com/go-redis/redis`
 
+`go get -u github.com/tinylib/msgp`
+
 
 ## Run
-`go run newWorld.go` - flushes the db and regenerate the map
+`go run new_world/new_world.go` - flushes the db and regenerate the map
 
-`go run createPlayer.go` - get the Id of the player
-
-`go run coin.go` - spawns coin (optional)
+`go run spawn_coins/spawn_coins.go` - spawns coin (optional)
 
 to run the debugger backend / terminal client:
-`go run terminalClient.go` - set the Id of player then run this
+`go run terminal_client/terminal_client.go` - set the Id of player then run this
 
-or run the websockets server to send data to the front-end
-`go run websocketServer.go`
+or run the websockets server to communicate with the front-end
+`go run websocket_server/websocket_server.go`
 
-## Reference
-[Directory Layout](https://github.com/golang-standards/project-layout/blob/master/README.md)
+## Tests
+Tests in back-end are intended to be run individually for the time being. For now, we are only using tests to debug and print
+usages of functions as we 'test-drive' the development of them. In the future, as things become more solidified, we may add actual tests assertions.
+For now they are just debugging / printing results of functions. Tests within their respective packages are intended to be more white-box / unit like whereas
+tests under tests under `tests/` are black-box integration-like tests. https://stackoverflow.com/questions/19998250/proper-package-naming-for-testing-with-the-go-language
 
-# Frontend
+Eg.
+`go test cell/cell_test.go -v`
 
-Game client using phaser.js
+or
+`go test tests/loader_and_saver_test.go -v`
+
+or for the entire test suite:
+`go test ./...`
+
+
+# front-end
+
+Game client using Phaser.js
 
 ## To start:
 install yarn
@@ -63,7 +76,7 @@ exploration
 generative world
 
 
-# Gameplay
+# Game play ideas to support
 emphasis for the origin on the world, 0,0
 
 a player has their origin
@@ -134,8 +147,8 @@ what happens to your stuff (resources building etc) when you die or log off: see
 4. needs to have a failure state (client as well)
 
 
-#### Future Thoughts
-should the player be on a vector and not grid?
+#### Future Thoughts and Questions
+- Should the player be on a vector / floating point and not an integer grid?
 
 
 #### Scaling Plans
@@ -174,22 +187,39 @@ should the player be on a vector and not grid?
 ----
 
 # V0.1
+Architecutre diagram:
+https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/edit?usp=sharing
 
 ## Prep Refactors and Fixes:
 - [X] Gracefully handle websockets disconnect
-- [ ] Use redis `Inc` to handle ids
-- [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
-- [ ] fix bug where lots of players start showing up
-- [ ] break apart basic.go into various files / packages for spawn coin and player interactions / actor movement
+- [X] Use uuid for ids
+- [X] Separate objects and paint
+- [X] introduce struct like 'cell' which contains objects and paint
+- [X] Add loader and saver services
+- [X] Add items layer for items on the ground
+- [X] Implement player as object remove coin as object
+- [X] Add event system: player object id based event channels in redis pub/sub when event happens, propagates to all player channels around the event
+- [X] Fix event system bug where emitter and receiver are not being de-serialized correctly. Fixed, now we use objectId instead
+- [X] move things from el into obj. remove old els. rename el package to factory or something
+- [X] Can we remove setting type in the loaders? investigate this, run tests etc.
+- [X] break apart basic.go into various files / packages for spawn coin and player interactions / actor movement
+- [X] Re-work movement system, introduce velocity.
+    - [X] Backend velocity regulator
+    - [X] Velocity config
+    - [X] Parse velocity config to backend velocity package
+    - [X] Parse velocity config on front end
+    - [X] Use velocities on front end
+- [X] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins
 
 
 ## Game Overview
-- Multi player
-- Dynamicically generated map
 - Respawn, and setting origin
-- Logging out
+- Dynamicically generated map
 - Attacking / defending
-- Building
+- Picking up items / resources
+- Building / spending resources
+- Multi player
+- Logging out, boxing up all your buildings
 
 ## Server
 
