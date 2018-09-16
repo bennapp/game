@@ -5,12 +5,12 @@ import (
 	"../gs"
 	"../items"
 	"../obj"
+	"../os_utils"
 	"../pnt"
 	"../store"
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
-	"os"
 )
 
 var REDIS_INSTANCE *RedisManager
@@ -27,17 +27,8 @@ func Manager() *RedisManager {
 	return REDIS_INSTANCE
 }
 
-// Move GetEnv to a utils-like package if appropriate
-func GetEnv(key, fallback string) string {
-	value := os.Getenv(key)
-	if len(value) == 0 {
-		return fallback
-	}
-	return value
-}
-
 func initializeRedisClient() {
-	opt, err := redis.ParseURL(GetEnv("REDIS_URL", "redis://localhost:6379/0"))
+	opt, err := redis.ParseURL(os_utils.GetEnv("REDIS_URL", "redis://localhost:6379/0"))
 	if err != nil {
 		panic(err)
 	}
