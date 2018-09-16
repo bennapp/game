@@ -9,6 +9,8 @@ Game Engine written in Go and Phaser.js to support MMORTS-like games
 
 `go get github.com/go-redis/redis`
 
+`go get -u github.com/tinylib/msgp`
+
 
 ## Run
 `go run new_world.go` - flushes the db and regenerate the map
@@ -201,8 +203,8 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 
 - [ ] Re-work movement system, introduce velocity.
     - [X] Backend velocity regulator
-    - [ ] Velocity config
-    - [ ] Parse velocity config to backend velocity package
+    - [X] Velocity config
+    - [X] Parse velocity config to backend velocity package
     - [ ] Parse velocity config on front end
     - [ ] Use velocities on front end
 - [ ] Fix issue where move events are not sent as vectors and player 'skips / jumps over' coins

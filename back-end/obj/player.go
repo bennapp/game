@@ -4,6 +4,7 @@ import (
 	"../gs"
 	"../mov"
 	"../typ"
+	"../velocity"
 )
 
 const PLAYER = "player"
@@ -48,9 +49,5 @@ func LoadPlayer() typ.Typical {
 }
 
 func (player *Player) GetVelocity() float64 {
-	// TODO: make a velocity constants package / singleton / global mapping
-	// return velocity.GetConstants()[PLAYER]
-
-	// in cells per second
-	return 5.0
+	return velocity.Constants(PLAYER)
 }

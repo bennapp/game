@@ -1,5 +1,7 @@
 package obj
 
+const SNAKE = "snake"
+
 //type Snake struct {
 //	Location
 //}
