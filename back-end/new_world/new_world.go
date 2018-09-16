@@ -1,4 +1,4 @@
-package new_world
+package main
 
 import (
 	"../rc"

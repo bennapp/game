@@ -1,4 +1,4 @@
-package spawn_coins
+package main
 
 import (
 	"../items"

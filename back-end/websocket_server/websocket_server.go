@@ -1,4 +1,4 @@
-package websocket_server
+package main
 
 import "../ws"
 

@@ -34,11 +34,37 @@ function preload() {
   // TODO WEBPACK ASSETS
   this.load.image('ship', 'assets/spaceShips_001.png');
   this.load.image('otherPlayer', 'assets/enemyBlack5.png');
-  this.load.image('star', 'assets/star_gold.png');
-  this.load.image('rocks', 'assets/sprites/Rock Pile.png');
+  this.load.image('rocks', 'assets/sprites/rock1.png');
+
+  this.load.image('coins1', 'assets/sprites/coins/goldCoin1.png');
+  this.load.image('coins2', 'assets/sprites/coins/goldCoin2.png');
+  this.load.image('coins3', 'assets/sprites/coins/goldCoin3.png');
+  this.load.image('coins4', 'assets/sprites/coins/goldCoin4.png');
+  this.load.image('coins5', 'assets/sprites/coins/goldCoin5.png');
+  this.load.image('coins6', 'assets/sprites/coins/goldCoin6.png');
+  this.load.image('coins7', 'assets/sprites/coins/goldCoin7.png');
+  this.load.image('coins8', 'assets/sprites/coins/goldCoin8.png');
+  this.load.image('coins9', 'assets/sprites/coins/goldCoin9.png');
 }
 
 function create() {
+  this.anims.create({
+      key: 'coins',
+      frames: [
+          { key: 'coins1' },
+          { key: 'coins2' },
+          { key: 'coins3' },
+          { key: 'coins4' },
+          { key: 'coins5' },
+          { key: 'coins6' },
+          { key: 'coins7' },
+          { key: 'coins8' },
+          { key: 'coins9' },
+      ],
+      frameRate: 15,
+      repeat: -1
+  });
+
   var self = this;
   self.world = new World(self);
 
