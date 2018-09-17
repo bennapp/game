@@ -85,6 +85,6 @@ spec:
       - name: spawn-world-and-coins
         image: game:latest
         imagePullPolicy: IfNotPresent
-        command: ["sh",  "-x", "-e", "-c", "zerozero-new-world && zerozero-spawn-coins"]
+        command: ["sh",  "-x", "-e", "-c", "zerozero-new-world && (zerozero-spawn-coins & export COINPID=$! && sleep 5 && kill $COINPID && wait)"]
       restartPolicy: Never
   backoffLimit: 4
