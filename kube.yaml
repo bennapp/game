@@ -73,3 +73,18 @@ spec:
     targetPort: 8081
   selector:
     service: zerozero
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spawn-world-and-coins
+spec:
+  template:
+    spec:
+      containers:
+      - name: spawn-world-and-coins
+        image: game:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh",  "-x", "-e", "-c", "zerozero-new-world && zerozero-spawn-coins"]
+      restartPolicy: Never
+  backoffLimit: 4
