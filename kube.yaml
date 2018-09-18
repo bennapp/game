@@ -65,7 +65,7 @@ metadata:
     service: zerozero
   name: zerozero
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
   - name: zerozero
     port: 8081
