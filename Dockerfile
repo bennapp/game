@@ -5,7 +5,8 @@ WORKDIR /go/src/github.com/bennapp/game
 RUN go get -u github.com/nsf/termbox-go && \
     go get github.com/go-redis/redis && \
     go get github.com/gorilla/websocket && \
-    go get github.com/google/uuid
+    go get github.com/google/uuid && \
+    go get github.com/vmihailenco/msgpack
 
 COPY back-end back-end
 
