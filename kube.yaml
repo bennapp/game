@@ -1,23 +1,19 @@
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
+apiVersion: v1
+kind: Service
 metadata:
-  name: redis
+  labels:
+    service: zerozero
+  name: zerozero
 spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: redis
-    spec:
-      hostNetwork: true
-      containers:
-      - image: redis:3.2.3
-        name: redis
-        ports:
-        - name: redis
-          containerPort: 6379
-      restartPolicy: Always
+  type: LoadBalancer
+  ports:
+  - name: zerozero
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    service: zerozero
 ---
 apiVersion: v1
 kind: Service
@@ -36,6 +32,25 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
+  name: redis
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - image: redis:3.2.3
+        name: redis
+        ports:
+        - name: redis
+          containerPort: 6379
+      restartPolicy: Always
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
   name: zerozero
 spec:
   replicas: 1
@@ -44,7 +59,6 @@ spec:
       labels:
         service: zerozero
     spec:
-      hostNetwork: true
       containers:
       - image: game:latest
         imagePullPolicy: IfNotPresent
@@ -57,22 +71,6 @@ spec:
           hostPort: 8081
           protocol: TCP
       restartPolicy: Always
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    service: zerozero
-  name: zerozero
-spec:
-  type: LoadBalancer
-  ports:
-  - name: zerozero
-    port: 8081
-    protocol: TCP
-    targetPort: 8081
-  selector:
-    service: zerozero
 ---
 apiVersion: batch/v1
 kind: Job
