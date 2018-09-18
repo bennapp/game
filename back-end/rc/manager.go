@@ -36,6 +36,12 @@ func initializeRedisClient() {
 	REDIS_INSTANCE = &RedisManager{
 		client: redis.NewClient(opt),
 	}
+
+	_, err = REDIS_INSTANCE.client.Ping().Result()
+
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (manager *RedisManager) PrintAllKeyValuesForDebugging() {
