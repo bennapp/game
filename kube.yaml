@@ -52,6 +52,9 @@ spec:
       - image: game:latest
         imagePullPolicy: IfNotPresent
         name: zerozero
+        env:
+          - name: REDIS_URL
+            value: redis://redis:6379/0
         ports:
         - containerPort: 8081
           hostPort: 8081
@@ -85,6 +88,9 @@ spec:
       - name: spawn-world-and-coins
         image: game:latest
         imagePullPolicy: IfNotPresent
-        command: ["sh",  "-x", "-e", "-c", "zerozero-new-world && (zerozero-spawn-coins & export COINPID=$! && sleep 5 && kill $COINPID && wait)"]
+        command: ["zerozero-new-world"]
+        env:
+          - name: REDIS_URL
+            value: redis://redis:6379/0
       restartPolicy: Never
   backoffLimit: 4
