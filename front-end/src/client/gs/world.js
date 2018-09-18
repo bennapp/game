@@ -1,6 +1,5 @@
 import { MapStore } from './map-store'
 import velocities from "../../../../game-config/velocities.json"
-import msgpack from "msgpack-lite"
 
 class World {
   constructor(game) {
@@ -89,7 +88,7 @@ class World {
 
         console.log('moving player to', this.globalPlayerLocation);
 
-        conn.send(msgpack.encode(moveEvent));
+        conn.send(JSON.stringify(moveEvent));
       }
     }
   }
