@@ -8,8 +8,8 @@ import (
 	"../obj"
 	"../wo"
 	"bytes"
-	"encoding/json"
 	"github.com/gorilla/websocket"
+	"github.com/vmihailenco/msgpack"
 	"log"
 	"net/http"
 	"time"
@@ -81,7 +81,7 @@ func (c *Client) readPump(player *obj.Player) {
 		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
 		moveEvent := &playerMoveEvent{}
-		json.Unmarshal(message, moveEvent)
+		msgpack.Unmarshal(message, moveEvent)
 
 		moveVector := gs.NewVector(0, 0)
 
@@ -126,7 +126,7 @@ func (c *Client) writePump() {
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.TextMessage)
+			w, err := c.conn.NextWriter(websocket.BinaryMessage)
 			if err != nil {
 				return
 			}
@@ -179,7 +179,7 @@ func (c *Client) beamState(player *obj.Player) {
 	}
 
 	gameState["coordinates"] = coordinateMapping
-	gameStateAsString, _ := json.Marshal(gameState)
+	gameStateAsString, _ := msgpack.Marshal(gameState)
 
 	c.send <- []byte(gameStateAsString)
 }
@@ -193,7 +193,7 @@ func (c *Client) beamInitialState(player *obj.Player) bool {
 
 		gameState["globalPlayerLocation"] = player.GetLocation()
 
-		gameStateAsString, _ := json.Marshal(gameState)
+		gameStateAsString, _ := msgpack.Marshal(gameState)
 		c.send <- []byte(gameStateAsString)
 	}
 

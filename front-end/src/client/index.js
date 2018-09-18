@@ -3,6 +3,7 @@ import { WIDTH, HEIGHT } from './constants'
 
 import { World } from './gs/world'
 import { Player } from "./el/player";
+import msgpack from "msgpack-lite";
 
 var config = {
   type: Phaser.AUTO,
@@ -69,8 +70,8 @@ function create() {
   self.world = new World(self);
 
   self.gameStateUpdate = (rawGameState) => {
-      let jsonGameState = JSON.parse(rawGameState);
-      this.world.setState(jsonGameState);
+      let gameState = msgpack.decode(rawGameState);
+      this.world.setState(gameState);
   };
 
   if (window["WebSocket"]) {
@@ -90,7 +91,7 @@ function create() {
       console.log("Connection closed.");
     };
     conn.onmessage = function (event) {
-      console.log(JSON.parse(event.data));
+      console.log(msgpack.decode(event.data));
       self.gameStateUpdate(event.data);
     };
   } else {
