@@ -69,14 +69,14 @@ function create() {
   var self = this;
   self.world = new World(self);
 
-  self.gameStateUpdate = (rawGameState) => {
-      let gameState = msgpack.decode(rawGameState);
+  self.gameStateUpdate = (gameState) => {
       this.world.setState(gameState);
   };
 
   if (window["WebSocket"]) {
     console.log('websockts!');
     conn = new WebSocket("ws://" + "localhost:8081" + "/ws");
+    conn.binaryType = 'arraybuffer';
 
     conn.onopen = function (event) {
       self.ship = new Player(self);
@@ -90,9 +90,13 @@ function create() {
     conn.onclose = function (event) {
       console.log("Connection closed.");
     };
+
     conn.onmessage = function (event) {
-      console.log(msgpack.decode(event.data));
-      self.gameStateUpdate(event.data);
+      //need to cast the raw buffer to a sequence of typed elements
+      var typedData = new Uint8Array(event.data)
+      var decodedEvent = (msgpack.decode(typedData));
+
+      self.gameStateUpdate(decodedEvent);
     };
   } else {
     console.log("Your browser does not support WebSockets.");
