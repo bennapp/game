@@ -1,4 +1,34 @@
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: zerozero
+  name: zerozero
+spec:
+  type: LoadBalancer
+  ports:
+  - name: zerozero
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    service: zerozero
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    service: redis
+  name: redis
+spec:
+  ports:
+  - name: redis
+    port: 6379
+    targetPort: 6379
+  selector:
+    app: redis
+---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
@@ -8,33 +38,15 @@ spec:
   template:
     metadata:
       labels:
-        service: redis
+        app: redis
     spec:
-      hostNetwork: true
       containers:
       - image: redis:3.2.3
         name: redis
         ports:
-        - containerPort: 6379
-          hostPort: 6379
-          protocol: TCP
+        - name: redis
+          containerPort: 6379
       restartPolicy: Always
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    service: redis
-  name: redis
-spec:
-  type: NodePort
-  ports:
-  - name: redis
-    port: 6379
-    protocol: TCP
-    targetPort: 6379
-  selector:
-    service: redis
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -47,29 +59,47 @@ spec:
       labels:
         service: zerozero
     spec:
-      hostNetwork: true
       containers:
       - image: game:latest
         imagePullPolicy: IfNotPresent
         name: zerozero
+        env:
+          - name: REDIS_URL
+            value: redis://redis:6379/0
+        resources:
+          requests:
+            memory: 100Mi
+            cpu: 1m
+          limits:
+            memory: 1000Mi
+            cpu: 250m
         ports:
         - containerPort: 8081
           hostPort: 8081
           protocol: TCP
       restartPolicy: Always
 ---
-apiVersion: v1
-kind: Service
+apiVersion: batch/v1
+kind: Job
 metadata:
-  labels:
-    service: zerozero
-  name: zerozero
+  name: spawn-world-and-coins
 spec:
-  type: NodePort
-  ports:
-  - name: zerozero
-    port: 8081
-    protocol: TCP
-    targetPort: 8081
-  selector:
-    service: zerozero
+  template:
+    spec:
+      containers:
+      - name: spawn-world-and-coins
+        image: game:latest
+        imagePullPolicy: IfNotPresent
+        command: ["zerozero-new-world"]
+        env:
+          - name: REDIS_URL
+            value: redis://redis:6379/0
+        resources:
+          requests:
+            memory: 100Mi
+            cpu: 1m
+          limits:
+            memory: 1000Mi
+            cpu: 250m
+      restartPolicy: Never
+  backoffLimit: 4

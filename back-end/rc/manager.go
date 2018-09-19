@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
+	"time"
 )
 
 var REDIS_INSTANCE *RedisManager
@@ -33,14 +34,20 @@ func initializeRedisClient() {
 		panic(err)
 	}
 
-	REDIS_INSTANCE = &RedisManager{
-		client: redis.NewClient(opt),
-	}
+	for {
+		REDIS_INSTANCE = &RedisManager{
+			client: redis.NewClient(opt),
+		}
 
-	_, err = REDIS_INSTANCE.client.Ping().Result()
+		_, err = REDIS_INSTANCE.client.Ping().Result()
 
-	if err != nil {
-		panic(err)
+		if err == nil {
+			break
+			//panic(err)
+		} else {
+			fmt.Printf("redis ping error: %v\n", err.Error())
+			time.Sleep(100 * time.Millisecond)
+		}
 	}
 }
 
