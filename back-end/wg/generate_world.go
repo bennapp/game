@@ -14,28 +14,6 @@ const MAX_FILL_DISTANCE = 3
 
 type paintMap map[gs.Coord]*pnt.Paint
 
-var baseWeightProbMap map[string]float64
-var neighborWeightProbMap map[string]float64
-
-func init() {
-	baseWeightMap := make(map[string]float64)
-	baseWeightMap["rock"] = 3
-	baseWeightMap["grass"] = 7
-	baseWeightMap["sand"] = 1
-	baseWeightMap["mud"] = 2
-
-	baseWeightProbMap := weightsToProbMap(baseWeightMap)
-	baseWeightProbMap = scaleProbMap(baseWeightProbMap, 0.5)
-
-	neighborWeightMap := make(map[string]float64)
-	neighborWeightMap["rock"] = 7
-	neighborWeightMap["grass"] = 4
-	neighborWeightMap["sand"] = 3
-	neighborWeightMap["mud"] = 2
-
-	neighborWeightProbMap = weightsToProbMap(neighborWeightMap)
-}
-
 func GenerateWorld(regionCoord gs.Coord) {
 	startingX := regionCoord.X * gs.WORLD_GENERATION_DISTANCE
 	startingY := regionCoord.Y * gs.WORLD_GENERATION_DISTANCE
@@ -77,12 +55,16 @@ func GenerateWorld(regionCoord gs.Coord) {
 		coordToGeneratePaint[i], coordToGeneratePaint[j] = coordToGeneratePaint[j], coordToGeneratePaint[i]
 	}
 
-	fmt.Println(paintMapping)
 	for _, coord := range coordToGeneratePaint {
-		paint := generatePaint(coord, paintMapping)
-		paintMapping[coord] = paint
+		paint := paintMapping[coord]
+
+		terrainType := generatePaintType(coord, paintMapping)
+		paint.SetTerrainByType(terrainType)
+
 		dbs.SavePaintLocation(coord, paint)
 	}
+
+	fmt.Println(paintMapping)
 }
 
 type weightMap map[string]float64
@@ -94,9 +76,7 @@ func coordDistance(firstCoord gs.Coord, secondCoord gs.Coord) int {
 	return math_util.Max(math_util.Abs(diffX), math_util.Abs(diffY))
 }
 
-func generatePaint(coord gs.Coord, paintMapping paintMap) *pnt.Paint {
-	paint := paintMapping[coord]
-
+func generatePaintType(coord gs.Coord, paintMapping paintMap) string {
 	v := gs.NewVector(-MAX_FILL_DISTANCE, -MAX_FILL_DISTANCE)
 	weightedDistanceMap := make(map[int]weightMap)
 
@@ -106,7 +86,6 @@ func generatePaint(coord gs.Coord, paintMapping paintMap) *pnt.Paint {
 			paint := paintMapping[otherCoord]
 
 			distance := coordDistance(coord, otherCoord)
-			fmt.Println(coord, otherCoord, distance)
 
 			if weightedDistanceMap[distance] == nil {
 				weightedDistanceMap[distance] = make(weightMap)
@@ -118,11 +97,12 @@ func generatePaint(coord gs.Coord, paintMapping paintMap) *pnt.Paint {
 
 			v.X += 1
 		}
-		v.X = -(MAX_FILL_DISTANCE * 2)
+		v.X = -MAX_FILL_DISTANCE
 		v.Y += 1
 	}
 
-	fmt.Println(weightedDistanceMap)
+	baseWeightProbMap := getBaseWeightProbMap()
+	neighborWeightProbMap := getNeighborWeightProbMap()
 
 	for distance, wMap := range weightedDistanceMap {
 		if distance == 0 {
@@ -134,11 +114,38 @@ func generatePaint(coord gs.Coord, paintMapping paintMap) *pnt.Paint {
 
 		scaledWeightedNeighborMap := scaleProbMap(weightedNeighborMap, scaleWeight)
 
+		fmt.Println(distance, scaledWeightedNeighborMap)
+
 		baseWeightProbMap = addProbMap(baseWeightProbMap, scaledWeightedNeighborMap)
 	}
 
 	terrainType := randomValueFromProbMap(baseWeightProbMap)
-	paint.SetTerrainByType(terrainType)
 
-	return paint
+	return terrainType
+}
+
+// CACHE THESE
+func getBaseWeightProbMap() map[string]float64 {
+	baseWeightMap := make(map[string]float64)
+	baseWeightMap["rock"] = 3
+	baseWeightMap["grass"] = 7
+	baseWeightMap["sand"] = 1
+	baseWeightMap["mud"] = 2
+
+	baseWeightProbMap := weightsToProbMap(baseWeightMap)
+	baseWeightProbMap = scaleProbMap(baseWeightProbMap, 0.5)
+
+	return baseWeightProbMap
+}
+
+func getNeighborWeightProbMap() map[string]float64 {
+	neighborWeightMap := make(map[string]float64)
+	neighborWeightMap["rock"] = 7
+	neighborWeightMap["grass"] = 4
+	neighborWeightMap["sand"] = 3
+	neighborWeightMap["mud"] = 2
+
+	neighborWeightProbMap := weightsToProbMap(neighborWeightMap)
+
+	return neighborWeightProbMap
 }
