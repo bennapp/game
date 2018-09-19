@@ -7,12 +7,12 @@ import (
 	"../movs"
 	"../obj"
 	"../wo"
-	"bytes"
 	"github.com/gorilla/websocket"
 	"github.com/vmihailenco/msgpack"
 	"log"
 	"net/http"
 	"time"
+	"fmt"
 )
 
 const (
@@ -76,12 +76,19 @@ func (c *Client) readPump(player *obj.Player) {
 		_, message, err := c.conn.ReadMessage()
 
 		if err != nil {
+			log.Println(err)
 			break
 		}
-		message = bytes.TrimSpace(bytes.Replace(message, newline, space, -1))
 
 		moveEvent := &playerMoveEvent{}
-		msgpack.Unmarshal(message, moveEvent)
+		err = msgpack.Unmarshal(message, moveEvent)
+
+		if err != nil {
+			log.Println(err)
+			break
+		}
+
+		log.Println(fmt.Sprintf("Move Event %v,%v => %v,%v", moveEvent.From.X, moveEvent.From.Y, moveEvent.To.X, moveEvent.To.Y))
 
 		moveVector := gs.NewVector(0, 0)
 
