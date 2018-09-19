@@ -51,3 +51,14 @@ func LoadPlayer() typ.Typical {
 func (player *Player) GetVelocity() float64 {
 	return velocity.Constants(PLAYER)
 }
+
+func IsPlayer(entity interface{}) bool {
+	entityIsPlayer := false
+
+	switch _ := entity.(type) {
+	case *Player:
+		entityIsPlayer = true
+	}
+
+	return entityIsPlayer
+}

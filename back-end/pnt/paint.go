@@ -17,6 +17,11 @@ type Paint struct {
 type Zone struct {
 }
 
+func NewPaintWithEmptyTerrain() *Paint {
+	zone := Zone{}
+	return &Paint{Type: typ.NewType(PAINT), Zone: zone}
+}
+
 func NewPaintByTerrain(terrain terr.Terrain) *Paint {
 	zone := Zone{}
 	return NewPaint(terrain, zone)

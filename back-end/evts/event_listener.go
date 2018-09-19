@@ -13,12 +13,8 @@ func EventListener(object obj.Objectable) chan *evt.Event {
 
 	go func() {
 		for {
-			select {
-			case serializedEvent := <-serializedEventChanel:
-				eventChannel <- typf.Factory().DeserializeEvent(serializedEvent)
-			default:
-				// no op
-			}
+			serializedEvent := <-serializedEventChanel
+			eventChannel <- typf.Factory().DeserializeEvent(serializedEvent)
 		}
 	}()
 

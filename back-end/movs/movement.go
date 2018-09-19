@@ -5,15 +5,23 @@ import (
 	"../gs"
 	"../mov"
 	"../obj"
+	"../wg"
 )
 
 func MoveObject(movable mov.Movable, vector gs.Vector) {
-	coord := movable.GetLocation().AddVector(vector)
-	cell := dbs.LoadCell(coord)
+	originalCoord := movable.GetLocation()
 
-	if cell.IsMovableThrough() {
-		dbs.DeleteObjectLocation(movable.GetLocation(), movable.(obj.Objectable))
-		movable.SetLocation(coord)
-		dbs.SaveObjectAndLocation(coord, movable.(obj.Objectable))
+	nextCoord := originalCoord.AddVector(vector)
+	nextCell := dbs.LoadCell(nextCoord)
+
+	if nextCell.IsMovableThrough() {
+		if obj.IsPlayer(movable) {
+			distantCoord := nextCoord.AddVector(vector.Scale(gs.WORLD_GENERATION_DISTANCE / 2))
+			wg.DetectWorldGeneration(distantCoord)
+		}
+
+		dbs.DeleteObjectLocation(originalCoord, movable.(obj.Objectable))
+		movable.SetLocation(nextCoord)
+		dbs.SaveObjectAndLocation(nextCoord, movable.(obj.Objectable))
 	}
 }

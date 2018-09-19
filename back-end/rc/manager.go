@@ -1,14 +1,12 @@
 package rc
 
 import (
-	"../evt"
 	"../gs"
 	"../items"
 	"../obj"
 	"../os_util"
 	"../pnt"
 	"../store"
-	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
 )
@@ -87,6 +85,19 @@ func (manager *RedisManager) DeleteObject(object obj.Objectable) {
 	manager.delete(objectStore)
 }
 
+func (manager *RedisManager) SaveWorldGenerationStore(coord gs.Coord) {
+	worldGenerationStore := store.NewWorldGenerationStore(coord)
+	manager.set(worldGenerationStore)
+}
+
+func (manager *RedisManager) LoadWorldGenerationStore(coord gs.Coord) *store.WorldGenerationStore {
+	worldGenerationStore := store.NewWorldGenerationStore(coord)
+	storeData := manager.get(worldGenerationStore)
+	worldGenerationStore.Retrieve(storeData)
+
+	return worldGenerationStore
+}
+
 func (manager *RedisManager) LoadObjectStore(objectId string) *store.ObjectStore {
 	objectStore := store.NewObjectStoreRetriever(objectId)
 	objectData := manager.get(objectStore)
@@ -141,36 +152,6 @@ func (manager *RedisManager) LoadItemsStoreFromCoord(coord gs.Coord) *store.Item
 	itemsStore.SerializedItems = []byte(serializedString)
 
 	return itemsStore
-}
-
-func (manager *RedisManager) SubscribeToObjectChannel(object obj.Objectable) chan string {
-	pubsub := manager.client.Subscribe(object.ObjectId())
-
-	_, err := pubsub.Receive()
-	if err != nil {
-		panic(err)
-	}
-
-	redisChannel := pubsub.Channel()
-
-	ch := make(chan string)
-	go func() {
-		for {
-			select {
-			case message := <-redisChannel:
-				ch <- message.Payload
-			default:
-				// no op
-			}
-		}
-	}()
-
-	return ch
-}
-
-func (manager *RedisManager) WriteToObjectEventChannel(object obj.Objectable, event *evt.Event) {
-	serializedEvent, _ := json.Marshal(event)
-	manager.client.Publish(object.ObjectId(), serializedEvent)
 }
 
 func (manager *RedisManager) set(store store.RedisStore) {

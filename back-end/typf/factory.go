@@ -71,7 +71,7 @@ func (elementFactory *TypeFactory) DeserializeEvent(serializedEvent string) *evt
 	return event
 }
 
-func (elementFactory *TypeFactory) deserialize(store store.Storable) typ.Typical {
+func (elementFactory *TypeFactory) deserialize(store store.DeserializableStorable) typ.Typical {
 	typical := elementFactory.load(store.GetType())
 	json.Unmarshal(store.GetSerializedData(), &typical)
 
