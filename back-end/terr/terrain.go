@@ -9,7 +9,3 @@ type Terrain struct {
 func newTerrain(permeable bool, terrainType string, friction float64) Terrain {
 	return Terrain{Permeable: permeable, TerrainType: terrainType, Friction: friction}
 }
-
-func (terrain *Terrain) IsEmpty() bool {
-	return terrain.TerrainType == ""
-}

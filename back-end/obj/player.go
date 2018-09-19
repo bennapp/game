@@ -55,7 +55,7 @@ func (player *Player) GetVelocity() float64 {
 func IsPlayer(entity interface{}) bool {
 	entityIsPlayer := false
 
-	switch _ := entity.(type) {
+	switch entity.(type) {
 	case *Player:
 		entityIsPlayer = true
 	}

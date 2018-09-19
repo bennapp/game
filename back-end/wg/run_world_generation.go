@@ -11,6 +11,6 @@ func RunWorldGeneration() {
 	for {
 		coordKey := <-worldGenerationChannel
 		coord := gs.NewCoordFromKey(coordKey)
-		go generateWorld(coord)
+		go GenerateWorld(coord)
 	}
 }

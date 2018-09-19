@@ -34,3 +34,24 @@ func NewPaint(terrain terr.Terrain, zone Zone) *Paint {
 func LoadPaint() typ.Typical {
 	return &Paint{}
 }
+
+func (paint *Paint) TerrainEmpty() bool {
+	return paint.Terrain.TerrainType == ""
+}
+
+func (paint *Paint) SetTerrainByType(terrainType string) {
+	var terrain terr.Terrain
+
+	switch terrainType {
+	case "grass":
+		terrain = terr.NewGrass()
+	case "mud":
+		terrain = terr.NewMud()
+	case "rock":
+		terrain = terr.NewRock()
+	case "sand":
+		terrain = terr.NewSand()
+	}
+
+	paint.Terrain = terrain
+}
