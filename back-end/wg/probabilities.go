@@ -1,7 +1,6 @@
 package wg
 
 import (
-	"fmt"
 	"math/rand"
 )
 
@@ -64,32 +63,4 @@ func randomValueFromProbMap(probMap map[string]float64) string {
 	}
 
 	return value
-}
-
-func Weights() {
-	weightmap := make(map[string]float64)
-	weightmap["red"] = 2
-	weightmap["blue"] = 3
-	weightmap["green"] = 5
-
-	probmap := weightsToProbMap(weightmap)
-	fmt.Println(probmap)
-
-	weights := make(map[string]float64)
-	weights["red"] = 4
-	weights["blue"] = 2
-	weights["green"] = 1
-
-	weightedProbMap := reWeight(weights, probmap)
-
-	scale := 0.5
-	scaledMap := scaleProbMap(weightedProbMap, scale)
-
-	fmt.Println(scaledMap)
-
-	summedMap := addProbMap(scaledMap, scaledMap)
-	fmt.Println(summedMap)
-
-	value := randomValueFromProbMap(summedMap)
-	fmt.Println(value)
 }

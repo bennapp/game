@@ -17,7 +17,7 @@ func NewCoord(x int, y int) Coord {
 }
 
 func NewRandomCoord() Coord {
-	x, y := math_util.RandomPair(WORLD_SIZE)
+	x, y := math_util.RandomPair(RANDOM_CORD_SIZE)
 	return Coord{X: x, Y: y}
 }
 

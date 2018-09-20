@@ -5,7 +5,6 @@ import (
 	"../gs"
 	"../math_util"
 	"../pnt"
-	"fmt"
 	"math"
 	"math/rand"
 )
@@ -63,8 +62,6 @@ func GenerateWorld(regionCoord gs.Coord) {
 
 		dbs.SavePaintLocation(coord, paint)
 	}
-
-	fmt.Println(paintMapping)
 }
 
 type weightMap map[string]float64
@@ -101,7 +98,8 @@ func generatePaintType(coord gs.Coord, paintMapping paintMap) string {
 		v.Y += 1
 	}
 
-	baseWeightProbMap := getBaseWeightProbMap()
+	probMap := getBaseWeightProbMap()
+	probMap = scaleProbMap(probMap, 0.5)
 	neighborWeightProbMap := getNeighborWeightProbMap()
 
 	for distance, wMap := range weightedDistanceMap {
@@ -110,42 +108,45 @@ func generatePaintType(coord gs.Coord, paintMapping paintMap) string {
 		}
 
 		weightedNeighborMap := reWeight(wMap, neighborWeightProbMap)
-		scaleWeight := 1 / (math.Pow(2, float64(distance)))
-
+		dWeight := distance + 1
+		scaleWeight := 1 / (math.Pow(2, float64(dWeight)))
 		scaledWeightedNeighborMap := scaleProbMap(weightedNeighborMap, scaleWeight)
-
-		fmt.Println(distance, scaledWeightedNeighborMap)
-
-		baseWeightProbMap = addProbMap(baseWeightProbMap, scaledWeightedNeighborMap)
+		probMap = addProbMap(probMap, scaledWeightedNeighborMap)
 	}
 
-	terrainType := randomValueFromProbMap(baseWeightProbMap)
+	terrainType := randomValueFromProbMap(probMap)
 
 	return terrainType
 }
 
-// CACHE THESE
-func getBaseWeightProbMap() map[string]float64 {
-	baseWeightMap := make(map[string]float64)
-	baseWeightMap["rock"] = 3
-	baseWeightMap["grass"] = 7
-	baseWeightMap["sand"] = 1
-	baseWeightMap["mud"] = 2
+var baseWeightProbMap map[string]float64
 
-	baseWeightProbMap := weightsToProbMap(baseWeightMap)
-	baseWeightProbMap = scaleProbMap(baseWeightProbMap, 0.5)
+func getBaseWeightProbMap() map[string]float64 {
+	if baseWeightProbMap == nil {
+		baseWeightMap := make(map[string]float64)
+		baseWeightMap["rock"] = 3
+		baseWeightMap["grass"] = 7
+		baseWeightMap["sand"] = 1
+		baseWeightMap["mud"] = 2
+
+		baseWeightProbMap = weightsToProbMap(baseWeightMap)
+	}
 
 	return baseWeightProbMap
 }
 
-func getNeighborWeightProbMap() map[string]float64 {
-	neighborWeightMap := make(map[string]float64)
-	neighborWeightMap["rock"] = 7
-	neighborWeightMap["grass"] = 4
-	neighborWeightMap["sand"] = 3
-	neighborWeightMap["mud"] = 2
+var neighborWeightProbMap map[string]float64
 
-	neighborWeightProbMap := weightsToProbMap(neighborWeightMap)
+func getNeighborWeightProbMap() map[string]float64 {
+	if neighborWeightProbMap == nil {
+		neighborWeightMap := make(map[string]float64)
+		neighborWeightMap["rock"] = 7
+		neighborWeightMap["grass"] = 4
+		neighborWeightMap["sand"] = 3
+		neighborWeightMap["mud"] = 2
+
+		neighborWeightProbMap = weightsToProbMap(neighborWeightMap)
+	}
 
 	return neighborWeightProbMap
 }
