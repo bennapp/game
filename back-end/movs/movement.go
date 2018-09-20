@@ -16,7 +16,8 @@ func MoveObject(movable mov.Movable, vector gs.Vector) {
 
 	if nextCell.IsMovableThrough() {
 		if obj.IsPlayer(movable) {
-			distantCoord := nextCoord.AddVector(vector.Scale(gs.WORLD_GENERATION_DISTANCE / 2))
+			scaledVector := vector.Scale(gs.WORLD_GENERATION_DISTANCE / 2)
+			distantCoord := originalCoord.AddVector(scaledVector)
 			wg.DetectWorldGeneration(distantCoord)
 		}
 

@@ -31,7 +31,7 @@ func coordRegion(coord gs.Coord) gs.Coord {
 }
 
 func regionConvert(position int) int {
-	return position % gs.WORLD_GENERATION_DISTANCE
+	return position / gs.WORLD_GENERATION_DISTANCE
 }
 
 func NewWorldGenerationStore(coord gs.Coord) *WorldGenerationStore {
