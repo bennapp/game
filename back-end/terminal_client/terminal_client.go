@@ -39,10 +39,9 @@ func printWorld(player *obj.Player) {
 }
 
 func printStat(player *obj.Player) {
-	fmt.Printf("Coin: %d", player.CoinCount)
-	fmt.Println()
-	fmt.Printf("HP: %d", player.Hp)
-	fmt.Println()
+	fmt.Printf("Coin: %d\n", player.CoinCount)
+	fmt.Printf("HP: %d\n", player.Hp)
+	fmt.Printf("Location: %v", player.GetLocation())
 }
 
 func checkAlive(player *obj.Player) {
