@@ -34,7 +34,11 @@ function preload() {
   // TODO WEBPACK ASSETS
   this.load.image('ship', 'assets/spaceShips_001.png');
   this.load.image('otherPlayer', 'assets/enemyBlack5.png');
-  this.load.image('rocks', 'assets/sprites/rock1.png');
+
+  this.load.image('rock', 'assets/sprites/rock1.png');
+  this.load.image('grass', 'assets/sprites/grass1.png');
+  this.load.image('mud', 'assets/sprites/mud1.png');
+  this.load.image('sand', 'assets/sprites/sand1.png');
 
   this.load.image('coins1', 'assets/sprites/coins/goldCoin1.png');
   this.load.image('coins2', 'assets/sprites/coins/goldCoin2.png');

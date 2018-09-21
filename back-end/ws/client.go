@@ -159,7 +159,7 @@ func (c *Client) beamState(player *obj.Player) {
 	gameState := gameStateMapping{}
 	coordinateMapping := dboLookup{}
 
-	visionDistance := 13
+	visionDistance := 53
 	halfWidth := visionDistance / 2
 	v := gs.NewVector(-halfWidth, -halfWidth)
 
