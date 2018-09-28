@@ -28,9 +28,8 @@ func EmitEvent(event *evt.Event) {
 	for coord, _ := range objectLocationCordMappings {
 		object := dbs.LoadObjectByCoord(coord)
 
-		switch player := object.(type) {
-		case *obj.Player:
-			rc.Manager().WriteToObjectEventChannel(player, event)
+		if obj.IsPlayer(object) {
+			rc.Manager().WriteToObjectEventChannel(object, event)
 		}
 	}
 }

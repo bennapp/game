@@ -1,13 +1,13 @@
 import { GRID_DISTANCE, GRID_OFFSET, NUM_CELLS } from '../constants'
 
-class Rock {
+class Terrain {
   constructor(game, attributes) {
     this.coord = attributes.coord;
     let location = this.spriteLocationFrom(attributes.globalPlayerLocation);
 
-    this.type = 'rock';
+    this.type = attributes.terrainType;
 
-    this.sprite = game.physics.add.sprite(location.x, location.y, 'rocks')
+    this.sprite = game.physics.add.sprite(location.x, location.y, attributes.terrainType)
       .setDisplaySize(GRID_DISTANCE, GRID_DISTANCE);
   }
 
@@ -17,6 +17,10 @@ class Rock {
 
   setNewLocation(globalPlayerLocation) {
     let location = this.spriteLocationFrom(globalPlayerLocation);
+
+    if (this.coord.x === globalPlayerLocation.X && this.coord.y == globalPlayerLocation.Y) {
+        this.destroy()
+    }
 
     this.sprite.x = location.x;
     this.sprite.y = location.y;
@@ -39,4 +43,4 @@ class Rock {
   }
 }
 
-export { Rock };
+export { Terrain };

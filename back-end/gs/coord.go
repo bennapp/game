@@ -3,6 +3,8 @@ package gs
 import (
 	"../math_util"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 type Coord struct {
@@ -15,8 +17,16 @@ func NewCoord(x int, y int) Coord {
 }
 
 func NewRandomCoord() Coord {
-	x, y := math_util.RandomPair(WORLD_SIZE)
+	x, y := math_util.RandomPair(RANDOM_CORD_SIZE)
 	return Coord{X: x, Y: y}
+}
+
+func NewCoordFromKey(key string) Coord {
+	positions := strings.Split(key, ",")
+	x, _ := strconv.Atoi(positions[0])
+	y, _ := strconv.Atoi(positions[1])
+
+	return NewCoord(x, y)
 }
 
 func (coord Coord) Key() string {

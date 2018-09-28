@@ -55,7 +55,7 @@ func (cell *Cell) DebugString() string {
 	}
 
 	if !cell.isEmptyPaint() {
-		return "P"
+		return cell.Paint.TerrainType[0:1]
 	}
 
 	if !cell.isEmptyItems() {

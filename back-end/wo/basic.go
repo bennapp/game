@@ -105,7 +105,7 @@ package wo
 //	gX := gridCoord.X + vector.X
 //	gY := gridCoord.Y + vector.Y
 //
-//	if isOutOfBound(gX, gY, gs.WORLD_SIZE) {
+//	if isOutOfBound(gX, gY, gs.RANDOM_CORD_SIZE) {
 //		return gridCoord, false
 //	}
 //

@@ -18,7 +18,7 @@ type RedisStore interface {
 	Value() string
 }
 
-type Storable interface {
+type DeserializableStorable interface {
 	GetType() string
 	GetSerializedData() []byte
 }

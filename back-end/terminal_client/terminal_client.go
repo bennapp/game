@@ -9,16 +9,15 @@ import (
 	"fmt"
 	"github.com/nsf/termbox-go"
 	"os"
-	"os/exec"
 	"time"
 )
 
 func clearScreen() {
-	cmd := exec.Command("cmd", "/c", "cls || clear")
-	cmd.Stdout = os.Stdout
-	cmd.Run()
+	//cmd := exec.Command("cmd", "/c", "cls || clear")
+	//cmd.Stdout = os.Stdout
+	//cmd.Run()
 
-	//print("\033[H\033[2J")
+	print("\033[H\033[2J")
 }
 
 func printWorld(player *obj.Player) {
@@ -40,10 +39,9 @@ func printWorld(player *obj.Player) {
 }
 
 func printStat(player *obj.Player) {
-	fmt.Printf("Coin: %d", player.CoinCount)
-	fmt.Println()
-	fmt.Printf("HP: %d", player.Hp)
-	fmt.Println()
+	fmt.Printf("Coin: %d\n", player.CoinCount)
+	fmt.Printf("HP: %d\n", player.Hp)
+	fmt.Printf("Location: %v", player.GetLocation())
 }
 
 func checkAlive(player *obj.Player) {
@@ -71,6 +69,9 @@ func startTerminalClient() {
 	}
 
 	player := wo.CreatePlayer()
+
+	fmt.Println(player.GetLocation())
+
 	go render(player)
 
 	for {
