@@ -213,16 +213,16 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 
 
 ## Game Overview
-- [ ] Add in terrain, grass, sand, mud
+- [X] Add in terrain, grass, sand, mud
     - [X] Backend
-    - [ ] Front end
-- [ ] Dynamically generated map
+    - [X] Front end
+- [X] Dynamically generated map
     - [X] Store what portions of the world have been generated
     - [X] Detect 'world generation' within generate world detection vision distance, kick off generate world job via redis channel
     - [X] generate world executable listening to redis-channel
     - [X] generate world job
         - [X] shuffle all coords
-        - [ ] loop through coords and assign 'fill' based on probability of neighbors
+        - [X] loop through coords and assign 'fill' based on probability of neighbors
 - [ ] Re-spawn, and setting origin
 - [ ] Attacking / defending
 - [ ] Picking up items / resources
@@ -230,8 +230,5 @@ https://docs.google.com/drawings/d/1KoQpRLkz38vh3UNjf-xKUZWU0z8rbUOcvMJSpSRLSiQ/
 - [ ] Multi player
 - [ ] Logging out, boxing up all your buildings
 
-## Server
-
-## Client
-
-## Adapter
+# V0.2
+- Client refactor to render more performantly. Need to only re-render what has changed vs niavely re-rendering everything every network tick as we are now

@@ -1,4 +1,3 @@
-import {GRID_DISTANCE, NUM_CELLS} from "../constants";
 import {Terrain} from "../el/terrain";
 import {Coin} from "../el/coin";
 
@@ -32,19 +31,20 @@ class MapStore {
   // update all coordinates with new objects
 
   setState(jsonGameState, globalPlayerLocation) {
-    this.newStore = {};
-
     let coordinateState = jsonGameState.coordinates;
 
     for (var coordString in coordinateState) {
       this.buildObjectFromCoord(coordString, coordinateState, globalPlayerLocation)
     }
 
-    this.swapStores();
+    // TODO: add something here that cleans up old state from far away
   }
 
   buildObjectFromCoord(coordString, coordinateState, globalPlayerLocation) {
-    this.newStore[coordString] = this.buildObject(coordString, coordinateState, globalPlayerLocation)
+    // FIXME: this assumes items and terrian do not change
+    if (!this.store[coordString]) {
+        this.store[coordString] = this.buildObject(coordString, coordinateState, globalPlayerLocation)
+    }
   }
 
   buildObject(coordString, coordinateState, globalPlayerLocation) {
@@ -54,6 +54,7 @@ class MapStore {
     let coord = { x: coordArray[0], y: coordArray[1] };
     let object;
 
+    // This makes it so the player can be seen
     if (coord.x === globalPlayerLocation.X && coord.y == globalPlayerLocation.Y) {
         return
     }
@@ -70,19 +71,6 @@ class MapStore {
     }
 
     return object
-  }
-
-  swapStores() {
-    this.cleanUpStore();
-    this.store = this.newStore
-  }
-
-  cleanUpStore() {
-    for (var coordString in this.store) {
-      let storedObject = this.store[coordString];
-      storedObject && storedObject.destroy && storedObject.destroy();
-      delete this.store[coordString];
-    }
   }
 }
 
