@@ -1,10 +1,11 @@
 import { MapStore } from './map-store'
+import velocities from "../../../../game-config/velocities.json"
+import msgpack from "msgpack-lite"
 
 class World {
   constructor(game) {
-    // This will be refactored later when we have game state passed by websockets
     this.lastMoveTime = 0;
-    this.repeatMoveDelay = 200;
+    this.repeatMoveDelay = (1 / velocities.player) * 1000;
 
     this.globalPlayerLocation = {};
     this.mapStore = new MapStore(game);
@@ -88,7 +89,7 @@ class World {
 
         console.log('moving player to', this.globalPlayerLocation);
 
-        conn.send(JSON.stringify(moveEvent));
+        conn.send(msgpack.encode(moveEvent));
       }
     }
   }

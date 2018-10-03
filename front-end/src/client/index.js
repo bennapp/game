@@ -2,7 +2,8 @@ import 'phaser'
 import { WIDTH, HEIGHT } from './constants'
 
 import { World } from './gs/world'
-import {Player} from "./el/player";
+import { Player } from "./el/player";
+import msgpack from "msgpack-lite";
 
 var config = {
   type: Phaser.AUTO,
@@ -34,22 +35,52 @@ function preload() {
   // TODO WEBPACK ASSETS
   this.load.image('ship', 'assets/spaceShips_001.png');
   this.load.image('otherPlayer', 'assets/enemyBlack5.png');
-  this.load.image('star', 'assets/star_gold.png');
-  this.load.image('rocks', 'assets/sprites/Rock Pile.png');
+
+  this.load.image('rock', 'assets/sprites/rock1.png');
+  this.load.image('grass', 'assets/sprites/grass1.png');
+  this.load.image('mud', 'assets/sprites/mud1.png');
+  this.load.image('sand', 'assets/sprites/sand1.png');
+
+  this.load.image('coins1', 'assets/sprites/coins/goldCoin1.png');
+  this.load.image('coins2', 'assets/sprites/coins/goldCoin2.png');
+  this.load.image('coins3', 'assets/sprites/coins/goldCoin3.png');
+  this.load.image('coins4', 'assets/sprites/coins/goldCoin4.png');
+  this.load.image('coins5', 'assets/sprites/coins/goldCoin5.png');
+  this.load.image('coins6', 'assets/sprites/coins/goldCoin6.png');
+  this.load.image('coins7', 'assets/sprites/coins/goldCoin7.png');
+  this.load.image('coins8', 'assets/sprites/coins/goldCoin8.png');
+  this.load.image('coins9', 'assets/sprites/coins/goldCoin9.png');
 }
 
 function create() {
+  this.anims.create({
+      key: 'coins',
+      frames: [
+          { key: 'coins1' },
+          { key: 'coins2' },
+          { key: 'coins3' },
+          { key: 'coins4' },
+          { key: 'coins5' },
+          { key: 'coins6' },
+          { key: 'coins7' },
+          { key: 'coins8' },
+          { key: 'coins9' },
+      ],
+      frameRate: 15,
+      repeat: -1
+  });
+
   var self = this;
   self.world = new World(self);
 
-  self.gameStateUpdate = (rawGameState) => {
-      let jsonGameState = JSON.parse(rawGameState);
-      this.world.setState(jsonGameState);
+  self.gameStateUpdate = (gameState) => {
+      this.world.setState(gameState);
   };
 
   if (window["WebSocket"]) {
     console.log('websockts!');
     conn = new WebSocket("ws://" + "localhost:8081" + "/ws");
+    conn.binaryType = 'arraybuffer';
 
     conn.onopen = function (event) {
       self.ship = new Player(self);
@@ -63,77 +94,23 @@ function create() {
     conn.onclose = function (event) {
       console.log("Connection closed.");
     };
+
     conn.onmessage = function (event) {
-      self.gameStateUpdate(event.data);
+      //need to cast the raw buffer to a sequence of typed elements
+      var typedData = new Uint8Array(event.data)
+      var decodedEvent = (msgpack.decode(typedData));
+
+      self.gameStateUpdate(decodedEvent);
     };
   } else {
     console.log("Your browser does not support WebSockets.");
   }
-
-  // this.socket = ioClient('http://localhost:8080');
-  // this.socket.on('currentPlayers', function (players) {
-  //   Object.keys(players).forEach(function (id) {
-  //     if (players[id].playerId === self.socket.id) {
-  //       addPlayer(self, players[id]);
-  //     } else {
-  //       addOtherPlayers(self, players[id]);
-  //     }
-  //   });
-  // });
-  // this.socket.on('newPlayer', function (playerInfo) {
-  //   addOtherPlayers(self, playerInfo);
-  // });
-  // this.socket.on('disconnect', function (playerId) {
-    // self.otherPlayers.getChildren().forEach(function (otherPlayer) {
-    //   if (playerId === otherPlayer.playerId) {
-    //     otherPlayer.destroy();
-    //   }
-    // });
-  // });
-  // this.socket.on('playerMoved', function (playerInfo) {
-    // self.otherPlayers.getChildren().forEach(function (otherPlayer) {
-    //   if (playerInfo.playerId === otherPlayer.playerId) {
-    //     otherPlayer.setPosition(playerInfo.x, playerInfo.y);
-    //   }
-    // });
-  // });
 
   this.cursors = this.input.keyboard.createCursorKeys();
   self.upKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
   self.leftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
   self.downKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
   self.rightKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-
-  // this.blueScoreText = this.add.text(16, 16, '', { fontSize: '32px', fill: '#0000FF' });
-
-  // this.socket.on('scoreUpdate', function (scores) {
-    // self.blueScoreText.setText('CoinCount: ' + scores.blue);
-  // });
-
-  // this.socket.on('starLocation', function (starLocation) {
-    // if (self.star) self.star.destroy();
-    // self.star = self.arcade.add.image(starLocation.x, starLocation.y, 'star');
-    // self.arcade.add.overlap(self.ship, self.star, function () {
-    //   this.socket.emit('starCollected');
-    // }, null, self);
-  // });
-}
-
-// function addPlayer(self) {
-  // Refactor later when we are ready to handle first response from server,
-  // should set gamestate and player location
-  // self.ship = new Player(self);
-// }
-
-function addOtherPlayers(self, playerInfo) {
-  // const otherPlayer = self.add.sprite(playerInfo.x, playerInfo.y, 'otherPlayer').setOrigin(0.5, 0.5).setDisplaySize(53, 40);
-  // if (playerInfo.team === 'blue') {
-  //   otherPlayer.setTint(0x0000ff);
-  // } else {
-  //   otherPlayer.setTint(0xff0000);
-  // }
-  // otherPlayer.playerId = playerInfo.playerId;
-  //self.otherPlayers.add(otherPlayer);
 }
 
 function update(time, delta) {

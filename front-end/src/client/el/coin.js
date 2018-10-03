@@ -7,7 +7,8 @@ class Coin {
 
     this.type = 'coin';
 
-    this.sprite = game.physics.add.sprite(location.x, location.y, 'star')
+    this.sprite = game.physics.add.sprite(location.x, location.y, 'coins1')
+      .play('coins')
       .setDisplaySize(GRID_DISTANCE, GRID_DISTANCE);
   }
 

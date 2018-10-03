@@ -1,5 +1,5 @@
 import {GRID_DISTANCE, NUM_CELLS} from "../constants";
-import {Rock} from "../el/rock";
+import {Terrain} from "../el/terrain";
 import {Coin} from "../el/coin";
 
 class MapStore {
@@ -48,15 +48,25 @@ class MapStore {
   }
 
   buildObject(coordString, coordinateState, globalPlayerLocation) {
-    let type = coordinateState[coordString].Type;
+    let cell = coordinateState[coordString];
 
     let coordArray = coordString.split(',').map(Number);
     let coord = { x: coordArray[0], y: coordArray[1] };
     let object;
-    if (type === 'rock') {
-      object = new Rock(this.game, { coord: coord, globalPlayerLocation: globalPlayerLocation });
-    } else if (type === 'coin') {
-      object = new Coin(this.game, { coord: coord, globalPlayerLocation: globalPlayerLocation });
+
+    if (coord.x === globalPlayerLocation.X && coord.y == globalPlayerLocation.Y) {
+        return
+    }
+
+    // FIXME: this assumes all items are coins
+    if (cell.Items) {
+        object = new Coin(this.game, { coord: coord, globalPlayerLocation: globalPlayerLocation });
+    }
+
+    if (cell.Paint) {
+      if (cell.Paint.TerrainType !== "") {
+        object = new Terrain(this.game, { coord: coord, globalPlayerLocation: globalPlayerLocation, terrainType: cell.Paint.TerrainType });
+      }
     }
 
     return object
