@@ -36,6 +36,8 @@ class MapStore {
 
     let coordinateState = jsonGameState.coordinates;
 
+    console.log(coordinateState);
+
     for (var coordString in coordinateState) {
       this.buildObjectFromCoord(coordString, coordinateState, globalPlayerLocation)
     }
