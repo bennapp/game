@@ -7,12 +7,12 @@ import (
 	"../movs"
 	"../obj"
 	"../wo"
+	"fmt"
 	"github.com/gorilla/websocket"
 	"github.com/vmihailenco/msgpack"
 	"log"
 	"net/http"
 	"time"
-	"fmt"
 )
 
 const (
@@ -68,7 +68,7 @@ func (c *Client) readPump(player *obj.Player) {
 		c.hub.unregister <- c
 		c.conn.Close()
 	}()
-	c.conn.SetReadLimit(maxMessageSize)
+	// c.conn.SetReadLimit(maxMessageSize)
 	c.conn.SetReadDeadline(time.Now().Add(pongWait))
 	c.conn.SetPongHandler(func(string) error { c.conn.SetReadDeadline(time.Now().Add(pongWait)); return nil })
 
@@ -166,7 +166,7 @@ func (c *Client) beamState(player *obj.Player) {
 	gameState := gameStateMapping{}
 	coordinateMapping := dboLookup{}
 
-	visionDistance := 53
+	visionDistance := 17
 	halfWidth := visionDistance / 2
 	v := gs.NewVector(-halfWidth, -halfWidth)
 
@@ -220,9 +220,9 @@ func (c *Client) beamStateUntilClosed(player *obj.Player) {
 			return
 		default:
 			c.beamState(player)
+			fmt.Println("beam state")
+			time.Sleep(1000 * time.Millisecond)
 		}
-
-		time.Sleep(100 * time.Millisecond)
 	}
 }
 

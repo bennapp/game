@@ -5,6 +5,7 @@ import (
 	"../gs"
 	"../math_util"
 	"../pnt"
+	"fmt"
 	"math"
 	"math/rand"
 )
@@ -14,8 +15,8 @@ const MAX_FILL_DISTANCE = 3
 type paintMap map[gs.Coord]*pnt.Paint
 
 func GenerateWorld(regionCoord gs.Coord) {
-	startingX := regionCoord.X * gs.WORLD_GENERATION_DISTANCE
-	startingY := regionCoord.Y * gs.WORLD_GENERATION_DISTANCE
+	startingX := regionCoord.X
+	startingY := regionCoord.Y
 
 	endingX := startingX + gs.WORLD_GENERATION_DISTANCE
 	endingY := startingY + gs.WORLD_GENERATION_DISTANCE
@@ -61,6 +62,8 @@ func GenerateWorld(regionCoord gs.Coord) {
 		paint.SetTerrainByType(terrainType)
 
 		dbs.SavePaintLocation(coord, paint)
+
+		fmt.Printf("saving coord: %v, paint: %v\n", coord, paint)
 	}
 }
 

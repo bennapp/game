@@ -32,8 +32,6 @@ class MapStore {
   // update all coordinates with new objects
 
   setState(jsonGameState, globalPlayerLocation) {
-    this.newStore = {};
-
     let coordinateState = jsonGameState.coordinates;
 
     console.log(coordinateState);
@@ -41,12 +39,15 @@ class MapStore {
     for (var coordString in coordinateState) {
       this.buildObjectFromCoord(coordString, coordinateState, globalPlayerLocation)
     }
-
-    this.swapStores();
   }
 
   buildObjectFromCoord(coordString, coordinateState, globalPlayerLocation) {
-    this.newStore[coordString] = this.buildObject(coordString, coordinateState, globalPlayerLocation)
+    // FIXME: this needs to do some sort of diffing, right now it is assuming no changes
+    // FIXME: There should be some strategy to clean up old coordinates
+
+    if (!this.store[coordString]) {
+      this.store[coordString] = this.buildObject(coordString, coordinateState, globalPlayerLocation)
+    }
   }
 
   buildObject(coordString, coordinateState, globalPlayerLocation) {
@@ -56,6 +57,7 @@ class MapStore {
     let coord = { x: coordArray[0], y: coordArray[1] };
     let object;
 
+    // FIXME: This prevents writing terrain over user sprite
     if (coord.x === globalPlayerLocation.X && coord.y == globalPlayerLocation.Y) {
         return
     }
@@ -72,19 +74,6 @@ class MapStore {
     }
 
     return object
-  }
-
-  swapStores() {
-    this.cleanUpStore();
-    this.store = this.newStore
-  }
-
-  cleanUpStore() {
-    for (var coordString in this.store) {
-      let storedObject = this.store[coordString];
-      storedObject && storedObject.destroy && storedObject.destroy();
-      delete this.store[coordString];
-    }
   }
 }
 
