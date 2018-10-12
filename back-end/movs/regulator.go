@@ -25,22 +25,22 @@ func enqueueMoves(movable mov.Movable, vector gs.Vector) {
 
 func relayMovesToBuffer(movable mov.Movable) {
 	for {
-		select {
-		case move := <-movable.GetMovesToRegulate():
-			movable.AppendMoveBuffer(move)
-		default:
-			// no op
-		}
+		move := <-movable.GetMovesToRegulate()
+		movable.AppendMoveBuffer(move)
 	}
 }
 
 func readMovesAtRegulatedInterval(movable mov.Movable) {
-	for {
-		move, error := movable.PopMoveBuffer()
+	sleepOffset := time.Duration(10) * time.Millisecond
 
-		if error != nil {
+	for {
+		move, pop := movable.PopMoveBuffer()
+
+		if pop == false {
+			time.Sleep(sleepOffset)
 			continue
 		}
+
 		friction := 1.0
 		paint := dbs.LoadPaintByCoord(movable.GetLocation())
 		if paint != nil {
@@ -54,6 +54,7 @@ func readMovesAtRegulatedInterval(movable mov.Movable) {
 
 		milliSecondsPerCell := secondsPerCell * 1000
 		sleepTime := time.Duration(milliSecondsPerCell) * time.Millisecond
+		sleepTime -= sleepOffset
 
 		time.Sleep(sleepTime)
 	}

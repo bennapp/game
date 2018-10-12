@@ -2,7 +2,6 @@ package mov
 
 import (
 	"../gs"
-	"errors"
 	"sync"
 )
 
@@ -17,7 +16,7 @@ type Movable interface {
 	GetMovesToRegulate() chan gs.Vector
 	SetMovesToRegulate(chan gs.Vector)
 
-	PopMoveBuffer() (gs.Vector, error)
+	PopMoveBuffer() (gs.Vector, bool)
 	AppendMoveBuffer(gs.Vector)
 }
 
@@ -44,16 +43,17 @@ func (mover *Mover) SetMovesToRegulate(ch chan gs.Vector) {
 	mover.movesToRegulate = ch
 }
 
-func (mover *Mover) PopMoveBuffer() (gs.Vector, error) {
+func (mover *Mover) PopMoveBuffer() (gs.Vector, bool) {
+	var vector gs.Vector
+
 	if len(mover.moveBuffer) > 0 {
-		var vector gs.Vector
 		mover.moveBufferMutex.Lock()
 		vector, mover.moveBuffer = mover.moveBuffer[0], mover.moveBuffer[1:]
 		mover.moveBufferMutex.Unlock()
 
-		return vector, nil
+		return vector, true
 	} else {
-		return gs.Vector{}, errors.New("No vector to pop")
+		return vector, false
 	}
 }
 

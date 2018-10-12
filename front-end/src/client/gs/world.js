@@ -82,11 +82,6 @@ class World {
 
         this.lastMoveTime = time;
 
-        // This is where 'interactions' happen
-        if (nextObject && nextObject.type == 'coin') {
-          nextObject.destroy();
-        }
-
         console.log('moving player to', this.globalPlayerLocation);
 
         conn.send(msgpack.encode(moveEvent));

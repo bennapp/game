@@ -19,12 +19,8 @@ func TestEvents(t *testing.T) {
 
 	go func() {
 		for {
-			select {
-			case event := <-eventChannel:
-				t.Log(event)
-			default:
-				// no op
-			}
+			event := <-eventChannel
+			t.Log(event)
 		}
 	}()
 
