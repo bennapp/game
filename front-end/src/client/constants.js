@@ -1,6 +1,6 @@
 const WIDTH = 800;
 const HEIGHT = WIDTH;
-const NUM_CELLS = 13;
+const NUM_CELLS = 20;
 const GRID_DISTANCE = WIDTH / NUM_CELLS;
 const GRID_OFFSET = GRID_DISTANCE / 2;
 

@@ -166,12 +166,11 @@ func (c *Client) beamState(player *obj.Player) {
 	gameState := gameStateMapping{}
 	coordinateMapping := dboLookup{}
 
-	visionDistance := 17
-	halfWidth := visionDistance / 2
+	halfWidth := gs.LOADED_VISION_DISTANCE / 2
 	v := gs.NewVector(-halfWidth, -halfWidth)
 
-	for i := 0; i < visionDistance; i++ {
-		for j := 0; j < visionDistance; j++ {
+	for i := 0; i < gs.LOADED_VISION_DISTANCE; i++ {
+		for j := 0; j < gs.LOADED_VISION_DISTANCE; j++ {
 
 			coord := player.GetLocation().AddVector(v)
 			cell := dbs.LoadCell(coord)
@@ -221,7 +220,7 @@ func (c *Client) beamStateUntilClosed(player *obj.Player) {
 		default:
 			c.beamState(player)
 			fmt.Println("beam state")
-			time.Sleep(1000 * time.Millisecond)
+			time.Sleep(250 * time.Millisecond)
 		}
 	}
 }
