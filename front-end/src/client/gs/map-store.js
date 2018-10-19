@@ -1,6 +1,7 @@
 import {GRID_DISTANCE, NUM_CELLS} from "../constants";
 import {Terrain} from "../el/terrain";
 import {Coin} from "../el/coin";
+import {Player} from "../el/player";
 
 class MapStore {
   constructor(game){
@@ -71,6 +72,10 @@ class MapStore {
       if (cell.Paint.TerrainType !== "") {
         object = new Terrain(this.game, { coord: coord, globalPlayerLocation: globalPlayerLocation, terrainType: cell.Paint.TerrainType });
       }
+    }
+
+    if (cell.Object) {
+      object = new Player(this.game, { coord: coord, globalPlayerLocation: globalPlayerLocation })
     }
 
     return object

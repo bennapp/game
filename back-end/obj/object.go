@@ -7,7 +7,8 @@ import (
 
 type Object struct {
 	typ.Type
-	Id uuid.UUID
+	UUID uuid.UUID
+	Id   string
 }
 
 type Objectable interface {
@@ -15,10 +16,10 @@ type Objectable interface {
 }
 
 func (object *Object) ObjectId() string {
-	return object.Id.String()
+	return object.UUID.String()
 }
 
 func newObject(objectType string) Object {
 	uuid, _ := uuid.NewUUID()
-	return Object{Type: typ.NewType(objectType), Id: uuid}
+	return Object{Type: typ.NewType(objectType), UUID: uuid, Id: fmt.Sprintf("%v", uuid)}
 }

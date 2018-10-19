@@ -1,6 +1,7 @@
 import { MapStore } from './map-store'
 import velocities from "../../../../game-config/velocities.json"
 import msgpack from "msgpack-lite"
+import {Player} from "../el/player";
 
 class World {
   constructor(game) {
@@ -9,6 +10,7 @@ class World {
 
     this.globalPlayerLocation = {};
     this.mapStore = new MapStore(game);
+    this.game = game;
   }
 
   setState(jsonGameState) {
@@ -16,7 +18,7 @@ class World {
       this.globalPlayerLocation.X = Number(jsonGameState.globalPlayerLocation.X);
       this.globalPlayerLocation.Y = Number(jsonGameState.globalPlayerLocation.Y);
 
-      console.log('correcting player location', this.globalPlayerLocation)
+      this.game.ship = new Player(this.game, { globalPlayerLocation: this.globalPlayerLocation, coord: { x: this.globalPlayerLocation.X, y: this.globalPlayerLocation.Y } });
     }
 
     this.mapStore.setState(jsonGameState, this.globalPlayerLocation);
@@ -65,6 +67,7 @@ class World {
 
       if (this.isValidMove(nextObject)) {
         let moveEvent = {
+          Type: 'MoveEvent',
           From: {},
             To: {},
         };

@@ -53,7 +53,8 @@ type Client struct {
 	closed chan bool
 }
 
-type playerMoveEvent struct {
+type playerEvent struct {
+	Type string
 	From gs.Coord
 	To   gs.Coord
 }
@@ -81,20 +82,20 @@ func (c *Client) readPump(player *obj.Player) {
 			break
 		}
 
-		moveEvent := &playerMoveEvent{}
-		err = msgpack.Unmarshal(message, moveEvent)
+		event := &playerEvent{}
+		err = msgpack.Unmarshal(message, event)
 
 		if err != nil {
 			log.Println(err)
 			break
 		}
 
-		log.Println(fmt.Sprintf("Move Event %v,%v => %v,%v", moveEvent.From.X, moveEvent.From.Y, moveEvent.To.X, moveEvent.To.Y))
+		log.Println(fmt.Sprintf("Move Event %v,%v => %v,%v", event.From.X, event.From.Y, event.To.X, event.To.Y))
 
 		moveVector := gs.NewVector(0, 0)
 
-		moveVector.X = moveEvent.To.X - player.GetLocation().X
-		moveVector.Y = moveEvent.To.Y - player.GetLocation().Y
+		moveVector.X = event.To.X - player.GetLocation().X
+		moveVector.Y = event.To.Y - player.GetLocation().Y
 
 		movs.RegulateMove(player, moveVector)
 

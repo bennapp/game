@@ -2,7 +2,6 @@ import 'phaser'
 import { WIDTH, HEIGHT } from './constants'
 
 import { World } from './gs/world'
-import { Player } from "./el/player";
 import msgpack from "msgpack-lite";
 
 var config = {
@@ -83,8 +82,6 @@ function create() {
     conn.binaryType = 'arraybuffer';
 
     conn.onopen = function (event) {
-      self.ship = new Player(self);
-
       window.onbeforeunload = function() {
         conn.onclose = function () {};
         conn.close()

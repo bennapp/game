@@ -127,7 +127,7 @@ var baseWeightProbMap map[string]float64
 func getBaseWeightProbMap() map[string]float64 {
 	if baseWeightProbMap == nil {
 		baseWeightMap := make(map[string]float64)
-		baseWeightMap["rock"] = 2
+		baseWeightMap["rock"] = 0
 		baseWeightMap["grass"] = 10
 		baseWeightMap["sand"] = 2
 		baseWeightMap["mud"] = 2
@@ -143,7 +143,7 @@ var neighborWeightProbMap map[string]float64
 func getNeighborWeightProbMap() map[string]float64 {
 	if neighborWeightProbMap == nil {
 		neighborWeightMap := make(map[string]float64)
-		neighborWeightMap["rock"] = 10
+		neighborWeightMap["rock"] = 0
 		neighborWeightMap["grass"] = 3
 		neighborWeightMap["sand"] = 3
 		neighborWeightMap["mud"] = 3

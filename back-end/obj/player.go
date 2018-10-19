@@ -15,7 +15,6 @@ type Player struct {
 	CoinCount int
 	Alive     bool
 	Hp        int
-	Avatar    string
 }
 
 func (player *Player) Kill() {
