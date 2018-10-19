@@ -2,6 +2,8 @@ package movs
 
 import (
 	"../dbs"
+	"../evt"
+	"../evts"
 	"../gs"
 	"../mov"
 	"../obj"
@@ -16,6 +18,11 @@ func MoveObject(movable mov.Movable, vector gs.Vector) {
 
 	if nextCell.IsMovableThrough() {
 		if obj.IsPlayer(movable) {
+			playerId := movable.(*obj.Player).ObjectId()
+
+			event := evt.NewEvent(playerId, playerId, originalCoord, nextCoord, "move")
+			evts.EmitEvent(event)
+
 			scaledVector := vector.Scale(gs.WORLD_GENERATION_DISTANCE / 2)
 			distantCoord := originalCoord.AddVector(scaledVector)
 			wg.DetectWorldGeneration(distantCoord)

@@ -97,8 +97,10 @@ function create() {
 
     conn.onmessage = function (event) {
       //need to cast the raw buffer to a sequence of typed elements
-      var typedData = new Uint8Array(event.data)
+      var typedData = new Uint8Array(event.data);
       var decodedEvent = (msgpack.decode(typedData));
+
+      console.log(decodedEvent);
 
       self.gameStateUpdate(decodedEvent);
     };

@@ -3,6 +3,7 @@ package ws
 import (
 	"../cell"
 	"../dbs"
+	"../evts"
 	"../gs"
 	"../movs"
 	"../obj"
@@ -171,7 +172,6 @@ func (c *Client) beamState(player *obj.Player) {
 
 	for i := 0; i < gs.LOADED_VISION_DISTANCE; i++ {
 		for j := 0; j < gs.LOADED_VISION_DISTANCE; j++ {
-
 			coord := player.GetLocation().AddVector(v)
 			cell := dbs.LoadCell(coord)
 
@@ -198,6 +198,7 @@ func (c *Client) beamInitialState(player *obj.Player) bool {
 		gameState := gameStateMapping{}
 
 		gameState["globalPlayerLocation"] = player.GetLocation()
+		gameState["playerId"] = player.ObjectId()
 
 		gameStateAsString, _ := msgpack.Marshal(gameState)
 		c.send <- []byte(gameStateAsString)
@@ -219,9 +220,18 @@ func (c *Client) beamStateUntilClosed(player *obj.Player) {
 			return
 		default:
 			c.beamState(player)
-			fmt.Println("beam state")
 			time.Sleep(250 * time.Millisecond)
 		}
+	}
+}
+
+func (c *Client) relayEvents(player *obj.Player) {
+	eventChannel := evts.EventListener(player)
+
+	for {
+		event := <-eventChannel
+		eventAsString, _ := msgpack.Marshal(event)
+		c.send <- []byte(eventAsString)
 	}
 }
 
@@ -248,4 +258,5 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	go client.writePump()
 	go client.readPump(player)
 	go client.beamStateUntilClosed(player)
+	go client.relayEvents(player)
 }
