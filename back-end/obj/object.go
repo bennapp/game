@@ -2,6 +2,7 @@ package obj
 
 import (
 	"../typ"
+	"fmt"
 	"github.com/google/uuid"
 )
 

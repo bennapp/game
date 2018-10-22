@@ -85,6 +85,8 @@ func (c *Client) readPump(player *obj.Player) {
 		event := &playerEvent{}
 		err = msgpack.Unmarshal(message, event)
 
+		fmt.Println(event)
+
 		if err != nil {
 			log.Println(err)
 			break
@@ -221,7 +223,7 @@ func (c *Client) beamStateUntilClosed(player *obj.Player) {
 			return
 		default:
 			c.beamState(player)
-			time.Sleep(250 * time.Millisecond)
+			time.Sleep(16 * time.Millisecond)
 		}
 	}
 }
@@ -252,7 +254,11 @@ func serveWs(hub *Hub, w http.ResponseWriter, r *http.Request) {
 	client.hub.register <- client
 
 	player := wo.CreatePlayer()
-	defer wo.DeletePlayer(player)
+	onClose := func(code int, text string) error {
+		wo.DeletePlayer(player)
+		return nil
+	}
+	client.conn.SetCloseHandler(onClose)
 
 	// Allow collection of memory referenced by the caller by doing all work in
 	// new goroutines.

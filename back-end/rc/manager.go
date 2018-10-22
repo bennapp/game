@@ -166,7 +166,7 @@ func (manager *RedisManager) set(store store.RedisStore) {
 }
 
 func (manager *RedisManager) delete(store store.RedisStore) {
-	manager.client.Set(store.Key(), nil, 0).Err()
+	manager.client.Del(store.Key()).Err()
 }
 
 func (manager *RedisManager) get(store store.RedisStore) string {
