@@ -15,3 +15,22 @@ func (vector *Vector) Scale(magnitude int) Vector {
 
 	return NewVector(x, y)
 }
+
+func (vector *Vector) Normalize() Vector {
+	x := coerceToOne(vector.X)
+	y := coerceToOne(vector.Y)
+
+	return NewVector(x, y)
+}
+
+func coerceToOne(n int) int {
+	if n > 0 {
+		return 1
+	}
+
+	if n < 0 {
+		return -1
+	}
+
+	return 0
+}

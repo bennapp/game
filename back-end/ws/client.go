@@ -99,6 +99,10 @@ func (c *Client) readPump(player *obj.Player) {
 		moveVector.X = event.To.X - player.GetLocation().X
 		moveVector.Y = event.To.Y - player.GetLocation().Y
 
+		moveVector = moveVector.Normalize()
+
+		fmt.Printf("move vector in client: %v \n", moveVector)
+
 		movs.RegulateMove(player, moveVector)
 
 		// The is where we could correct the client
@@ -217,15 +221,20 @@ func (c *Client) beamStateUntilClosed(player *obj.Player) {
 		return
 	}
 
-	for {
-		select {
-		case <-c.closed:
-			return
-		default:
-			c.beamState(player)
-			time.Sleep(500 * time.Millisecond)
-		}
-	}
+	c.beamState(player)
+
+	// beam state should send location where abouts the first time,
+	// from then on it should not send player locations
+
+	//for {
+	//	select {
+	//	case <-c.closed:
+	//		return
+	//	default:
+	//		c.beamState(player)
+	//		time.Sleep(500 * time.Millisecond)
+	//	}
+	//}
 }
 
 func (c *Client) relayEvents(player *obj.Player) {

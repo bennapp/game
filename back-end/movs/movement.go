@@ -8,15 +8,23 @@ import (
 	"../mov"
 	"../obj"
 	"../wg"
+	"fmt"
 )
 
 func MoveObject(movable mov.Movable, vector gs.Vector) {
 	originalCoord := movable.GetLocation()
 
 	nextCoord := originalCoord.AddVector(vector)
+
+	fmt.Printf("move object, from: %v to: %v \n", originalCoord, nextCoord)
+
 	nextCell := dbs.LoadCell(nextCoord)
 
 	if nextCell.IsMovableThrough() {
+		dbs.DeleteObjectLocation(originalCoord, movable.(obj.Objectable))
+		movable.SetLocation(nextCoord)
+		dbs.SaveObjectAndLocation(nextCoord, movable.(obj.Objectable))
+
 		if obj.IsPlayer(movable) {
 			playerId := movable.(*obj.Player).ObjectId()
 
@@ -27,9 +35,5 @@ func MoveObject(movable mov.Movable, vector gs.Vector) {
 			distantCoord := originalCoord.AddVector(scaledVector)
 			wg.DetectWorldGeneration(distantCoord)
 		}
-
-		dbs.DeleteObjectLocation(originalCoord, movable.(obj.Objectable))
-		movable.SetLocation(nextCoord)
-		dbs.SaveObjectAndLocation(nextCoord, movable.(obj.Objectable))
 	}
 }

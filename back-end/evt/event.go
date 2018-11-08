@@ -18,7 +18,7 @@ type Event struct {
 	ToCoord   gs.Coord
 
 	EventType string
-	Timestamp time.Time
+	Timestamp int64
 }
 
 func NewEvent(emitterId string, receiverId string, from gs.Coord, to gs.Coord, eventType string) *Event {
@@ -28,7 +28,7 @@ func NewEvent(emitterId string, receiverId string, from gs.Coord, to gs.Coord, e
 		FromCoord:  from,
 		ToCoord:    to,
 		EventType:  eventType,
-		Timestamp:  time.Now(),
+		Timestamp:  time.Now().Unix(),
 		Type:       typ.NewType(EVENT),
 	}
 }

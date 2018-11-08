@@ -4,6 +4,7 @@ import (
 	"../dbs"
 	"../gs"
 	"../mov"
+	"fmt"
 	"time"
 )
 
@@ -15,6 +16,8 @@ func RegulateMove(movable mov.Movable, vector gs.Vector) {
 		go relayMovesToBuffer(movable)
 		go readMovesAtRegulatedInterval(movable)
 	}
+
+	fmt.Printf("enqueueing vector: %v \n", vector)
 
 	enqueueMoves(movable, vector)
 }
