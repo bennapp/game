@@ -1,9 +1,7 @@
 package main
 
 import (
-	"../gs"
 	"../rc"
-	"../wg"
 	"fmt"
 )
 
@@ -12,6 +10,6 @@ func main() {
 	rc.Manager().FlushAll()
 
 	fmt.Printf("newWorld.go: creating new world\n")
-	zerozero := gs.NewCoord(0, 0)
-	wg.GenerateWorld(zerozero)
+	// zerozero := gs.NewCoord(0, 0)
+	// wg.GenerateWorld(zerozero)
 }

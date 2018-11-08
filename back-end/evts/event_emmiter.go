@@ -6,6 +6,7 @@ import (
 	"../gs"
 	"../obj"
 	"../rc"
+	"fmt"
 )
 
 func EmitEvent(event *evt.Event) {
@@ -29,6 +30,7 @@ func EmitEvent(event *evt.Event) {
 		object := dbs.LoadObjectByCoord(coord)
 
 		if obj.IsPlayer(object) {
+			fmt.Printf("Writing event to channel: %v \n", object.ObjectId())
 			rc.Manager().WriteToObjectEventChannel(object, event)
 		}
 	}
