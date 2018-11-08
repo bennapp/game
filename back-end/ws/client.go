@@ -229,16 +229,10 @@ func (c *Client) beamStateUntilClosed(player *obj.Player) {
 }
 
 func (c *Client) relayEvents(player *obj.Player) {
-	fmt.Println("before event listener!!!")
 	eventChannel := evts.EventListener(player)
-
-	fmt.Println("after event listener!!!")
-
-	fmt.Printf("listening to events for: %v \n", player.ObjectId())
 
 	for {
 		event := <-eventChannel
-		fmt.Printf("relaying to: %v, event: %v \n", player.ObjectId(), event)
 		eventAsString, _ := msgpack.Marshal(event)
 		c.send <- []byte(eventAsString)
 	}
